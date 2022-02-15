@@ -1,2 +1,2 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# gperf in MSYS chokes on DOS line endings
+*.gperf text eol=lf
