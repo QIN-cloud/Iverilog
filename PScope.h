@@ -56,8 +56,12 @@ class LexicalScope {
     public:
       enum lifetime_t { INHERITED, STATIC, AUTOMATIC };
 
+<<<<<<< Updated upstream
       explicit LexicalScope(LexicalScope*parent)
         : default_lifetime(INHERITED), generate_counter(0), parent_(parent) { }
+=======
+      explicit LexicalScope(LexicalScope*parent) : default_lifetime(INHERITED), parent_(parent) { }
+>>>>>>> Stashed changes
 	// A virtual destructor is so that dynamic_cast can work.
       virtual ~LexicalScope() { }
 
@@ -73,7 +77,11 @@ class LexicalScope {
 	// Packages that are wildcard imported. When identifiers from
 	// these packages are referenced, they will be added to the
 	// explicit imports (IEEE 1800-2012 26.3).
+<<<<<<< Updated upstream
       std::list<PPackage*>potential_imports;
+=======
+      std::set<PPackage*>potential_imports;
+>>>>>>> Stashed changes
 
 	// A task or function call may reference a task or function defined
 	// later in the scope. So here we stash the potential imports for
@@ -100,14 +108,19 @@ class LexicalScope {
 	   is elaborated. During parsing, I put the parameters into
 	   this map. */
       struct param_expr_t : public PNamedItem {
+<<<<<<< Updated upstream
             inline param_expr_t() : data_type(0), expr(0), range(0),
 				    local_flag(false), overridable(true) { }
+=======
+            inline param_expr_t() : data_type(0), expr(0), range(0) { }
+>>>>>>> Stashed changes
 	      // Type information.
 	    data_type_t*data_type;
 	      // Value expression
 	    PExpr*expr;
 	      // If there are range constraints, list them here
 	    range_t*range;
+<<<<<<< Updated upstream
 	      // Whether it is a local parameter
 	    bool local_flag;
 	      // Whether the parameter can be overridden
@@ -125,11 +138,28 @@ class LexicalScope {
 
 	// Nets and variables (wires) in the scope
       std::map<perm_string,PWire*>wires;
+=======
+
+	    SymbolType symbol_type() const;
+      };
+      map<perm_string,param_expr_t*>parameters;
+      map<perm_string,param_expr_t*>localparams;
+
+	// Defined types in the scope.
+      map<perm_string,data_type_t*>typedefs;
+
+	// Named events in the scope.
+      map<perm_string,PEvent*>events;
+
+	// Nets and variables (wires) in the scope
+      map<perm_string,PWire*>wires;
+>>>>>>> Stashed changes
       PWire* wires_find(perm_string name);
 
         // Genvars in the scope. These will only be present in module
         // scopes, but are listed here to allow them to be found when
         // creating implicit nets.
+<<<<<<< Updated upstream
       std::map<perm_string,LineInfo*> genvars;
 
 	// Variable initializations in this scope
@@ -149,12 +179,29 @@ class LexicalScope {
         // used to automatically name unnamed generate blocks, as
         // specified in the LRM.
       unsigned generate_counter;
+=======
+      map<perm_string,LineInfo*> genvars;
+
+	// Variable initializations in this scope
+      vector<Statement*> var_inits;
+
+	// Behaviors (processes) in this scope
+      list<PProcess*> behaviors;
+      list<AProcess*> analog_behaviors;
+
+	// The elaboration tasks in this scope
+      list<PCallTask*> elab_tasks;
+
+	// Enumeration sets.
+      std::set<enum_type_t*> enum_sets;
+>>>>>>> Stashed changes
 
       LexicalScope* parent_scope() const { return parent_; }
 
       virtual bool var_init_needs_explicit_lifetime() const;
 
     protected:
+<<<<<<< Updated upstream
       void dump_typedefs_(std::ostream&out, unsigned indent) const;
 
       void dump_parameters_(std::ostream&out, unsigned indent) const;
@@ -166,6 +213,21 @@ class LexicalScope {
       void dump_wires_(std::ostream&out, unsigned indent) const;
 
       void dump_var_inits_(std::ostream&out, unsigned indent) const;
+=======
+      void dump_typedefs_(ostream&out, unsigned indent) const;
+
+      void dump_parameters_(ostream&out, unsigned indent) const;
+
+      void dump_localparams_(ostream&out, unsigned indent) const;
+
+      void dump_enumerations_(ostream&out, unsigned indent) const;
+
+      void dump_events_(ostream&out, unsigned indent) const;
+
+      void dump_wires_(ostream&out, unsigned indent) const;
+
+      void dump_var_inits_(ostream&out, unsigned indent) const;
+>>>>>>> Stashed changes
 
       bool elaborate_var_inits_(Design*des, NetScope*scope) const;
 
@@ -236,9 +298,15 @@ class PScopeExtra : public PScope {
       bool time_prec_is_local;
 
     protected:
+<<<<<<< Updated upstream
       void dump_classes_(std::ostream&out, unsigned indent) const;
       void dump_tasks_(std::ostream&out, unsigned indent) const;
       void dump_funcs_(std::ostream&out, unsigned indent) const;
+=======
+      void dump_classes_(ostream&out, unsigned indent) const;
+      void dump_tasks_(ostream&out, unsigned indent) const;
+      void dump_funcs_(ostream&out, unsigned indent) const;
+>>>>>>> Stashed changes
 };
 
 #endif /* IVL_PScope_H */

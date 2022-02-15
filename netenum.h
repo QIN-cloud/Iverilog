@@ -35,7 +35,11 @@ class netenum_t : public LineInfo, public ivl_type_s {
 
     public:
       explicit netenum_t(ivl_variable_type_t base_type, bool signed_flag,
+<<<<<<< Updated upstream
 			 bool isint_flag, const netrange_t &range,
+=======
+			 bool isint_flag, long msb, long lsb,
+>>>>>>> Stashed changes
 			 size_t name_count, enum_type_t*enum_type);
       ~netenum_t();
 
@@ -77,7 +81,11 @@ class netenum_t : public LineInfo, public ivl_type_s {
       enum_type_t*enum_type_;
       bool signed_flag_;
       bool integer_flag_;
+<<<<<<< Updated upstream
       netrange_t range_;
+=======
+      long msb_, lsb_;
+>>>>>>> Stashed changes
 
       std::map<perm_string,verinum> names_map_;
       std::vector<perm_string> names_;

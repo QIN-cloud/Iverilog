@@ -19,6 +19,7 @@
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
+<<<<<<< Updated upstream
 
 # include "config.h"
 
@@ -33,13 +34,31 @@
 
 using namespace std;
 
+=======
+
+# include "config.h"
+
+# include  "parse_misc.h"
+# include  "compiler.h"
+# include  "pform.h"
+# include  "Statement.h"
+# include  "PSpec.h"
+# include  <stack>
+# include  <cstring>
+# include  <sstream>
+
+>>>>>>> Stashed changes
 class PSpecPath;
 
 extern void lex_end_table();
 
 static data_type_t* param_data_type = 0;
+<<<<<<< Updated upstream
 static bool param_is_local = false;
 static std::list<pform_range_t>* specparam_active_range = 0;
+=======
+static list<pform_range_t>* specparam_active_range = 0;
+>>>>>>> Stashed changes
 
 /* Port declaration lists use this structure for context. */
 static struct {
@@ -94,7 +113,11 @@ static unsigned args_after_notifier;
 /* The rules sometimes push attributes into a global context where
    sub-rules may grab them. This makes parser rules a little easier to
    write in some cases. */
+<<<<<<< Updated upstream
 static std::list<named_pexpr_t>*attributes_in_context = 0;
+=======
+static list<named_pexpr_t>*attributes_in_context = 0;
+>>>>>>> Stashed changes
 
 /* Later version of bison (including 1.35) will not compile in stack
    extension if the output is compiled with C++ and either the YYSTYPE
@@ -134,15 +157,26 @@ static std::list<named_pexpr_t>*attributes_in_context = 0;
 static const struct str_pair_t pull_strength = { IVL_DR_PULL,  IVL_DR_PULL };
 static const struct str_pair_t str_strength = { IVL_DR_STRONG, IVL_DR_STRONG };
 
+<<<<<<< Updated upstream
 static std::list<pform_port_t>* make_port_list(char*id, std::list<pform_range_t>*udims, PExpr*expr)
 {
       std::list<pform_port_t>*tmp = new std::list<pform_port_t>;
+=======
+static list<pform_port_t>* make_port_list(char*id, list<pform_range_t>*udims, PExpr*expr)
+{
+      list<pform_port_t>*tmp = new list<pform_port_t>;
+>>>>>>> Stashed changes
       tmp->push_back(pform_port_t(lex_strings.make(id), udims, expr));
       delete[]id;
       return tmp;
 }
+<<<<<<< Updated upstream
 static std::list<pform_port_t>* make_port_list(list<pform_port_t>*tmp,
                                           char*id, std::list<pform_range_t>*udims, PExpr*expr)
+=======
+static list<pform_port_t>* make_port_list(list<pform_port_t>*tmp,
+                                          char*id, list<pform_range_t>*udims, PExpr*expr)
+>>>>>>> Stashed changes
 {
       tmp->push_back(pform_port_t(lex_strings.make(id), udims, expr));
       delete[]id;
@@ -155,20 +189,34 @@ list<pform_range_t>* make_range_from_width(uint64_t wid)
       range.first  = new PENumber(new verinum(wid-1, integer_width));
       range.second = new PENumber(new verinum((uint64_t)0, integer_width));
 
+<<<<<<< Updated upstream
       std::list<pform_range_t>*rlist = new std::list<pform_range_t>;
+=======
+      list<pform_range_t>*rlist = new list<pform_range_t>;
+>>>>>>> Stashed changes
       rlist->push_back(range);
       return rlist;
 }
 
+<<<<<<< Updated upstream
 static std::list<perm_string>* list_from_identifier(char*id)
 {
       std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+static list<perm_string>* list_from_identifier(char*id)
+{
+      list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
       tmp->push_back(lex_strings.make(id));
       delete[]id;
       return tmp;
 }
 
+<<<<<<< Updated upstream
 static std::list<perm_string>* list_from_identifier(list<perm_string>*tmp, char*id)
+=======
+static list<perm_string>* list_from_identifier(list<perm_string>*tmp, char*id)
+>>>>>>> Stashed changes
 {
       tmp->push_back(lex_strings.make(id));
       delete[]id;
@@ -177,15 +225,26 @@ static std::list<perm_string>* list_from_identifier(list<perm_string>*tmp, char*
 
 list<pform_range_t>* copy_range(list<pform_range_t>* orig)
 {
+<<<<<<< Updated upstream
       std::list<pform_range_t>*copy = 0;
 
       if (orig)
 	    copy = new std::list<pform_range_t> (*orig);
+=======
+      list<pform_range_t>*copy = 0;
+
+      if (orig)
+	    copy = new list<pform_range_t> (*orig);
+>>>>>>> Stashed changes
 
       return copy;
 }
 
+<<<<<<< Updated upstream
 template <class T> void append(vector<T>&out, const std::vector<T>&in)
+=======
+template <class T> void append(vector<T>&out, const vector<T>&in)
+>>>>>>> Stashed changes
 {
       for (size_t idx = 0 ; idx < in.size() ; idx += 1)
 	    out.push_back(in[idx]);
@@ -209,7 +268,11 @@ static void strip_tail_items(list<PExpr*>*lst)
  */
 static PECallFunction*make_call_function(perm_string tn, PExpr*arg)
 {
+<<<<<<< Updated upstream
       std::vector<PExpr*> parms(1);
+=======
+      vector<PExpr*> parms(1);
+>>>>>>> Stashed changes
       parms[0] = arg;
       PECallFunction*tmp = new PECallFunction(tn, parms);
       return tmp;
@@ -217,16 +280,26 @@ static PECallFunction*make_call_function(perm_string tn, PExpr*arg)
 
 static PECallFunction*make_call_function(perm_string tn, PExpr*arg1, PExpr*arg2)
 {
+<<<<<<< Updated upstream
       std::vector<PExpr*> parms(2);
+=======
+      vector<PExpr*> parms(2);
+>>>>>>> Stashed changes
       parms[0] = arg1;
       parms[1] = arg2;
       PECallFunction*tmp = new PECallFunction(tn, parms);
       return tmp;
 }
 
+<<<<<<< Updated upstream
 static std::list<named_pexpr_t>* make_named_numbers(perm_string name, long first, long last, PExpr*val =0)
 {
       std::list<named_pexpr_t>*lst = new std::list<named_pexpr_t>;
+=======
+static list<named_pexpr_t>* make_named_numbers(perm_string name, long first, long last, PExpr*val =0)
+{
+      list<named_pexpr_t>*lst = new list<named_pexpr_t>;
+>>>>>>> Stashed changes
       named_pexpr_t tmp;
 	// We are counting up.
       if (first <= last) {
@@ -252,9 +325,15 @@ static std::list<named_pexpr_t>* make_named_numbers(perm_string name, long first
       return lst;
 }
 
+<<<<<<< Updated upstream
 static std::list<named_pexpr_t>* make_named_number(perm_string name, PExpr*val =0)
 {
       std::list<named_pexpr_t>*lst = new std::list<named_pexpr_t>;
+=======
+static list<named_pexpr_t>* make_named_number(perm_string name, PExpr*val =0)
+{
+      list<named_pexpr_t>*lst = new list<named_pexpr_t>;
+>>>>>>> Stashed changes
       named_pexpr_t tmp;
       tmp.name = name;
       tmp.parm = val;
@@ -284,6 +363,7 @@ static long check_enum_seq_value(const YYLTYPE&loc, verinum *arg, bool zero_ok)
       return value;
 }
 
+<<<<<<< Updated upstream
 static void check_end_label(const struct vlltype&loc, const char *type,
 			    const char *begin, const char *end)
 {
@@ -303,14 +383,23 @@ static void check_end_label(const struct vlltype&loc, const char *type,
 }
 
 static void current_task_set_statement(const YYLTYPE&loc, std::vector<Statement*>*s)
+=======
+static void current_task_set_statement(const YYLTYPE&loc, vector<Statement*>*s)
+>>>>>>> Stashed changes
 {
       if (s == 0) {
 	      /* if the statement list is null, then the parser
 		 detected the case that there are no statements in the
 		 task. If this is SystemVerilog, handle it as an
 		 an empty block. */
+<<<<<<< Updated upstream
 	    pform_requires_sv(loc, "Task body with no statements");
 
+=======
+	    if (!gn_system_verilog()) {
+		  yyerror(loc, "error: Support for empty tasks requires SystemVerilog.");
+	    }
+>>>>>>> Stashed changes
 	    PBlock*tmp = new PBlock(PBlock::BL_SEQ);
 	    FILE_NAME(tmp, loc);
 	    current_task->set_statement(tmp);
@@ -329,7 +418,13 @@ static void current_task_set_statement(const YYLTYPE&loc, std::vector<Statement*
 	    return;
       }
 
+<<<<<<< Updated upstream
       pform_requires_sv(loc, "Task body with multiple statements");
+=======
+      if (!gn_system_verilog()) {
+	    yyerror(loc, "error: Task body with multiple statements requires SystemVerilog.");
+      }
+>>>>>>> Stashed changes
 
       PBlock*tmp = new PBlock(PBlock::BL_SEQ);
       FILE_NAME(tmp, loc);
@@ -337,15 +432,25 @@ static void current_task_set_statement(const YYLTYPE&loc, std::vector<Statement*
       current_task->set_statement(tmp);
 }
 
+<<<<<<< Updated upstream
 static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statement*>*s)
+=======
+static void current_function_set_statement(const YYLTYPE&loc, vector<Statement*>*s)
+>>>>>>> Stashed changes
 {
       if (s == 0) {
 	      /* if the statement list is null, then the parser
 		 detected the case that there are no statements in the
 		 task. If this is SystemVerilog, handle it as an
 		 an empty block. */
+<<<<<<< Updated upstream
 	    pform_requires_sv(loc, "Function body with no statements");
 
+=======
+	    if (!gn_system_verilog()) {
+		  yyerror(loc, "error: Support for empty functions requires SystemVerilog.");
+	    }
+>>>>>>> Stashed changes
 	    PBlock*tmp = new PBlock(PBlock::BL_SEQ);
 	    FILE_NAME(tmp, loc);
 	    current_function->set_statement(tmp);
@@ -364,7 +469,13 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 	    return;
       }
 
+<<<<<<< Updated upstream
       pform_requires_sv(loc, "Function body with multiple statements");
+=======
+      if (!gn_system_verilog()) {
+	    yyerror(loc, "error: Function body with multiple statements requires SystemVerilog.");
+      }
+>>>>>>> Stashed changes
 
       PBlock*tmp = new PBlock(PBlock::BL_SEQ);
       FILE_NAME(tmp, loc);
@@ -383,11 +494,19 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 	/* text items are C strings allocated by the lexor using
 	   strdup. They can be put into lists with the texts type. */
       char*text;
+<<<<<<< Updated upstream
       std::list<perm_string>*perm_strings;
 
       std::list<pform_port_t>*port_list;
 
       std::vector<pform_tf_port_t>* tf_ports;
+=======
+      list<perm_string>*perm_strings;
+
+      list<pform_port_t>*port_list;
+
+      vector<pform_tf_port_t>* tf_ports;
+>>>>>>> Stashed changes
 
       pform_name_t*pform_name;
 
@@ -407,6 +526,7 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 
       Module::port_t *mport;
       LexicalScope::range_t* value_range;
+<<<<<<< Updated upstream
       std::vector<Module::port_t*>*mports;
 
       std::list<PLet::let_port_t*>*let_port_lst;
@@ -422,6 +542,23 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 
       PExpr*expr;
       std::list<PExpr*>*exprs;
+=======
+      vector<Module::port_t*>*mports;
+
+      list<PLet::let_port_t*>*let_port_lst;
+      PLet::let_port_t*let_port_itm;
+
+      named_number_t* named_number;
+      list<named_number_t>* named_numbers;
+
+      named_pexpr_t*named_pexpr;
+      list<named_pexpr_t>*named_pexprs;
+      struct parmvalue_t*parmvalue;
+      list<pform_range_t>*ranges;
+
+      PExpr*expr;
+      list<PExpr*>*exprs;
+>>>>>>> Stashed changes
 
       svector<PEEvent*>*event_expr;
 
@@ -433,20 +570,35 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
       PBlock::BL_TYPE join_keyword;
 
       PWire*wire;
+<<<<<<< Updated upstream
       std::vector<PWire*>*wires;
 
       PEventStatement*event_statement;
       Statement*statement;
       std::vector<Statement*>*statement_list;
+=======
+      vector<PWire*>*wires;
+
+      PEventStatement*event_statement;
+      Statement*statement;
+      vector<Statement*>*statement_list;
+>>>>>>> Stashed changes
 
       net_decl_assign_t*net_decl_assign;
       enum_type_t*enum_type;
 
       decl_assignment_t*decl_assignment;
+<<<<<<< Updated upstream
       std::list<decl_assignment_t*>*decl_assignments;
 
       struct_member_t*struct_member;
       std::list<struct_member_t*>*struct_members;
+=======
+      list<decl_assignment_t*>*decl_assignments;
+
+      struct_member_t*struct_member;
+      list<struct_member_t*>*struct_members;
+>>>>>>> Stashed changes
       struct_type_t*struct_type;
 
       data_type_t*data_type;
@@ -462,7 +614,11 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 
       struct {
 	    data_type_t*type;
+<<<<<<< Updated upstream
 	    std::list<PExpr*>*exprs;
+=======
+	    list<PExpr*>*exprs;
+>>>>>>> Stashed changes
       } class_declaration_extends;
 
       struct {
@@ -470,17 +626,24 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 	    PExpr*expr;
       } genvar_iter;
 
+<<<<<<< Updated upstream
       struct {
 	    bool packed_flag;
 	    bool signed_flag;
       } packed_signing;
 
+=======
+>>>>>>> Stashed changes
       verinum* number;
 
       verireal* realtime;
 
       PSpecPath* specpath;
+<<<<<<< Updated upstream
       std::list<index_component_t> *dimensions;
+=======
+      list<index_component_t> *dimensions;
+>>>>>>> Stashed changes
 
       LexicalScope::lifetime_t lifetime;
 };
@@ -502,8 +665,11 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 %token K_SCOPE_RES
 %token K_edge_descriptor
 
+<<<<<<< Updated upstream
 %token K_CONSTRAINT_IMPL
 
+=======
+>>>>>>> Stashed changes
  /* The base tokens from 1364-1995. */
 %token K_always K_and K_assign K_begin K_buf K_bufif0 K_bufif1 K_case
 %token K_casex K_casez K_cmos K_deassign K_default K_defparam K_disable
@@ -591,7 +757,11 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 %type <number>  number pos_neg_number
 %type <flag>    signing unsigned_signed_opt signed_unsigned_opt
 %type <flag>    import_export
+<<<<<<< Updated upstream
 %type <flag>    K_genvar_opt K_reg_opt K_static_opt K_virtual_opt
+=======
+%type <flag>    K_genvar_opt K_packed_opt K_reg_opt K_static_opt K_virtual_opt
+>>>>>>> Stashed changes
 %type <flag>    udp_reg_opt edge_operator
 %type <drive>   drive_strength drive_strength_opt dr_strength0 dr_strength1
 %type <letter>  udp_input_sym udp_output_sym
@@ -604,7 +774,11 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 %type <statement> udp_initial udp_init_opt
 %type <expr>    udp_initial_expr_opt
 
+<<<<<<< Updated upstream
 %type <text> register_variable net_variable event_variable label_opt class_declaration_endlabel_opt
+=======
+%type <text> register_variable net_variable event_variable endlabel_opt class_declaration_endlabel_opt
+>>>>>>> Stashed changes
 %type <text> block_identifier_opt
 %type <perm_strings> register_variable_list net_variable_list event_variable_list
 %type <perm_strings> list_of_identifiers loop_variables
@@ -620,7 +794,11 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 %type <expr> tf_port_item_expr_opt value_range_expression
 
 %type <named_pexprs> enum_name_list enum_name
+<<<<<<< Updated upstream
 %type <enum_type> enum_data_type enum_base_type
+=======
+%type <enum_type> enum_data_type
+>>>>>>> Stashed changes
 
 %type <tf_ports> function_item function_item_list function_item_list_opt
 %type <tf_ports> task_item task_item_list task_item_list_opt
@@ -655,15 +833,23 @@ static void current_function_set_statement(const YYLTYPE&loc, std::vector<Statem
 %type <decl_assignment> variable_decl_assignment
 %type <decl_assignments> list_of_variable_decl_assignments
 
+<<<<<<< Updated upstream
 %type <data_type>  data_type data_type_opt data_type_or_implicit data_type_or_implicit_or_void
 %type <data_type>  simple_type_or_string let_formal_type
 %type <data_type>  packed_array_data_type
 %type <data_type>  ps_type_identifier
+=======
+%type <data_type>  data_type data_type_or_implicit data_type_or_implicit_or_void
+%type <data_type>  simple_type_or_string let_formal_type
+>>>>>>> Stashed changes
 %type <class_type> class_identifier
 %type <struct_member>  struct_union_member
 %type <struct_members> struct_union_member_list
 %type <struct_type>    struct_data_type
+<<<<<<< Updated upstream
 %type <packed_signing> packed_signing
+=======
+>>>>>>> Stashed changes
 
 %type <class_declaration_extends> class_declaration_extends_opt
 
@@ -803,7 +989,14 @@ class_declaration /* IEEE1800-2005: A.1.2 */
       }
     class_declaration_endlabel_opt
       { // Wrap up the class.
+<<<<<<< Updated upstream
 	check_end_label(@11, "class", $4->name, $11);
+=======
+	if ($11 && $4 && $4->name != $11) {
+	      yyerror(@11, "error: Class end label doesn't match class name.");
+	      delete[]$11;
+	}
+>>>>>>> Stashed changes
       }
   ;
 
@@ -862,6 +1055,7 @@ class_declaration_endlabel_opt
      a data_type. */
 
 class_declaration_extends_opt /* IEEE1800-2005: A.1.2 */
+<<<<<<< Updated upstream
   : K_extends ps_type_identifier
       { $$.type  = $2;
 	$$.exprs = 0;
@@ -869,6 +1063,19 @@ class_declaration_extends_opt /* IEEE1800-2005: A.1.2 */
   | K_extends ps_type_identifier '(' expression_list_with_nuls ')'
       { $$.type  = $2;
 	$$.exprs = $4;
+=======
+  : K_extends TYPE_IDENTIFIER
+      { pform_set_type_referenced(@2, $2.text);
+	$$.type = $2.type;
+	$$.exprs= 0;
+	delete[]$2.text;
+      }
+  | K_extends TYPE_IDENTIFIER '(' expression_list_with_nuls ')'
+      { pform_set_type_referenced(@2, $2.text);
+	$$.type  = $2.type;
+	$$.exprs = $4;
+	delete[]$2.text;
+>>>>>>> Stashed changes
       }
   |
       { $$.type = 0; $$.exprs = 0; }
@@ -1002,7 +1209,11 @@ class_item_qualifier_opt
 
 class_new /* IEEE1800-2005 A.2.4 */
   : K_new '(' expression_list_with_nuls ')'
+<<<<<<< Updated upstream
       { std::list<PExpr*>*expr_list = $3;
+=======
+      { list<PExpr*>*expr_list = $3;
+>>>>>>> Stashed changes
 	strip_tail_items(expr_list);
 	PENewClass*tmp = new PENewClass(*expr_list);
 	FILE_NAME(tmp, @1);
@@ -1150,16 +1361,23 @@ constraint_declaration /* IEEE1800-2005: A.1.9 */
 constraint_expression /* IEEE1800-2005 A.1.9 */
   : expression ';'
   | expression K_dist '{' '}' ';'
+<<<<<<< Updated upstream
   | expression constraint_trigger
+=======
+  | expression K_TRIGGER constraint_set
+>>>>>>> Stashed changes
   | K_if '(' expression ')' constraint_set %prec less_than_K_else
   | K_if '(' expression ')' constraint_set K_else constraint_set
   | K_foreach '(' IDENTIFIER '[' loop_variables ']' ')' constraint_set
   ;
 
+<<<<<<< Updated upstream
 constraint_trigger
   : K_CONSTRAINT_IMPL '{' constraint_expression_list '}'
   ;
 
+=======
+>>>>>>> Stashed changes
 constraint_expression_list /* */
   : constraint_expression_list constraint_expression
   | constraint_expression
@@ -1190,6 +1408,7 @@ data_declaration /* IEEE1800-2005: A.2.1.3 */
   | attribute_list_opt package_import_declaration
   ;
 
+<<<<<<< Updated upstream
 ps_type_identifier /* IEEE1800-2017: A.9.3 */
  : TYPE_IDENTIFIER
       { pform_set_type_referenced(@1, $1.text);
@@ -1217,6 +1436,8 @@ packed_array_data_type /* IEEE1800-2005: A.2.2.1 */
   | ps_type_identifier
   ;
 
+=======
+>>>>>>> Stashed changes
 data_type /* IEEE1800-2005: A.2.2.1 */
   : integer_vector_type unsigned_signed_opt dimensions_opt
       { ivl_variable_type_t use_vtype = $1;
@@ -1235,24 +1456,44 @@ data_type /* IEEE1800-2005: A.2.2.1 */
 	FILE_NAME(tmp, @1);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
+=======
+  | struct_data_type
+      { if (!$1->packed_flag) {
+	      yyerror(@1, "sorry: Unpacked structs not supported.");
+	}
+	$$ = $1;
+      }
+  | enum_data_type
+      { $$ = $1; }
+>>>>>>> Stashed changes
   | atom2_type signed_unsigned_opt
       { atom2_type_t*tmp = new atom2_type_t($1, $2);
 	FILE_NAME(tmp, @1);
 	$$ = tmp;
       }
   | K_integer signed_unsigned_opt
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*pd = make_range_from_width(integer_width);
+=======
+      { list<pform_range_t>*pd = make_range_from_width(integer_width);
+>>>>>>> Stashed changes
 	vector_type_t*tmp = new vector_type_t(IVL_VT_LOGIC, $2, pd);
 	tmp->reg_flag = true;
 	tmp->integer_flag = true;
 	$$ = tmp;
       }
   | K_time unsigned_signed_opt
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*pd = make_range_from_width(64);
+=======
+      { list<pform_range_t>*pd = make_range_from_width(64);
+>>>>>>> Stashed changes
 	vector_type_t*tmp = new vector_type_t(IVL_VT_LOGIC, $2, pd);
 	tmp->reg_flag = !gn_system_verilog();
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
   | packed_array_data_type dimensions_opt
       { if ($2) {
 	      parray_type_t*tmp = new parray_type_t($1, $2);
@@ -1261,6 +1502,23 @@ data_type /* IEEE1800-2005: A.2.2.1 */
         } else {
 	      $$ = $1;
         }
+=======
+  | TYPE_IDENTIFIER dimensions_opt
+      { pform_set_type_referenced(@1, $1.text);
+	if ($2) {
+	      parray_type_t*tmp = new parray_type_t($1.type, $2);
+	      FILE_NAME(tmp, @1);
+	      $$ = tmp;
+	} else $$ = $1.type;
+	delete[]$1.text;
+      }
+  | PACKAGE_IDENTIFIER K_SCOPE_RES
+      { lex_in_package_scope($1); }
+    TYPE_IDENTIFIER
+      { lex_in_package_scope(0);
+	$$ = $4.type;
+	delete[]$4.text;
+>>>>>>> Stashed changes
       }
   | K_string
       { string_type_t*tmp = new string_type_t;
@@ -1269,11 +1527,14 @@ data_type /* IEEE1800-2005: A.2.2.1 */
       }
   ;
 
+<<<<<<< Updated upstream
 /* Data type or nothing, but not implicit */
 data_type_opt
   : data_type { $$ = $1; }
   | { $$ = 0; }
 
+=======
+>>>>>>> Stashed changes
   /* The data_type_or_implicit rule is a little more complex then the
      rule documented in the IEEE format syntax in order to allow for
      signaling the special case that the data_type is completely
@@ -1290,7 +1551,11 @@ scalar_vector_opt /*IEEE1800-2005: optional support for packed array */
   ;
 
 data_type_or_implicit /* IEEE1800-2005: A.2.2.1 */
+<<<<<<< Updated upstream
   : data_type_opt
+=======
+  : data_type
+>>>>>>> Stashed changes
       { $$ = $1; }
   | signing dimensions_opt
       { vector_type_t*tmp = new vector_type_t(IVL_VT_LOGIC, $1, $2);
@@ -1304,6 +1569,11 @@ data_type_or_implicit /* IEEE1800-2005: A.2.2.1 */
 	FILE_NAME(tmp, @2);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
+=======
+  |
+      { $$ = 0; }
+>>>>>>> Stashed changes
   ;
 
 
@@ -1472,9 +1742,25 @@ function_declaration /* IEEE1800-2005: A.2.6 */
 	pform_pop_scope();
 	current_function = 0;
       }
+<<<<<<< Updated upstream
     label_opt
       { // Last step: check any closing name.
 	check_end_label(@11, "function", $4, $11);
+=======
+    endlabel_opt
+      { // Last step: check any closing name.
+	if ($11) {
+	      if (strcmp($4,$11) != 0) {
+		    yyerror(@11, "error: End label doesn't match "
+		                 "function name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@11, "error: Function end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$11;
+	}
+>>>>>>> Stashed changes
 	delete[]$4;
       }
 
@@ -1492,6 +1778,7 @@ function_declaration /* IEEE1800-2005: A.2.6 */
 	pform_set_this_class(@4, current_function);
 	pform_pop_scope();
 	current_function = 0;
+<<<<<<< Updated upstream
 	if ($7 == 0) {
 	      pform_requires_sv(@4, "Empty parenthesis syntax");
 	}
@@ -1499,6 +1786,25 @@ function_declaration /* IEEE1800-2005: A.2.6 */
     label_opt
       { // Last step: check any closing name.
 	check_end_label(@14, "function", $4, $14);
+=======
+	if ($7==0 && !gn_system_verilog()) {
+	      yyerror(@4, "error: Empty parenthesis syntax requires SystemVerilog.");
+	}
+      }
+    endlabel_opt
+      { // Last step: check any closing name.
+	if ($14) {
+	      if (strcmp($4,$14) != 0) {
+		    yyerror(@14, "error: End label doesn't match "
+		                 "function name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@14, "error: Function end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$14;
+	}
+>>>>>>> Stashed changes
 	delete[]$4;
       }
 
@@ -1514,9 +1820,24 @@ function_declaration /* IEEE1800-2005: A.2.6 */
 	yyerror(@1, "error: Syntax error defining function.");
 	yyerrok;
       }
+<<<<<<< Updated upstream
     label_opt
       { // Last step: check any closing name.
 	check_end_label(@8, "function", $4, $8);
+=======
+    endlabel_opt
+      { // Last step: check any closing name.
+	if ($8) {
+	      if (strcmp($4,$8) != 0) {
+		    yyerror(@8, "error: End label doesn't match function name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@8, "error: Function end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$8;
+	}
+>>>>>>> Stashed changes
 	delete[]$4;
       }
 
@@ -1770,12 +2091,20 @@ loop_statement /* IEEE1800-2005: A.6.8 */
 /* TODO: Replace register_variable_list with list_of_variable_decl_assignments. */
 list_of_variable_decl_assignments /* IEEE1800-2005 A.2.3 */
   : variable_decl_assignment
+<<<<<<< Updated upstream
       { std::list<decl_assignment_t*>*tmp = new std::list<decl_assignment_t*>;
+=======
+      { list<decl_assignment_t*>*tmp = new list<decl_assignment_t*>;
+>>>>>>> Stashed changes
 	tmp->push_back($1);
 	$$ = tmp;
       }
   | list_of_variable_decl_assignments ',' variable_decl_assignment
+<<<<<<< Updated upstream
       { std::list<decl_assignment_t*>*tmp = $1;
+=======
+      { list<decl_assignment_t*>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back($3);
 	$$ = tmp;
       }
@@ -1820,13 +2149,21 @@ variable_decl_assignment /* IEEE1800-2005 A.2.3 */
 
 loop_variables /* IEEE1800-2005: A.6.8 */
   : loop_variables ',' IDENTIFIER
+<<<<<<< Updated upstream
       { std::list<perm_string>*tmp = $1;
+=======
+      { list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back(lex_strings.make($3));
 	delete[]$3;
 	$$ = tmp;
       }
   | IDENTIFIER
+<<<<<<< Updated upstream
       { std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+      { list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 	tmp->push_back(lex_strings.make($1));
 	delete[]$1;
 	$$ = tmp;
@@ -1985,9 +2322,21 @@ package_declaration /* IEEE1800-2005 A.1.2 */
     timeunits_declaration_opt
       { pform_set_scope_timescale(@1); }
     package_item_list_opt
+<<<<<<< Updated upstream
     K_endpackage label_opt
       { pform_end_package_declaration(@1);
 	check_end_label(@10, "package", $3, $10);
+=======
+    K_endpackage endlabel_opt
+      { pform_end_package_declaration(@1);
+	// If an end label is present make sure it match the package name.
+	if ($10) {
+	      if (strcmp($3,$10) != 0) {
+		    yyerror(@10, "error: End label doesn't match package name");
+	      }
+	      delete[]$10;
+	}
+>>>>>>> Stashed changes
 	delete[]$3;
       }
   ;
@@ -2024,7 +2373,12 @@ package_import_item_list
 
 package_item /* IEEE1800-2005 A.1.10 */
   : timeunits_declaration
+<<<<<<< Updated upstream
   | parameter_or_localparam param_type parameter_assign_list ';'
+=======
+  | K_parameter param_type parameter_assign_list ';'
+  | K_localparam param_type localparam_assign_list ';'
+>>>>>>> Stashed changes
   | type_declaration
   | function_declaration
   | task_declaration
@@ -2045,8 +2399,13 @@ port_direction /* IEEE1800-2005 A.1.3 */
   | K_inout  { $$ = NetNet::PINOUT; }
   | K_ref
       { $$ = NetNet::PREF;
+<<<<<<< Updated upstream
 
 	if (!pform_requires_sv(@1, "Reference port (ref)")) {
+=======
+        if (!gn_system_verilog()) {
+	      yyerror(@1, "error: Reference ports (ref) require SystemVerilog.");
+>>>>>>> Stashed changes
 	      $$ = NetNet::PINPUT;
 	}
       }
@@ -2128,7 +2487,11 @@ simple_immediate_assertion_statement /* IEEE1800-2012 A.6.10 */
   : assert_or_assume '(' expression ')' statement_or_null %prec less_than_K_else
       {
 	if (gn_supported_assertions_flag) {
+<<<<<<< Updated upstream
 	      std::list<PExpr*>arg_list;
+=======
+	      list<PExpr*>arg_list;
+>>>>>>> Stashed changes
 	      PCallTask*tmp1 = new PCallTask(lex_strings.make("$error"), arg_list);
 	      FILE_NAME(tmp1, @1);
 	      PCondit*tmp2 = new PCondit($3, $5, tmp1);
@@ -2214,24 +2577,50 @@ simple_type_or_string /* IEEE1800-2005: A.2.2.1 */
 	$$ = tmp;
       }
   | K_integer
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*pd = make_range_from_width(integer_width);
+=======
+      { list<pform_range_t>*pd = make_range_from_width(integer_width);
+>>>>>>> Stashed changes
 	vector_type_t*tmp = new vector_type_t(IVL_VT_LOGIC, true, pd);
 	tmp->reg_flag = true;
 	tmp->integer_flag = true;
 	$$ = tmp;
       }
   | K_time
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*pd = make_range_from_width(64);
+=======
+      { list<pform_range_t>*pd = make_range_from_width(64);
+>>>>>>> Stashed changes
 	vector_type_t*tmp = new vector_type_t(IVL_VT_LOGIC, false, pd);
 	tmp->reg_flag = !gn_system_verilog();
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
+=======
+  | TYPE_IDENTIFIER
+      { pform_set_type_referenced(@1, $1.text);
+	$$ = $1.type;
+	delete[]$1.text;
+      }
+  | PACKAGE_IDENTIFIER K_SCOPE_RES
+      { lex_in_package_scope($1); }
+    TYPE_IDENTIFIER
+      { lex_in_package_scope(0);
+	$$ = $4.type;
+	delete[]$4.text;
+      }
+>>>>>>> Stashed changes
   | K_string
       { string_type_t*tmp = new string_type_t;
 	FILE_NAME(tmp, @1);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
   | ps_type_identifier
+=======
+>>>>>>> Stashed changes
   ;
 
 statement /* IEEE1800-2005: A.6.4 */
@@ -2268,10 +2657,18 @@ stream_operator
 streaming_concatenation /* IEEE1800-2005: A.8.1 */
   : '{' stream_operator '{' stream_expression_list '}' '}'
       { /* streaming concatenation is a SystemVerilog thing. */
+<<<<<<< Updated upstream
 	if (pform_requires_sv(@2, "Streaming concatenation")) {
 	      yyerror(@2, "sorry: Streaming concatenation not supported.");
 	      $$ = 0;
 	} else {
+=======
+	if (gn_system_verilog()) {
+	      yyerror(@2, "sorry: Streaming concatenation not supported.");
+	      $$ = 0;
+	} else {
+	      yyerror(@2, "error: Streaming concatenation requires SystemVerilog");
+>>>>>>> Stashed changes
 	      $$ = 0;
 	}
       }
@@ -2296,6 +2693,7 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	pform_set_this_class(@3, current_task);
 	pform_pop_scope();
 	current_task = 0;
+<<<<<<< Updated upstream
 	if ($7 && $7->size() > 1) {
 	      pform_requires_sv(@7, "Task body with multiple statements");
 	}
@@ -2308,6 +2706,29 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	// early enough that the lexor can know we are outside the
 	// module.
 	check_end_label(@10, "task", $3, $10);
+=======
+	if ($7 && $7->size() > 1 && !gn_system_verilog()) {
+	      yyerror(@7, "error: Task body with multiple statements requires SystemVerilog.");
+	}
+	delete $7;
+      }
+    endlabel_opt
+      { // Last step: check any closing name. This is done late so
+	// that the parser can look ahead to detect the present
+	// endlabel_opt but still have the pform_endmodule() called
+	// early enough that the lexor can know we are outside the
+	// module.
+	if ($10) {
+	      if (strcmp($3,$10) != 0) {
+		    yyerror(@10, "error: End label doesn't match task name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@10, "error: Task end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$10;
+	}
+>>>>>>> Stashed changes
 	delete[]$3;
       }
 
@@ -2330,6 +2751,7 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	current_task = 0;
 	if ($10) delete $10;
       }
+<<<<<<< Updated upstream
     label_opt
       { // Last step: check any closing name. This is done late so
 	// that the parser can look ahead to detect the present
@@ -2337,6 +2759,24 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	// early enough that the lexor can know we are outside the
 	// module.
 	check_end_label(@13, "task", $3, $13);
+=======
+    endlabel_opt
+      { // Last step: check any closing name. This is done late so
+	// that the parser can look ahead to detect the present
+	// endlabel_opt but still have the pform_endmodule() called
+	// early enough that the lexor can know we are outside the
+	// module.
+	if ($13) {
+	      if (strcmp($3,$13) != 0) {
+		    yyerror(@13, "error: End label doesn't match task name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@13, "error: Task end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$13;
+	}
+>>>>>>> Stashed changes
 	delete[]$3;
       }
 
@@ -2347,6 +2787,7 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	      current_task = 0;
 	}
       }
+<<<<<<< Updated upstream
     label_opt
       { // Last step: check any closing name. This is done late so
 	// that the parser can look ahead to detect the present
@@ -2354,6 +2795,24 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 	// early enough that the lexor can know we are outside the
 	// module.
 	check_end_label(@7, "task", $3, $7);
+=======
+    endlabel_opt
+      { // Last step: check any closing name. This is done late so
+	// that the parser can look ahead to detect the present
+	// endlabel_opt but still have the pform_endmodule() called
+	// early enough that the lexor can know we are outside the
+	// module.
+	if ($7) {
+	      if (strcmp($3,$7) != 0) {
+		    yyerror(@7, "error: End label doesn't match task name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@7, "error: Task end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$7;
+	}
+>>>>>>> Stashed changes
 	delete[]$3;
       }
 
@@ -2362,7 +2821,11 @@ task_declaration /* IEEE1800-2005: A.2.7 */
 
 tf_port_declaration /* IEEE1800-2005: A.2.7 */
   : port_direction K_reg_opt unsigned_signed_opt dimensions_opt list_of_identifiers ';'
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1,
+=======
+      { vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1,
+>>>>>>> Stashed changes
 						$2 ? IVL_VT_LOGIC :
 						     IVL_VT_NO_TYPE,
 						$3, $4, $5);
@@ -2373,7 +2836,11 @@ tf_port_declaration /* IEEE1800-2005: A.2.7 */
      shape. Generate a range ([31:0]) to make it work. */
 
   | port_direction K_integer list_of_identifiers ';'
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*range_stub = make_range_from_width(integer_width);
+=======
+      { list<pform_range_t>*range_stub = make_range_from_width(integer_width);
+>>>>>>> Stashed changes
 	vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_LOGIC, true,
 						    range_stub, $3, true);
 	$$ = tmp;
@@ -2382,7 +2849,11 @@ tf_port_declaration /* IEEE1800-2005: A.2.7 */
   /* Ports can be time with a width of [63:0] (unsigned). */
 
   | port_direction K_time list_of_identifiers ';'
+<<<<<<< Updated upstream
       { std::list<pform_range_t>*range_stub = make_range_from_width(64);
+=======
+      { list<pform_range_t>*range_stub = make_range_from_width(64);
+>>>>>>> Stashed changes
 	vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_LOGIC, false,
 						   range_stub, $3);
 	$$ = tmp;
@@ -2391,7 +2862,11 @@ tf_port_declaration /* IEEE1800-2005: A.2.7 */
   /* Ports can be real or realtime. */
 
   | port_direction real_or_realtime list_of_identifiers ';'
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_REAL, true,
+=======
+      { vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_REAL, true,
+>>>>>>> Stashed changes
 						   0, $3);
 	$$ = tmp;
       }
@@ -2400,7 +2875,11 @@ tf_port_declaration /* IEEE1800-2005: A.2.7 */
   /* Ports can be string. */
 
   | port_direction K_string list_of_identifiers ';'
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_STRING, true,
+=======
+      { vector<pform_tf_port_t>*tmp = pform_make_task_ports(@1, $1, IVL_VT_STRING, true,
+>>>>>>> Stashed changes
 						   0, $3);
 	$$ = tmp;
       }
@@ -2419,7 +2898,11 @@ tf_port_declaration /* IEEE1800-2005: A.2.7 */
 tf_port_item /* IEEE1800-2005: A.2.7 */
 
   : port_direction_opt data_type_or_implicit IDENTIFIER dimensions_opt tf_port_item_expr_opt
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp;
+=======
+      { vector<pform_tf_port_t>*tmp;
+>>>>>>> Stashed changes
 	NetNet::PortType use_port_type = $1;
         if ((use_port_type == NetNet::PIMPLICIT) && (gn_system_verilog() || ($2 == 0)))
               use_port_type = port_declaration_context.port_type;
@@ -2454,8 +2937,15 @@ tf_port_item /* IEEE1800-2005: A.2.7 */
 	      tmp = pform_make_task_ports(@3, use_port_type, $2, ilist);
 	}
 	if ($4 != 0) {
+<<<<<<< Updated upstream
 	      if (pform_requires_sv(@4, "Task/function port with unpacked dimensions")) {
 		    pform_set_reg_idx(name, $4);
+=======
+	      if (gn_system_verilog()) {
+		    pform_set_reg_idx(name, $4);
+	      } else {
+		    yyerror(@4, "error: Task/function port with unpacked dimensions requires SystemVerilog.");
+>>>>>>> Stashed changes
 	      }
 	}
 
@@ -2479,7 +2969,14 @@ tf_port_item /* IEEE1800-2005: A.2.7 */
 
 tf_port_item_expr_opt
   : '=' expression
+<<<<<<< Updated upstream
       { pform_requires_sv(@$, "Task/function default argument");
+=======
+      { if (! gn_system_verilog()) {
+	      yyerror(@1, "error: Task/function default arguments require "
+	                  "SystemVerilog.");
+	}
+>>>>>>> Stashed changes
 	$$ = $2;
       }
   |   { $$ = 0; }
@@ -2495,7 +2992,11 @@ tf_port_list /* IEEE1800-2005: A.2.7 */
 
 tf_port_item_list
   : tf_port_item_list ',' tf_port_item
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp;
+=======
+      { vector<pform_tf_port_t>*tmp;
+>>>>>>> Stashed changes
 	if ($1 && $3) {
 	      size_t s1 = $1->size();
 	      tmp = $1;
@@ -2559,7 +3060,11 @@ value_range /* IEEE1800-2005: A.8.3 */
 
 variable_dimension /* IEEE1800-2005: A.2.5 */
   : '[' expression ':' expression ']'
+<<<<<<< Updated upstream
       { std::list<pform_range_t> *tmp = new std::list<pform_range_t>;
+=======
+      { list<pform_range_t> *tmp = new list<pform_range_t>;
+>>>>>>> Stashed changes
 	pform_range_t index ($2,$4);
 	tmp->push_back(index);
 	$$ = tmp;
@@ -2571,31 +3076,59 @@ variable_dimension /* IEEE1800-2005: A.2.5 */
 	      cerr << @2 << ": warning: Use of SystemVerilog [size] dimension. "
 		   << "Use at least -g2005-sv to remove this warning." << endl;
 	}
+<<<<<<< Updated upstream
 	list<pform_range_t> *tmp = new std::list<pform_range_t>;
+=======
+	list<pform_range_t> *tmp = new list<pform_range_t>;
+>>>>>>> Stashed changes
 	pform_range_t index ($2,0);
 	tmp->push_back(index);
 	$$ = tmp;
       }
   | '[' ']'
+<<<<<<< Updated upstream
       { std::list<pform_range_t> *tmp = new std::list<pform_range_t>;
 	pform_range_t index (0,0);
 	pform_requires_sv(@$, "Dynamic array declaration");
+=======
+      { list<pform_range_t> *tmp = new list<pform_range_t>;
+	pform_range_t index (0,0);
+	if (!gn_system_verilog()) {
+	      yyerror("error: Dynamic array declaration require SystemVerilog.");
+	}
+>>>>>>> Stashed changes
 	tmp->push_back(index);
 	$$ = tmp;
       }
   | '[' '$' ']'
       { // SystemVerilog queue
+<<<<<<< Updated upstream
 	list<pform_range_t> *tmp = new std::list<pform_range_t>;
 	pform_range_t index (new PENull,0);
 	pform_requires_sv(@$, "Queue declaration");
+=======
+	list<pform_range_t> *tmp = new list<pform_range_t>;
+	pform_range_t index (new PENull,0);
+	if (!gn_system_verilog()) {
+	      yyerror("error: Queue declaration require SystemVerilog.");
+	}
+>>>>>>> Stashed changes
 	tmp->push_back(index);
 	$$ = tmp;
       }
   | '[' '$' ':' expression ']'
       { // SystemVerilog queue with a max size
+<<<<<<< Updated upstream
 	list<pform_range_t> *tmp = new std::list<pform_range_t>;
 	pform_range_t index (new PENull,$4);
 	pform_requires_sv(@$, "Queue declaration");
+=======
+	list<pform_range_t> *tmp = new list<pform_range_t>;
+	pform_range_t index (new PENull,$4);
+	if (!gn_system_verilog()) {
+	      yyerror("error: Queue declarations require SystemVerilog.");
+	}
+>>>>>>> Stashed changes
 	tmp->push_back(index);
 	$$ = tmp;
       }
@@ -2603,8 +3136,15 @@ variable_dimension /* IEEE1800-2005: A.2.5 */
 
 variable_lifetime
   : lifetime
+<<<<<<< Updated upstream
       { if (pform_requires_sv(@1, "Overriding default variable lifetime") &&
 	    $1 != pform_peek_scope()->default_lifetime) {
+=======
+      { if (!gn_system_verilog()) {
+	      yyerror(@1, "error: overriding the default variable lifetime "
+			  "requires SystemVerilog.");
+	} else if ($1 != pform_peek_scope()->default_lifetime) {
+>>>>>>> Stashed changes
 	      yyerror(@1, "sorry: overriding the default variable lifetime "
 			  "is not yet supported.");
 	}
@@ -2627,7 +3167,11 @@ attribute_instance_list
   | K_PSTAR attribute_list K_STARP { $$ = $2; }
   | attribute_instance_list K_PSTAR K_STARP { $$ = $1; }
   | attribute_instance_list K_PSTAR attribute_list K_STARP
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = $1;
+=======
+      { list<named_pexpr_t>*tmp = $1;
+>>>>>>> Stashed changes
 	if (tmp) {
 	    tmp->splice(tmp->end(), *$3);
 	    delete $3;
@@ -2638,13 +3182,21 @@ attribute_instance_list
 
 attribute_list
   : attribute_list ',' attribute
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = $1;
+=======
+      { list<named_pexpr_t>*tmp = $1;
+>>>>>>> Stashed changes
         tmp->push_back(*$3);
 	delete $3;
 	$$ = tmp;
       }
   | attribute
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = new std::list<named_pexpr_t>;
+=======
+      { list<named_pexpr_t>*tmp = new list<named_pexpr_t>;
+>>>>>>> Stashed changes
         tmp->push_back(*$1);
 	delete $1;
 	$$ = tmp;
@@ -2704,7 +3256,12 @@ block_item_decl
       { if ($2) pform_make_events($2, @1.text, @1.first_line);
       }
 
+<<<<<<< Updated upstream
   | parameter_or_localparam param_type parameter_assign_list ';'
+=======
+  | K_parameter param_type parameter_assign_list ';'
+  | K_localparam param_type localparam_assign_list ';'
+>>>>>>> Stashed changes
 
   /* Blocks can have type declarations. */
 
@@ -2727,11 +3284,19 @@ block_item_decl
 	yyerrok;
       }
 
+<<<<<<< Updated upstream
   | parameter error ';'
       { yyerror(@1, "error: syntax error in parameter list.");
 	yyerrok;
       }
   | localparam error ';'
+=======
+  | K_parameter error ';'
+      { yyerror(@1, "error: syntax error in parameter list.");
+	yyerrok;
+      }
+  | K_localparam error ';'
+>>>>>>> Stashed changes
       { yyerror(@1, "error: syntax error localparam list.");
 	yyerrok;
       }
@@ -2809,15 +3374,24 @@ type_declaration
      for an optional base type. The default base type is "int", but it
      can be any of the integral or vector types. */
 
+<<<<<<< Updated upstream
 enum_base_type /* IEEE 1800-2012 A.2.2.1 */
   :
       { enum_type_t*enum_type = new enum_type_t;
+=======
+enum_data_type
+  : K_enum '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($3);
+>>>>>>> Stashed changes
 	enum_type->base_type = IVL_VT_BOOL;
 	enum_type->signed_flag = true;
 	enum_type->integer_flag = false;
 	enum_type->range.reset(make_range_from_width(32));
 	$$ = enum_type;
       }
+<<<<<<< Updated upstream
   | atom2_type signed_unsigned_opt
       { enum_type_t*enum_type = new enum_type_t;
 	enum_type->base_type = IVL_VT_BOOL;
@@ -2830,10 +3404,29 @@ enum_base_type /* IEEE 1800-2012 A.2.2.1 */
       { enum_type_t*enum_type = new enum_type_t;
 	enum_type->base_type = IVL_VT_LOGIC;
 	enum_type->signed_flag = $2;
+=======
+  | K_enum atom2_type signed_unsigned_opt '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($5);
+	enum_type->base_type = IVL_VT_BOOL;
+	enum_type->signed_flag = $3;
+	enum_type->integer_flag = false;
+	enum_type->range.reset(make_range_from_width($2));
+	$$ = enum_type;
+      }
+  | K_enum K_integer signed_unsigned_opt '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($5);
+	enum_type->base_type = IVL_VT_LOGIC;
+	enum_type->signed_flag = $3;
+>>>>>>> Stashed changes
 	enum_type->integer_flag = true;
 	enum_type->range.reset(make_range_from_width(integer_width));
 	$$ = enum_type;
       }
+<<<<<<< Updated upstream
   | integer_vector_type unsigned_signed_opt dimensions_opt
       { ivl_variable_type_t use_vtype = $1;
 	if (use_vtype == IVL_VT_NO_TYPE)
@@ -2854,6 +3447,36 @@ enum_data_type /* IEEE 1800-2012 A.2.2.1 */
 	FILE_NAME(enum_type, @1);
 	enum_type->names.reset($4);
 	pform_put_enum_type_in_scope(enum_type);
+=======
+  | K_enum K_logic unsigned_signed_opt dimensions_opt '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($6);
+	enum_type->base_type = IVL_VT_LOGIC;
+	enum_type->signed_flag = $3;
+	enum_type->integer_flag = false;
+	enum_type->range.reset($4 ? $4 : make_range_from_width(1));
+	$$ = enum_type;
+      }
+  | K_enum K_reg unsigned_signed_opt dimensions_opt '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($6);
+	enum_type->base_type = IVL_VT_LOGIC;
+	enum_type->signed_flag = $3;
+	enum_type->integer_flag = false;
+	enum_type->range.reset($4 ? $4 : make_range_from_width(1));
+	$$ = enum_type;
+      }
+  | K_enum K_bit unsigned_signed_opt dimensions_opt '{' enum_name_list '}'
+      { enum_type_t*enum_type = new enum_type_t;
+	FILE_NAME(enum_type, @1);
+	enum_type->names .reset($6);
+	enum_type->base_type = IVL_VT_BOOL;
+	enum_type->signed_flag = $3;
+	enum_type->integer_flag = false;
+	enum_type->range.reset($4 ? $4 : make_range_from_width(1));
+>>>>>>> Stashed changes
 	$$ = enum_type;
       }
   ;
@@ -2863,7 +3486,11 @@ enum_name_list
       { $$ = $1;
       }
   | enum_name_list ',' enum_name
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*lst = $1;
+=======
+      { list<named_pexpr_t>*lst = $1;
+>>>>>>> Stashed changes
 	lst->splice(lst->end(), *$3);
 	delete $3;
 	$$ = lst;
@@ -2924,6 +3551,7 @@ enum_name
       }
   ;
 
+<<<<<<< Updated upstream
 /* `signed` and `unsigned` are only valid if preceded by `packed` */
 packed_signing /* IEEE 1800-2012 A.2.2.1 */
   : K_packed unsigned_signed_opt
@@ -2942,36 +3570,66 @@ struct_data_type /* IEEE 1800-2012 A.2.2.1 */
 	FILE_NAME(tmp, @1);
 	tmp->packed_flag = $2.packed_flag;
 	tmp->signed_flag = $2.signed_flag;
+=======
+struct_data_type
+  : K_struct K_packed_opt '{' struct_union_member_list '}'
+      { struct_type_t*tmp = new struct_type_t;
+	FILE_NAME(tmp, @1);
+	tmp->packed_flag = $2;
+>>>>>>> Stashed changes
 	tmp->union_flag = false;
 	tmp->members .reset($4);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
   | K_union packed_signing '{' struct_union_member_list '}'
       { struct_type_t*tmp = new struct_type_t;
 	FILE_NAME(tmp, @1);
 	tmp->packed_flag = $2.packed_flag;
 	tmp->signed_flag = $2.signed_flag;
+=======
+  | K_union K_packed_opt '{' struct_union_member_list '}'
+      { struct_type_t*tmp = new struct_type_t;
+	FILE_NAME(tmp, @1);
+	tmp->packed_flag = $2;
+>>>>>>> Stashed changes
 	tmp->union_flag = true;
 	tmp->members .reset($4);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
   | K_struct packed_signing '{' error '}'
+=======
+  | K_struct K_packed_opt '{' error '}'
+>>>>>>> Stashed changes
       { yyerror(@3, "error: Errors in struct member list.");
 	yyerrok;
 	struct_type_t*tmp = new struct_type_t;
 	FILE_NAME(tmp, @1);
+<<<<<<< Updated upstream
 	tmp->packed_flag = $2.packed_flag;
 	tmp->signed_flag = $2.signed_flag;
 	tmp->union_flag = false;
 	$$ = tmp;
       }
   | K_union packed_signing '{' error '}'
+=======
+	tmp->packed_flag = $2;
+	tmp->union_flag = false;
+	$$ = tmp;
+      }
+  | K_union K_packed_opt '{' error '}'
+>>>>>>> Stashed changes
       { yyerror(@3, "error: Errors in union member list.");
 	yyerrok;
 	struct_type_t*tmp = new struct_type_t;
 	FILE_NAME(tmp, @1);
+<<<<<<< Updated upstream
 	tmp->packed_flag = $2.packed_flag;
 	tmp->signed_flag = $2.signed_flag;
+=======
+	tmp->packed_flag = $2;
+>>>>>>> Stashed changes
 	tmp->union_flag = true;
 	$$ = tmp;
       }
@@ -2983,6 +3641,7 @@ struct_data_type /* IEEE 1800-2012 A.2.2.1 */
      in IEEE 1800-2012 A.2.2.1. */
 struct_union_member_list
   : struct_union_member_list struct_union_member
+<<<<<<< Updated upstream
       { std::list<struct_member_t*>*tmp = $1;
 	if ($2) tmp->push_back($2);
 	$$ = tmp;
@@ -2990,6 +3649,15 @@ struct_union_member_list
   | struct_union_member
       { std::list<struct_member_t*>*tmp = new std::list<struct_member_t*>;
 	if ($1) tmp->push_back($1);
+=======
+      { list<struct_member_t*>*tmp = $1;
+	tmp->push_back($2);
+	$$ = tmp;
+      }
+  | struct_union_member
+      { list<struct_member_t*>*tmp = new list<struct_member_t*>;
+	tmp->push_back($1);
+>>>>>>> Stashed changes
 	$$ = tmp;
       }
   ;
@@ -3076,12 +3744,20 @@ defparam_assign_list
 
 delay1
 	: '#' delay_value_simple
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($2);
 		  $$ = tmp;
 		}
 	| '#' '(' delay_value ')'
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = tmp;
 		}
@@ -3089,23 +3765,39 @@ delay1
 
 delay3
 	: '#' delay_value_simple
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($2);
 		  $$ = tmp;
 		}
 	| '#' '(' delay_value ')'
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = tmp;
 		}
 	| '#' '(' delay_value ',' delay_value ')'
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  tmp->push_back($5);
 		  $$ = tmp;
 		}
 	| '#' '(' delay_value ',' delay_value ',' delay_value ')'
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+		{ list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  tmp->push_back($5);
 		  tmp->push_back($7);
@@ -3120,12 +3812,20 @@ delay3_opt
 
 delay_value_list
   : delay_value
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 	tmp->push_back($1);
 	$$ = tmp;
       }
   | delay_value_list ',' delay_value
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back($3);
 	$$ = tmp;
       }
@@ -3639,12 +4339,21 @@ expression
 	FILE_NAME(tmp, @2);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
+=======
+/*
+  FIXME: This creates shift/reduce issues that need to be solved
+>>>>>>> Stashed changes
   | expression K_TRIGGER attribute_list_opt expression
       { PEBinary*tmp = new PEBLogic('q', $1, $4);
 	FILE_NAME(tmp, @2);
 	$$ = tmp;
       }
+<<<<<<< Updated upstream
 
+=======
+*/
+>>>>>>> Stashed changes
   | expression K_LEQUIV attribute_list_opt expression
       { PEBinary*tmp = new PEBLogic('Q', $1, $4);
 	FILE_NAME(tmp, @2);
@@ -3708,22 +4417,38 @@ expr_mintypmax
 
 expression_list_with_nuls
   : expression_list_with_nuls ',' expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
 	if (tmp->empty()) tmp->push_back(0);
 	tmp->push_back($3);
 	$$ = tmp;
       }
   | expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 	tmp->push_back($1);
 	$$ = tmp;
       }
   |
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
 	$$ = tmp;
       }
   | expression_list_with_nuls ','
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+	$$ = tmp;
+      }
+  | expression_list_with_nuls ','
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
 	if (tmp->empty()) tmp->push_back(0);
 	tmp->push_back(0);
 	$$ = tmp;
@@ -3732,12 +4457,20 @@ expression_list_with_nuls
 
 expression_list_proper
   : expression_list_proper ',' expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
         tmp->push_back($3);
         $$ = tmp;
       }
   | expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 	tmp->push_back($1);
 	$$ = tmp;
       }
@@ -3748,10 +4481,19 @@ expr_primary_or_typename
 
   /* There are a few special cases (notably $bits argument) where the
      expression may be a type name. Let the elaborator sort this out. */
+<<<<<<< Updated upstream
   | data_type
       { PETypename*tmp = new PETypename($1);
 	FILE_NAME(tmp, @1);
 	$$ = tmp;
+=======
+  | TYPE_IDENTIFIER
+      { pform_set_type_referenced(@1, $1.text);
+	PETypename*tmp = new PETypename($1.type);
+	FILE_NAME(tmp,@1);
+	$$ = tmp;
+	delete[]$1.text;
+>>>>>>> Stashed changes
       }
 
   ;
@@ -3858,7 +4600,11 @@ expr_primary
      call. It can also be a call to a class method (function). */
 
   | hierarchy_identifier attribute_list_opt '(' expression_list_with_nuls ')'
+<<<<<<< Updated upstream
       { std::list<PExpr*>*expr_list = $4;
+=======
+      { list<PExpr*>*expr_list = $4;
+>>>>>>> Stashed changes
 	strip_tail_items(expr_list);
 	PECallFunction*tmp = pform_make_call_function(@1, *$1, *expr_list);
 	delete $1;
@@ -3894,12 +4640,22 @@ expr_primary
       }
   | SYSTEM_IDENTIFIER '('  ')'
       { perm_string tn = lex_strings.make($1);
+<<<<<<< Updated upstream
 	const std::vector<PExpr*>empty;
+=======
+	const vector<PExpr*>empty;
+>>>>>>> Stashed changes
 	PECallFunction*tmp = new PECallFunction(tn, empty);
 	FILE_NAME(tmp, @1);
 	delete[]$1;
 	$$ = tmp;
+<<<<<<< Updated upstream
 	pform_requires_sv(@1, "Empty function argument list");
+=======
+	if (!gn_system_verilog()) {
+	      yyerror(@1, "error: Empty function argument list requires SystemVerilog.");
+	}
+>>>>>>> Stashed changes
       }
 
   | implicit_class_handle
@@ -4128,7 +4884,11 @@ expr_primary
   | '{' '}'
       { // This is the empty queue syntax.
 	if (gn_system_verilog()) {
+<<<<<<< Updated upstream
 	      std::list<PExpr*> empty_list;
+=======
+	      list<PExpr*> empty_list;
+>>>>>>> Stashed changes
 	      PEConcat*tmp = new PEConcat(empty_list);
 	      FILE_NAME(tmp, @1);
 	      $$ = tmp;
@@ -4142,22 +4902,38 @@ expr_primary
 
   | expr_primary '\'' '(' expression ')'
       { PExpr*base = $4;
+<<<<<<< Updated upstream
 	if (pform_requires_sv(@1, "Size cast")) {
+=======
+	if (gn_system_verilog()) {
+>>>>>>> Stashed changes
 	      PECastSize*tmp = new PECastSize($1, base);
 	      FILE_NAME(tmp, @1);
 	      $$ = tmp;
 	} else {
+<<<<<<< Updated upstream
+=======
+	      yyerror(@1, "error: Size cast requires SystemVerilog.");
+>>>>>>> Stashed changes
 	      $$ = base;
 	}
       }
 
   | simple_type_or_string '\'' '(' expression ')'
       { PExpr*base = $4;
+<<<<<<< Updated upstream
 	if (pform_requires_sv(@1, "Type cast")) {
+=======
+	if (gn_system_verilog()) {
+>>>>>>> Stashed changes
 	      PECastType*tmp = new PECastType($1, base);
 	      FILE_NAME(tmp, @1);
 	      $$ = tmp;
 	} else {
+<<<<<<< Updated upstream
+=======
+	      yyerror(@1, "error: Type cast requires SystemVerilog.");
+>>>>>>> Stashed changes
 	      $$ = base;
 	}
       }
@@ -4194,7 +4970,11 @@ function_item_list
   | function_item_list function_item
       { /* */
 	if ($1 && $2) {
+<<<<<<< Updated upstream
 	      std::vector<pform_tf_port_t>*tmp = $1;
+=======
+	      vector<pform_tf_port_t>*tmp = $1;
+>>>>>>> Stashed changes
 	      size_t s1 = tmp->size();
 	      tmp->resize(s1 + $2->size());
 	      for (size_t idx = 0 ; idx < $2->size() ; idx += 1)
@@ -4219,6 +4999,7 @@ function_item
   /* A gate_instance is a module instantiation or a built in part
      type. In any case, the gate has a set of connections to ports. */
 gate_instance
+<<<<<<< Updated upstream
   : IDENTIFIER '(' port_conn_expression_list_with_nuls ')'
       { lgate*tmp = new lgate;
 	tmp->name = $1;
@@ -4248,11 +5029,47 @@ gate_instance
 	tmp->lineno = @1.first_line;
 	$$ = tmp;
       }
+=======
+	: IDENTIFIER '(' port_conn_expression_list_with_nuls ')'
+		{ lgate*tmp = new lgate;
+		  tmp->name = $1;
+		  tmp->parms = $3;
+		  tmp->file  = @1.text;
+		  tmp->lineno = @1.first_line;
+		  delete[]$1;
+		  $$ = tmp;
+		}
+
+  | IDENTIFIER dimensions '(' port_conn_expression_list_with_nuls ')'
+      { lgate*tmp = new lgate;
+	list<pform_range_t>*rng = $2;
+	tmp->name = $1;
+	tmp->parms = $4;
+	tmp->range = rng->front();
+	rng->pop_front();
+	assert(rng->empty());
+	tmp->file  = @1.text;
+	tmp->lineno = @1.first_line;
+	delete[]$1;
+	delete rng;
+	$$ = tmp;
+      }
+
+	| '(' port_conn_expression_list_with_nuls ')'
+		{ lgate*tmp = new lgate;
+		  tmp->name = "";
+		  tmp->parms = $2;
+		  tmp->file  = @1.text;
+		  tmp->lineno = @1.first_line;
+		  $$ = tmp;
+		}
+>>>>>>> Stashed changes
 
   /* Degenerate modules can have no ports. */
 
   | IDENTIFIER dimensions
       { lgate*tmp = new lgate;
+<<<<<<< Updated upstream
 	tmp->name = $1;
 	tmp->parms = 0;
 	tmp->parms_by_name = 0;
@@ -4260,6 +5077,19 @@ gate_instance
 	tmp->file  = @1.text;
 	tmp->lineno = @1.first_line;
 	delete[]$1;
+=======
+	list<pform_range_t>*rng = $2;
+	tmp->name = $1;
+	tmp->parms = 0;
+	tmp->parms_by_name = 0;
+	tmp->range = rng->front();
+	rng->pop_front();
+	assert(rng->empty());
+	tmp->file  = @1.text;
+	tmp->lineno = @1.first_line;
+	delete[]$1;
+	delete rng;
+>>>>>>> Stashed changes
 	$$ = tmp;
       }
 
@@ -4278,6 +5108,7 @@ gate_instance
 
   | IDENTIFIER dimensions '(' port_name_list ')'
       { lgate*tmp = new lgate;
+<<<<<<< Updated upstream
 	tmp->name = $1;
 	tmp->parms = 0;
 	tmp->parms_by_name = $4;
@@ -4332,6 +5163,65 @@ gate_instance_list
 	$$ = tmp;
       }
   ;
+=======
+	list<pform_range_t>*rng = $2;
+	tmp->name = $1;
+	tmp->parms = 0;
+	tmp->parms_by_name = $4;
+	tmp->range = rng->front();
+	rng->pop_front();
+	assert(rng->empty());
+	tmp->file  = @1.text;
+	tmp->lineno = @1.first_line;
+	delete[]$1;
+	delete rng;
+	$$ = tmp;
+      }
+
+	| IDENTIFIER '(' error ')'
+		{ lgate*tmp = new lgate;
+		  tmp->name = $1;
+		  tmp->parms = 0;
+		  tmp->parms_by_name = 0;
+		  tmp->file  = @1.text;
+		  tmp->lineno = @1.first_line;
+		  yyerror(@2, "error: Syntax error in instance port "
+			  "expression(s).");
+		  delete[]$1;
+		  $$ = tmp;
+		}
+
+	| IDENTIFIER dimensions '(' error ')'
+		{ lgate*tmp = new lgate;
+		  tmp->name = $1;
+		  tmp->parms = 0;
+		  tmp->parms_by_name = 0;
+		  tmp->file  = @1.text;
+		  tmp->lineno = @1.first_line;
+		  yyerror(@3, "error: Syntax error in instance port "
+			  "expression(s).");
+		  delete[]$1;
+		  $$ = tmp;
+		}
+	;
+
+gate_instance_list
+	: gate_instance_list ',' gate_instance
+		{ svector<lgate>*tmp1 = $1;
+		  lgate*tmp2 = $3;
+		  svector<lgate>*out = new svector<lgate> (*tmp1, *tmp2);
+		  delete tmp1;
+		  delete tmp2;
+		  $$ = out;
+		}
+	| gate_instance
+		{ svector<lgate>*tmp = new svector<lgate>(1);
+		  (*tmp)[0] = *$1;
+		  delete $1;
+		  $$ = tmp;
+		}
+	;
+>>>>>>> Stashed changes
 
 gatetype
 	: K_and  { $$ = PGBuiltin::AND; }
@@ -4391,9 +5281,18 @@ hierarchy_identifier
 	  $$ = tmp;
 	}
     | hierarchy_identifier '[' '$' ']'
+<<<<<<< Updated upstream
         { pform_requires_sv(@3, "Last element expression ($)");
           pform_name_t * tmp = $1;
 	  name_component_t&tail = tmp->back();
+=======
+        { pform_name_t * tmp = $1;
+	  name_component_t&tail = tmp->back();
+	  if (! gn_system_verilog()) {
+		yyerror(@3, "error: Last element expression ($) "
+			"requires SystemVerilog. Try enabling SystemVerilog.");
+	  }
+>>>>>>> Stashed changes
 	  index_component_t itmp;
 	  itmp.sel = index_component_t::SEL_BIT_LAST;
 	  itmp.msb = 0;
@@ -4480,13 +5379,22 @@ list_of_variable_port_identifiers
 
 list_of_ports
 	: port_opt
+<<<<<<< Updated upstream
 		{ std::vector<Module::port_t*>*tmp
 			  = new std::vector<Module::port_t*>(1);
+=======
+		{ vector<Module::port_t*>*tmp
+			  = new vector<Module::port_t*>(1);
+>>>>>>> Stashed changes
 		  (*tmp)[0] = $1;
 		  $$ = tmp;
 		}
 	| list_of_ports ',' port_opt
+<<<<<<< Updated upstream
 	        { std::vector<Module::port_t*>*tmp = $1;
+=======
+	        { vector<Module::port_t*>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = tmp;
 		}
@@ -4494,13 +5402,22 @@ list_of_ports
 
 list_of_port_declarations
 	: port_declaration
+<<<<<<< Updated upstream
 		{ std::vector<Module::port_t*>*tmp
 			  = new std::vector<Module::port_t*>(1);
+=======
+		{ vector<Module::port_t*>*tmp
+			  = new vector<Module::port_t*>(1);
+>>>>>>> Stashed changes
 		  (*tmp)[0] = $1;
 		  $$ = tmp;
 		}
 	| list_of_port_declarations ',' port_declaration
+<<<<<<< Updated upstream
 	        { std::vector<Module::port_t*>*tmp = $1;
+=======
+	        { vector<Module::port_t*>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = tmp;
 		}
@@ -4509,7 +5426,11 @@ list_of_port_declarations
 		  perm_string name = lex_strings.make($3);
 		  ptmp = pform_module_port_reference(name, @3.text,
 						     @3.first_line);
+<<<<<<< Updated upstream
 		  std::vector<Module::port_t*>*tmp = $1;
+=======
+		  vector<Module::port_t*>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(ptmp);
 
 		    /* Get the port declaration details, the port type
@@ -4563,6 +5484,7 @@ port_declaration
 	delete[]$4;
 	$$ = ptmp;
       }
+<<<<<<< Updated upstream
   | attribute_list_opt K_input net_type_opt data_type_or_implicit IDENTIFIER '=' expression
       { pform_requires_sv(@6, "Default port value");
 	Module::port_t*ptmp;
@@ -4577,6 +5499,8 @@ port_declaration
 	delete[]$5;
 	$$ = ptmp;
       }
+=======
+>>>>>>> Stashed changes
   | attribute_list_opt K_inout net_type_opt data_type_or_implicit IDENTIFIER dimensions_opt
       { Module::port_t*ptmp;
 	perm_string name = lex_strings.make($5);
@@ -4688,6 +5612,7 @@ port_declaration
       }
   ;
 
+<<<<<<< Updated upstream
 
 
 net_type_opt
@@ -4793,6 +5718,113 @@ cont_assign_list
      section, with optional ports, then an optional list of module
      items, and finally an end marker. */
 
+=======
+
+
+net_type_opt
+	: net_type { $$ = $1; }
+	| { $$ = NetNet::IMPLICIT; }
+	;
+
+  /*
+   * The signed_opt rule will return "true" if K_signed is present,
+   * for "false" otherwise. This rule corresponds to the declaration
+   * defaults for reg/bit/logic.
+   *
+   * The signed_unsigned_opt rule with match K_signed or K_unsigned
+   * and return true or false as appropriate. The default is
+   * "true". This corresponds to the declaration defaults for
+   * byte/shortint/int/longint.
+   */
+unsigned_signed_opt
+  : K_signed   { $$ = true; }
+  | K_unsigned { $$ = false; }
+  |            { $$ = false; }
+  ;
+
+signed_unsigned_opt
+  : K_signed   { $$ = true; }
+  | K_unsigned { $$ = false; }
+  |            { $$ = true; }
+  ;
+
+  /*
+   * In some places we can take any of the 4 2-value atom-type
+   * names. All the context needs to know if that type is its width.
+   */
+atom2_type
+  : K_byte     { $$ = 8; }
+  | K_shortint { $$ = 16; }
+  | K_int      { $$ = 32; }
+  | K_longint  { $$ = 64; }
+  ;
+
+  /* An lpvalue is the expression that can go on the left side of a
+     procedural assignment. This rule handles only procedural
+     assignments. It is more limited than the general expr_primary
+     rule to reflect the rules for assignment l-values. */
+lpvalue
+  : hierarchy_identifier
+      { PEIdent*tmp = pform_new_ident(@1, *$1);
+	FILE_NAME(tmp, @1);
+	$$ = tmp;
+	delete $1;
+      }
+
+  | implicit_class_handle '.' hierarchy_identifier
+      { pform_name_t*t_name = $1;
+	while (!$3->empty()) {
+	      t_name->push_back($3->front());
+	      $3->pop_front();
+	}
+	PEIdent*tmp = new PEIdent(*t_name);
+	FILE_NAME(tmp, @1);
+	$$ = tmp;
+	delete $1;
+	delete $3;
+      }
+
+  | '{' expression_list_proper '}'
+      { PEConcat*tmp = new PEConcat(*$2);
+	FILE_NAME(tmp, @1);
+	delete $2;
+	$$ = tmp;
+      }
+
+  | streaming_concatenation
+      { yyerror(@1, "sorry: streaming concatenation not supported in l-values.");
+	$$ = 0;
+      }
+  ;
+
+
+  /* Continuous assignments have a list of individual assignments. */
+
+cont_assign
+  : lpvalue '=' expression
+      { list<PExpr*>*tmp = new list<PExpr*>;
+	tmp->push_back($1);
+	tmp->push_back($3);
+	$$ = tmp;
+      }
+  ;
+
+cont_assign_list
+  : cont_assign_list ',' cont_assign
+      { list<PExpr*>*tmp = $1;
+	tmp->splice(tmp->end(), *$3);
+	delete $3;
+	$$ = tmp;
+      }
+  | cont_assign
+      { $$ = $1; }
+  ;
+
+  /* This is the global structure of a module. A module is a start
+     section, with optional ports, then an optional list of module
+     items, and finally an end marker. */
+
+>>>>>>> Stashed changes
 module
   : attribute_list_opt module_start lifetime_opt IDENTIFIER
       { pform_startmodule(@2, $4, $2==K_program, $2==K_interface, $3, $1); }
@@ -4840,6 +5872,7 @@ module
 	}
 	pform_endmodule($4, in_celldefine, ucd);
       }
+<<<<<<< Updated upstream
     label_opt
       { // Last step: check any closing name. This is done late so
 	// that the parser can look ahead to detect the present
@@ -4858,6 +5891,38 @@ module
 	      break;
 	    default:
 	      break;
+=======
+    endlabel_opt
+      { // Last step: check any closing name. This is done late so
+	// that the parser can look ahead to detect the present
+	// endlabel_opt but still have the pform_endmodule() called
+	// early enough that the lexor can know we are outside the
+	// module.
+	if ($17) {
+	      if (strcmp($4,$17) != 0) {
+		    switch ($2) {
+			case K_module:
+			  yyerror(@17, "error: End label doesn't match "
+			               "module name.");
+			  break;
+			case K_program:
+			  yyerror(@17, "error: End label doesn't match "
+			               "program name.");
+			  break;
+			case K_interface:
+			  yyerror(@17, "error: End label doesn't match "
+			               "interface name.");
+			  break;
+			default:
+			  break;
+		    }
+	      }
+	      if (($2 == K_module) && (! gn_system_verilog())) {
+		    yyerror(@8, "error: Module end labels require "
+		                 "SystemVerilog.");
+	      }
+	      delete[]$17;
+>>>>>>> Stashed changes
 	}
 	delete[]$4;
       }
@@ -4880,7 +5945,11 @@ module_end
   | K_endinterface { $$ = K_interface; }
   ;
 
+<<<<<<< Updated upstream
 label_opt
+=======
+endlabel_opt
+>>>>>>> Stashed changes
   : ':' IDENTIFIER { $$ = $2; }
   |                { $$ = 0; }
   ;
@@ -4906,6 +5975,7 @@ module_port_list_opt
      that the port declarations may use them. */
 module_parameter_port_list_opt
   :
+<<<<<<< Updated upstream
   | '#' '('
     { pform_start_parameter_port_list(); }
     module_parameter_port_list
@@ -4939,6 +6009,27 @@ module_parameter_port_list
       }
     }
     parameter_assign
+=======
+  | '#' '(' module_parameter_port_list ')'
+  ;
+
+module_parameter_port_list
+  : K_parameter param_type parameter_assign
+  | K_localparam param_type localparam_assign
+      { if (!gn_system_verilog()) {
+	      yyerror(@1, "error: Local parameters in module parameter "
+			  "port lists requires SystemVerilog.");
+	}
+      }
+  | module_parameter_port_list ',' parameter_assign
+  | module_parameter_port_list ',' K_parameter param_type parameter_assign
+  | module_parameter_port_list ',' K_localparam param_type localparam_assign
+      { if (!gn_system_verilog()) {
+	      yyerror(@3, "error: Local parameters in module parameter "
+			  "port lists requires SystemVerilog.");
+	}
+      }
+>>>>>>> Stashed changes
   ;
 
 module_item
@@ -5319,7 +6410,11 @@ module_item
 	delete $3;
       }
   | SYSTEM_IDENTIFIER ';'
+<<<<<<< Updated upstream
       { std::list<PExpr*>pt;
+=======
+      { list<PExpr*>pt;
+>>>>>>> Stashed changes
 	pform_make_elab_task(@1, lex_strings.make($1), pt);
 	delete[]$1;
       }
@@ -5369,10 +6464,20 @@ module_item
 	yyerrok;
       }
 
+<<<<<<< Updated upstream
   | K_function error K_endfunction label_opt
       { yyerror(@1, "error: I give up on this function definition.");
 	if ($4) {
 	    pform_requires_sv(@4, "Function end label");
+=======
+  | K_function error K_endfunction endlabel_opt
+      { yyerror(@1, "error: I give up on this function definition.");
+	if ($4) {
+	    if (!gn_system_verilog()) {
+		  yyerror(@4, "error: Function end names require "
+		              "SystemVerilog.");
+	    }
+>>>>>>> Stashed changes
 	    delete[]$4;
 	}
 	yyerrok;
@@ -5407,12 +6512,20 @@ let_port_list_opt
 
 let_port_list
   : let_port_item
+<<<<<<< Updated upstream
       { std::list<PLet::let_port_t*>*tmp = new std::list<PLet::let_port_t*>;
+=======
+      { list<PLet::let_port_t*>*tmp = new list<PLet::let_port_t*>;
+>>>>>>> Stashed changes
 	tmp->push_back($1);
 	$$ = tmp;
       }
   | let_port_list ',' let_port_item
+<<<<<<< Updated upstream
       { std::list<PLet::let_port_t*>*tmp = $1;
+=======
+      { list<PLet::let_port_t*>*tmp = $1;
+>>>>>>> Stashed changes
         tmp->push_back($3);
         $$ = tmp;
       }
@@ -5492,7 +6605,11 @@ generate_item_list
   ;
 
 generate_item_list_opt
+<<<<<<< Updated upstream
   : { pform_generate_single_item = false; } generate_item_list
+=======
+  : generate_item_list
+>>>>>>> Stashed changes
   |
   ;
 
@@ -5503,6 +6620,7 @@ generate_item_list_opt
      only need to take note here of the scope name, if any. */
 
 generate_block
+<<<<<<< Updated upstream
   : { pform_generate_single_item = true; }
     module_item
     { pform_generate_single_item = false; }
@@ -5511,6 +6629,24 @@ generate_block
 	    pform_generate_block_name($2);
 	check_end_label(@5, "block", $2, $5);
 	delete[]$2;
+=======
+  : module_item
+  | K_begin generate_item_list_opt K_end
+  | K_begin ':' IDENTIFIER generate_item_list_opt K_end endlabel_opt
+      { pform_generate_block_name($3);
+	if ($6) {
+	      if (strcmp($3,$6) != 0) {
+		    yyerror(@6, "error: End label doesn't match "
+				"begin name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@6, "error: Begin end labels require "
+				"SystemVerilog.");
+	      }
+	      delete[]$6;
+	}
+	delete[]$3;
+>>>>>>> Stashed changes
       }
   ;
 
@@ -5567,6 +6703,7 @@ net_type
      with an assignment to para_data_type with the figured data type.
      This is used by parameter_assign, which is found to the right of
      the param_type in various rules. */
+<<<<<<< Updated upstream
 
 param_type : data_type_or_implicit { param_data_type = $1; }
 
@@ -5598,6 +6735,38 @@ parameter_assign
       { PExpr*tmp = $3;
 	pform_set_parameter(@1, lex_strings.make($1), param_is_local,
 			    param_data_type, tmp, $4);
+=======
+
+param_type : data_type_or_implicit { param_data_type = $1; }
+
+  /* parameter and localparam assignment lists are broken into
+     separate BNF so that I can call slightly different parameter
+     handling code. localparams parse the same as parameters, they
+     just behave differently when someone tries to override them. */
+
+parameter_assign_list
+  : parameter_assign
+  | parameter_assign_list ',' parameter_assign
+  ;
+
+localparam_assign_list
+  : localparam_assign
+  | localparam_assign_list ',' localparam_assign
+  ;
+
+parameter_assign
+  : IDENTIFIER '=' expression parameter_value_ranges_opt
+      { PExpr*tmp = $3;
+	pform_set_parameter(@1, lex_strings.make($1), param_data_type, tmp, $4);
+	delete[]$1;
+      }
+  ;
+
+localparam_assign
+  : IDENTIFIER '=' expression
+      { PExpr*tmp = $3;
+	pform_set_localparam(@1, lex_strings.make($1), param_data_type, tmp);
+>>>>>>> Stashed changes
 	delete[]$1;
       }
   ;
@@ -5668,7 +6837,11 @@ parameter_value_opt
 		  FILE_NAME(tmp, @1);
 
 		  struct parmvalue_t*lst = new struct parmvalue_t;
+<<<<<<< Updated upstream
 		  lst->by_order = new std::list<PExpr*>;
+=======
+		  lst->by_order = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  lst->by_order->push_back(tmp);
 		  lst->by_name = 0;
 		  $$ = lst;
@@ -5680,7 +6853,11 @@ parameter_value_opt
 		  FILE_NAME(tmp, @1);
 
 		  struct parmvalue_t*lst = new struct parmvalue_t;
+<<<<<<< Updated upstream
 		  lst->by_order = new std::list<PExpr*>;
+=======
+		  lst->by_order = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  lst->by_order->push_back(tmp);
 		  lst->by_name = 0;
 		  $$ = lst;
@@ -5713,13 +6890,21 @@ parameter_value_byname
 
 parameter_value_byname_list
   : parameter_value_byname
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = new std::list<named_pexpr_t>;
+=======
+      { list<named_pexpr_t>*tmp = new list<named_pexpr_t>;
+>>>>>>> Stashed changes
 	tmp->push_back(*$1);
 	delete $1;
 	$$ = tmp;
       }
   | parameter_value_byname_list ',' parameter_value_byname
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = $1;
+=======
+      { list<named_pexpr_t>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back(*$3);
 	delete $3;
 	$$ = tmp;
@@ -5831,13 +7016,21 @@ port_name
 
 port_name_list
   : port_name_list ',' port_name
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = $1;
+=======
+      { list<named_pexpr_t>*tmp = $1;
+>>>>>>> Stashed changes
         tmp->push_back(*$3);
 	delete $3;
 	$$ = tmp;
       }
   | port_name
+<<<<<<< Updated upstream
       { std::list<named_pexpr_t>*tmp = new std::list<named_pexpr_t>;
+=======
+      { list<named_pexpr_t>*tmp = new list<named_pexpr_t>;
+>>>>>>> Stashed changes
         tmp->push_back(*$1);
 	delete $1;
 	$$ = tmp;
@@ -5846,24 +7039,40 @@ port_name_list
 
 port_conn_expression_list_with_nuls
   : port_conn_expression_list_with_nuls ',' attribute_list_opt expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back($4);
 	delete $3;
 	$$ = tmp;
       }
   | attribute_list_opt expression
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 	tmp->push_back($2);
 	delete $1;
 	$$ = tmp;
       }
   |
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+      { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
         tmp->push_back(0);
 	$$ = tmp;
       }
   | port_conn_expression_list_with_nuls ','
+<<<<<<< Updated upstream
       { std::list<PExpr*>*tmp = $1;
+=======
+      { list<PExpr*>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back(0);
 	$$ = tmp;
       }
@@ -5907,7 +7116,10 @@ port_reference
 	  Module::port_t*ptmp = new Module::port_t;
 	  ptmp->name = perm_string();
 	  ptmp->expr.push_back(wtmp);
+<<<<<<< Updated upstream
 	  ptmp->default_value = 0;
+=======
+>>>>>>> Stashed changes
 
 	  delete[]$1;
 	  $$ = ptmp;
@@ -5931,7 +7143,10 @@ port_reference
 	  Module::port_t*ptmp = new Module::port_t;
 	  ptmp->name = perm_string();
 	  ptmp->expr.push_back(tmp);
+<<<<<<< Updated upstream
 	  ptmp->default_value = 0;
+=======
+>>>>>>> Stashed changes
 	  delete[]$1;
 	  $$ = ptmp;
 	}
@@ -5943,7 +7158,10 @@ port_reference
 	  FILE_NAME(wtmp, @1);
 	  ptmp->name = lex_strings.make($1);
 	  ptmp->expr.push_back(wtmp);
+<<<<<<< Updated upstream
 	  ptmp->default_value = 0;
+=======
+>>>>>>> Stashed changes
 	  delete[]$1;
 	  $$ = ptmp;
 	}
@@ -5971,7 +7189,11 @@ dimensions
   : variable_dimension
       { $$ = $1; }
   | dimensions variable_dimension
+<<<<<<< Updated upstream
       { std::list<pform_range_t> *tmp = $1;
+=======
+      { list<pform_range_t> *tmp = $1;
+>>>>>>> Stashed changes
 	if ($2) {
 	      tmp->splice(tmp->end(), *$2);
 	      delete $2;
@@ -6025,13 +7247,21 @@ register_variable
 
 register_variable_list
 	: register_variable
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		{ list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($1));
 		  $$ = tmp;
 		  delete[]$1;
 		}
 	| register_variable_list ',' register_variable
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = $1;
+=======
+		{ list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($3));
 		  $$ = tmp;
 		  delete[]$3;
@@ -6050,13 +7280,21 @@ net_variable
 
 net_variable_list
 	: net_variable
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		{ list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($1));
 		  $$ = tmp;
 		  delete[]$1;
 		}
 	| net_variable_list ',' net_variable
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = $1;
+=======
+		{ list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($3));
 		  $$ = tmp;
 		  delete[]$3;
@@ -6202,7 +7440,11 @@ specify_edge_path_decl
 	: specify_edge_path '=' '(' delay_value_list ')'
                 { $$ = pform_assign_path_delay($1, $4); }
 	| specify_edge_path '=' delay_value_simple
+<<<<<<< Updated upstream
                 { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+                { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = pform_assign_path_delay($1, tmp);
 		}
@@ -6239,7 +7481,11 @@ specify_simple_path_decl
 	: specify_simple_path '=' '(' delay_value_list ')'
                 { $$ = pform_assign_path_delay($1, $4); }
 	| specify_simple_path '=' delay_value_simple
+<<<<<<< Updated upstream
                 { std::list<PExpr*>*tmp = new std::list<PExpr*>;
+=======
+                { list<PExpr*>*tmp = new list<PExpr*>;
+>>>>>>> Stashed changes
 		  tmp->push_back($3);
 		  $$ = pform_assign_path_delay($1, tmp);
 		}
@@ -6265,7 +7511,11 @@ specify_simple_path
 
 specify_path_identifiers
 	: IDENTIFIER
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		{ list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($1));
 		  $$ = tmp;
 		  delete[]$1;
@@ -6276,7 +7526,11 @@ specify_path_identifiers
 				   "in path declarations. The declaration "
 				   "will be applied to the whole vector.");
 		  }
+<<<<<<< Updated upstream
 		  std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		  list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($1));
 		  $$ = tmp;
 		  delete[]$1;
@@ -6287,13 +7541,21 @@ specify_path_identifiers
 				   "in path declarations. The declaration "
 				   "will be applied to the whole vector.");
 		  }
+<<<<<<< Updated upstream
 		  std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		  list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($1));
 		  $$ = tmp;
 		  delete[]$1;
 		}
 	| specify_path_identifiers ',' IDENTIFIER
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = $1;
+=======
+		{ list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($3));
 		  $$ = tmp;
 		  delete[]$3;
@@ -6304,7 +7566,11 @@ specify_path_identifiers
 				   "in path declarations. The declaration "
 				   "will be applied to the whole vector.");
 		  }
+<<<<<<< Updated upstream
 		  std::list<perm_string>*tmp = $1;
+=======
+		  list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($3));
 		  $$ = tmp;
 		  delete[]$3;
@@ -6315,7 +7581,11 @@ specify_path_identifiers
 				   "in path declarations. The declaration "
 				   "will be applied to the whole vector.");
 		  }
+<<<<<<< Updated upstream
 		  std::list<perm_string>*tmp = $1;
+=======
+		  list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($3));
 		  $$ = tmp;
 		  delete[]$3;
@@ -6501,6 +7771,7 @@ statement_item /* This is roughly statement_item in the LRM */
      name. These are handled by pushing the scope name, then matching
      the declarations. The scope is popped at the end of the block. */
 
+<<<<<<< Updated upstream
   /* In SystemVerilog an unnamed block can contain variable declarations. */
   | K_begin label_opt
       { PBlock*tmp = pform_push_block_scope(@1, $2, PBlock::BL_SEQ);
@@ -6523,6 +7794,36 @@ statement_item /* This is roughly statement_item in the LRM */
     statement_or_null_list_opt K_end label_opt
       { PBlock*tmp;
 	if ($2 || $4) {
+=======
+  | K_begin K_end
+      { PBlock*tmp = new PBlock(PBlock::BL_SEQ);
+	FILE_NAME(tmp, @1);
+	$$ = tmp;
+      }
+  /* In SystemVerilog an unnamed block can contain variable declarations. */
+  | K_begin
+      { PBlock*tmp = pform_push_block_scope(@1, 0, PBlock::BL_SEQ);
+	current_block_stack.push(tmp);
+      }
+    block_item_decls_opt
+      { if ($3) {
+	    if (! gn_system_verilog()) {
+		  yyerror("error: Variable declaration in unnamed block "
+		          "requires SystemVerilog.");
+	    }
+	} else {
+	    /* If there are no declarations in the scope then just delete it. */
+	    pform_pop_scope();
+	    assert(! current_block_stack.empty());
+	    PBlock*tmp = current_block_stack.top();
+	    current_block_stack.pop();
+	    delete tmp;
+	}
+      }
+    statement_or_null_list K_end
+      { PBlock*tmp;
+	if ($3) {
+>>>>>>> Stashed changes
 	    pform_pop_scope();
 	    assert(! current_block_stack.empty());
 	    tmp = current_block_stack.top();
@@ -6531,10 +7832,40 @@ statement_item /* This is roughly statement_item in the LRM */
 	    tmp = new PBlock(PBlock::BL_SEQ);
 	    FILE_NAME(tmp, @1);
 	}
+<<<<<<< Updated upstream
 	if ($6) tmp->set_statement(*$6);
 	delete $6;
 	check_end_label(@8, "block", $2, $8);
 	delete[]$2;
+=======
+	if ($5) tmp->set_statement(*$5);
+	delete $5;
+	$$ = tmp;
+      }
+  | K_begin ':' IDENTIFIER
+      { PBlock*tmp = pform_push_block_scope(@1, $3, PBlock::BL_SEQ);
+	current_block_stack.push(tmp);
+      }
+    block_item_decls_opt
+    statement_or_null_list_opt K_end endlabel_opt
+      { pform_pop_scope();
+	assert(! current_block_stack.empty());
+	PBlock*tmp = current_block_stack.top();
+	current_block_stack.pop();
+	if ($6) tmp->set_statement(*$6);
+	delete $6;
+	if ($8) {
+	      if (strcmp($3,$8) != 0) {
+		    yyerror(@8, "error: End label doesn't match begin name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@8, "error: Begin end labels require "
+		                "SystemVerilog.");
+	      }
+	      delete[]$8;
+	}
+	delete[]$3;
+>>>>>>> Stashed changes
 	$$ = tmp;
       }
 
@@ -6543,6 +7874,7 @@ statement_item /* This is roughly statement_item in the LRM */
      need to do is remember that this is a parallel block so that the
      code generator can do the right thing. */
 
+<<<<<<< Updated upstream
   /* In SystemVerilog an unnamed block can contain variable declarations. */
   | K_fork label_opt
       { PBlock*tmp = pform_push_block_scope(@1, $2, PBlock::BL_PAR);
@@ -6566,10 +7898,41 @@ statement_item /* This is roughly statement_item in the LRM */
     statement_or_null_list_opt join_keyword label_opt
       { PBlock*tmp;
 	if ($2 || $4) {
+=======
+  | K_fork join_keyword
+      { PBlock*tmp = new PBlock($2);
+	FILE_NAME(tmp, @1);
+	$$ = tmp;
+      }
+  /* In SystemVerilog an unnamed block can contain variable declarations. */
+  | K_fork
+      { PBlock*tmp = pform_push_block_scope(@1, 0, PBlock::BL_PAR);
+	current_block_stack.push(tmp);
+      }
+    block_item_decls_opt
+      { if ($3) {
+	    if (! gn_system_verilog()) {
+		  yyerror("error: Variable declaration in unnamed block "
+		          "requires SystemVerilog.");
+	    }
+	} else {
+	    /* If there are no declarations in the scope then just delete it. */
+	    pform_pop_scope();
+	    assert(! current_block_stack.empty());
+	    PBlock*tmp = current_block_stack.top();
+	    current_block_stack.pop();
+	    delete tmp;
+	}
+      }
+    statement_or_null_list join_keyword
+      { PBlock*tmp;
+	if ($3) {
+>>>>>>> Stashed changes
 	    pform_pop_scope();
 	    assert(! current_block_stack.empty());
 	    tmp = current_block_stack.top();
 	    current_block_stack.pop();
+<<<<<<< Updated upstream
 	    tmp->set_join_type($7);
 	} else {
 	    tmp = new PBlock($7);
@@ -6579,6 +7942,41 @@ statement_item /* This is roughly statement_item in the LRM */
 	delete $6;
 	check_end_label(@8, "fork", $2, $8);
 	delete[]$2;
+=======
+	    tmp->set_join_type($6);
+	} else {
+	    tmp = new PBlock($6);
+	    FILE_NAME(tmp, @1);
+	}
+	if ($5) tmp->set_statement(*$5);
+	delete $5;
+	$$ = tmp;
+      }
+  | K_fork ':' IDENTIFIER
+      { PBlock*tmp = pform_push_block_scope(@1, $3, PBlock::BL_PAR);
+	current_block_stack.push(tmp);
+      }
+    block_item_decls_opt
+    statement_or_null_list_opt join_keyword endlabel_opt
+      { pform_pop_scope();
+        assert(! current_block_stack.empty());
+	PBlock*tmp = current_block_stack.top();
+	current_block_stack.pop();
+	tmp->set_join_type($7);
+	if ($6) tmp->set_statement(*$6);
+	delete $6;
+	if ($8) {
+	      if (strcmp($3,$8) != 0) {
+		    yyerror(@8, "error: End label doesn't match fork name");
+	      }
+	      if (! gn_system_verilog()) {
+		    yyerror(@8, "error: Fork end labels require "
+		                "SystemVerilog.");
+	      }
+	      delete[]$8;
+	}
+	delete[]$3;
+>>>>>>> Stashed changes
 	$$ = tmp;
       }
 
@@ -6819,7 +8217,11 @@ statement_item /* This is roughly statement_item in the LRM */
 		  $$ = tmp;
 		}
 	| SYSTEM_IDENTIFIER ';'
+<<<<<<< Updated upstream
 		{ std::list<PExpr*>pt;
+=======
+		{ list<PExpr*>pt;
+>>>>>>> Stashed changes
 		  PCallTask*tmp = new PCallTask(lex_strings.make($1), pt);
 		  FILE_NAME(tmp,@1);
 		  delete[]$1;
@@ -6836,7 +8238,13 @@ statement_item /* This is roughly statement_item in the LRM */
   | hierarchy_identifier K_with '{' constraint_block_item_list_opt '}' ';'
       { /* ....randomize with { <constraints> } */
 	if ($1 && peek_tail_name(*$1) == "randomize") {
+<<<<<<< Updated upstream
 	      if (pform_requires_sv(@2, "Randomize with constraint"))
+=======
+	      if (!gn_system_verilog())
+		    yyerror(@2, "error: Randomize with constraint requires SystemVerilog.");
+	      else
+>>>>>>> Stashed changes
 		    yyerror(@2, "sorry: Randomize with constraint not supported.");
 	} else {
 	      yyerror(@2, "error: Constraint block can only be applied to randomize method.");
@@ -6863,7 +8271,11 @@ statement_item /* This is roughly statement_item in the LRM */
       }
 
   | hierarchy_identifier ';'
+<<<<<<< Updated upstream
       { std::list<PExpr*>pt;
+=======
+      { list<PExpr*>pt;
+>>>>>>> Stashed changes
 	PCallTask*tmp = pform_make_call_task(@1, *$1, pt);
 	delete $1;
 	$$ = tmp;
@@ -6969,12 +8381,20 @@ statement_or_null_list_opt
 
 statement_or_null_list
   : statement_or_null_list statement_or_null
+<<<<<<< Updated upstream
       { std::vector<Statement*>*tmp = $1;
+=======
+      { vector<Statement*>*tmp = $1;
+>>>>>>> Stashed changes
 	if ($2) tmp->push_back($2);
 	$$ = tmp;
       }
   | statement_or_null
+<<<<<<< Updated upstream
       { std::vector<Statement*>*tmp = new std::vector<Statement*>(0);
+=======
+      { vector<Statement*>*tmp = new vector<Statement*>(0);
+>>>>>>> Stashed changes
 	if ($1) tmp->push_back($1);
 	$$ = tmp;
       }
@@ -6988,13 +8408,21 @@ analog_statement
   /* Task items are, other than the statement, task port items and
      other block items. */
 task_item
+<<<<<<< Updated upstream
   : block_item_decl  { $$ = new std::vector<pform_tf_port_t>(0); }
+=======
+  : block_item_decl  { $$ = new vector<pform_tf_port_t>(0); }
+>>>>>>> Stashed changes
   | tf_port_declaration   { $$ = $1; }
   ;
 
 task_item_list
   : task_item_list task_item
+<<<<<<< Updated upstream
       { std::vector<pform_tf_port_t>*tmp = $1;
+=======
+      { vector<pform_tf_port_t>*tmp = $1;
+>>>>>>> Stashed changes
 	size_t s1 = tmp->size();
 	tmp->resize(s1 + $2->size());
 	for (size_t idx = 0 ; idx < $2->size() ; idx += 1)
@@ -7180,7 +8608,11 @@ udp_port_decl
   | K_output IDENTIFIER ';'
       { perm_string pname = lex_strings.make($2);
 	PWire*pp = new PWire(pname, NetNet::IMPLICIT, NetNet::POUTPUT, IVL_VT_LOGIC);
+<<<<<<< Updated upstream
 	vector<PWire*>*tmp = new std::vector<PWire*>(1);
+=======
+	vector<PWire*>*tmp = new vector<PWire*>(1);
+>>>>>>> Stashed changes
 	(*tmp)[0] = pp;
 	$$ = tmp;
 	delete[]$2;
@@ -7188,7 +8620,11 @@ udp_port_decl
   | K_reg IDENTIFIER ';'
       { perm_string pname = lex_strings.make($2);
 	PWire*pp = new PWire(pname, NetNet::REG, NetNet::PIMPLICIT, IVL_VT_LOGIC);
+<<<<<<< Updated upstream
 	vector<PWire*>*tmp = new std::vector<PWire*>(1);
+=======
+	vector<PWire*>*tmp = new vector<PWire*>(1);
+>>>>>>> Stashed changes
 	(*tmp)[0] = pp;
 	$$ = tmp;
 	delete[]$2;
@@ -7196,7 +8632,11 @@ udp_port_decl
   | K_reg K_output IDENTIFIER ';'
       { perm_string pname = lex_strings.make($3);
 	PWire*pp = new PWire(pname, NetNet::REG, NetNet::POUTPUT, IVL_VT_LOGIC);
+<<<<<<< Updated upstream
 	vector<PWire*>*tmp = new std::vector<PWire*>(1);
+=======
+	vector<PWire*>*tmp = new vector<PWire*>(1);
+>>>>>>> Stashed changes
 	(*tmp)[0] = pp;
 	$$ = tmp;
 	delete[]$3;
@@ -7207,7 +8647,11 @@ udp_port_decls
   : udp_port_decl
       { $$ = $1; }
   | udp_port_decls udp_port_decl
+<<<<<<< Updated upstream
       { std::vector<PWire*>*tmp = $1;
+=======
+      { vector<PWire*>*tmp = $1;
+>>>>>>> Stashed changes
 	size_t s1 = $1->size();
 	tmp->resize(s1+$2->size());
 	for (size_t idx = 0 ; idx < $2->size() ; idx += 1)
@@ -7219,13 +8663,21 @@ udp_port_decls
 
 udp_port_list
   : IDENTIFIER
+<<<<<<< Updated upstream
       { std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+      { list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 	tmp->push_back(lex_strings.make($1));
 	delete[]$1;
 	$$ = tmp;
       }
   | udp_port_list ',' IDENTIFIER
+<<<<<<< Updated upstream
       { std::list<perm_string>*tmp = $1;
+=======
+      { list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 	tmp->push_back(lex_strings.make($3));
 	delete[]$3;
 	$$ = tmp;
@@ -7241,13 +8693,21 @@ udp_initial_expr_opt
 
 udp_input_declaration_list
         : K_input IDENTIFIER
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = new std::list<perm_string>;
+=======
+		{ list<perm_string>*tmp = new list<perm_string>;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($2));
 		  $$ = tmp;
 		  delete[]$2;
 		}
 	| udp_input_declaration_list ',' K_input IDENTIFIER
+<<<<<<< Updated upstream
 		{ std::list<perm_string>*tmp = $1;
+=======
+		{ list<perm_string>*tmp = $1;
+>>>>>>> Stashed changes
 		  tmp->push_back(lex_strings.make($4));
 		  $$ = tmp;
 		  delete[]$4;
@@ -7263,13 +8723,31 @@ udp_primitive
 	    udp_port_decls
 	    udp_init_opt
 	    udp_body
+<<<<<<< Updated upstream
 	  K_endprimitive label_opt
+=======
+	  K_endprimitive endlabel_opt
+>>>>>>> Stashed changes
 
 		{ perm_string tmp2 = lex_strings.make($2);
 		  pform_make_udp(tmp2, $4, $7, $9, $8,
 				 @2.text, @2.first_line);
+<<<<<<< Updated upstream
 
 		  check_end_label(@11, "primitive", $2, $11);
+=======
+		  if ($11) {
+			if (strcmp($2,$11) != 0) {
+			      yyerror(@11, "error: End label doesn't match "
+			                   "primitive name");
+			}
+			if (! gn_system_verilog()) {
+			      yyerror(@11, "error: Primitive end labels "
+			                   "require SystemVerilog.");
+			}
+			delete[]$11;
+		  }
+>>>>>>> Stashed changes
 		  delete[]$2;
 		}
 
@@ -7280,14 +8758,32 @@ udp_primitive
 	    '(' K_output udp_reg_opt IDENTIFIER udp_initial_expr_opt ','
 	    udp_input_declaration_list ')' ';'
 	    udp_body
+<<<<<<< Updated upstream
 	  K_endprimitive label_opt
+=======
+	  K_endprimitive endlabel_opt
+>>>>>>> Stashed changes
 
 		{ perm_string tmp2 = lex_strings.make($2);
 		  perm_string tmp6 = lex_strings.make($6);
 		  pform_make_udp(tmp2, $5, tmp6, $7, $9, $12,
 				 @2.text, @2.first_line);
+<<<<<<< Updated upstream
 
 		  check_end_label(@14, "primitive", $2, $14);
+=======
+		  if ($14) {
+			if (strcmp($2,$14) != 0) {
+			      yyerror(@14, "error: End label doesn't match "
+			                   "primitive name");
+			}
+			if (! gn_system_verilog()) {
+			      yyerror(@14, "error: Primitive end labels "
+			                   "require SystemVerilog.");
+			}
+			delete[]$14;
+		  }
+>>>>>>> Stashed changes
 		  delete[]$2;
 		  delete[]$6;
 		}
@@ -7305,6 +8801,10 @@ unique_priority
      collect those rules here. */
 
 K_genvar_opt   : K_genvar    { $$ = true; } | { $$ = false; } ;
+<<<<<<< Updated upstream
+=======
+K_packed_opt   : K_packed    { $$ = true; } | { $$ = false; } ;
+>>>>>>> Stashed changes
 K_reg_opt      : K_reg       { $$ = true; } | { $$ = false; } ;
 K_static_opt   : K_static    { $$ = true; } | { $$ = false; } ;
 K_virtual_opt  : K_virtual   { $$ = true; } | { $$ = false; } ;

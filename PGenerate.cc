@@ -21,6 +21,7 @@
 # include  "PWire.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
 PGenerate::PGenerate(LexicalScope*parent, unsigned id)
@@ -28,6 +29,13 @@ PGenerate::PGenerate(LexicalScope*parent, unsigned id)
 {
       scheme_type = GS_NONE;
       directly_nested = false;
+=======
+PGenerate::PGenerate(LexicalScope*parent, unsigned id)
+: LexicalScope(parent), id_number(id)
+{
+      direct_nested_ = false;
+      scheme_type = GS_NONE;
+>>>>>>> Stashed changes
       local_index = false;
       loop_init = 0;
       loop_test = 0;
@@ -43,6 +51,55 @@ void PGenerate::add_gate(PGate*gate)
       gates.push_back(gate);
 }
 
+<<<<<<< Updated upstream
+=======
+void PGenerate::probe_for_direct_nesting_(void)
+{
+      direct_nested_ = false;
+
+      ivl_assert(*this, scheme_type==GS_CASE_ITEM || scheme_type==GS_CONDIT || scheme_type==GS_ELSE);
+
+	// If this scheme has received an explicit name, then it
+	// cannot be direct nested.
+      if (scope_name[0] != '$') return;
+
+      if (! tasks.empty()) return;
+      if (! funcs.empty()) return;
+      if (! gates.empty()) return;
+      if (! parameters.empty()) return;
+      if (! localparams.empty()) return;
+      if (! events.empty()) return;
+      if (! wires.empty()) return;
+      if (! genvars.empty()) return;
+      if (! behaviors.empty()) return;
+      if (! analog_behaviors.empty()) return;
+      if (! elab_tasks.empty()) return;
+
+      if (generate_schemes.empty()) return;
+
+      switch (generate_schemes.size()) {
+	  case 1: {
+		PGenerate*child = generate_schemes.front();
+		if (child->scheme_type == GS_CONDIT)
+		      direct_nested_ = true;
+		if (child->scheme_type == GS_CASE)
+		      direct_nested_ = true;
+		break;
+	  }
+
+	  case 2: {
+		PGenerate*child1 = generate_schemes.front();
+		PGenerate*child2 = generate_schemes.back();
+		if (child1->scheme_type==GS_CONDIT && child2->scheme_type==GS_ELSE)
+		      direct_nested_ = true;
+		if (child2->scheme_type==GS_CONDIT && child1->scheme_type==GS_ELSE)
+		      direct_nested_ = true;
+		break;
+	  }
+      }
+}
+
+>>>>>>> Stashed changes
 ostream& operator << (ostream&out, PGenerate::scheme_t type)
 {
       switch (type) {

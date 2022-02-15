@@ -1,7 +1,11 @@
 #ifndef IVL_PModport_H
 #define IVL_PModport_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2015-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2015-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -38,8 +42,13 @@ class PModport : public PNamedItem {
 
       perm_string name() const { return name_; }
 
+<<<<<<< Updated upstream
       typedef std::pair <NetNet::PortType,PExpr*> simple_port_t;
       std::map<perm_string,simple_port_t> simple_ports;
+=======
+      typedef pair <NetNet::PortType,PExpr*> simple_port_t;
+      map<perm_string,simple_port_t> simple_ports;
+>>>>>>> Stashed changes
 
       SymbolType symbol_type() const;
 

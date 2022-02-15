@@ -430,7 +430,11 @@ bool PGModule::elaborate_sig_udp_(Design*des, NetScope*scope, PUdp*udp) const
 
 bool PGenerate::elaborate_sig(Design*des,  NetScope*container) const
 {
+<<<<<<< Updated upstream
       if (directly_nested)
+=======
+      if (direct_nested_)
+>>>>>>> Stashed changes
 	    return elaborate_sig_direct_(des, container);
 
       bool flag = true;
@@ -449,7 +453,11 @@ bool PGenerate::elaborate_sig(Design*des,  NetScope*container) const
 	    for (generate_it_t cur = generate_schemes.begin()
 		       ; cur != generate_schemes.end() ; ++ cur ) {
 		  PGenerate*item = *cur;
+<<<<<<< Updated upstream
 		  if (item->directly_nested || !item->scope_list_.empty()) {
+=======
+		  if (item->direct_nested_ || !item->scope_list_.empty()) {
+>>>>>>> Stashed changes
 			flag &= item->elaborate_sig(des, container);
 		  }
 	    }
@@ -497,12 +505,20 @@ bool PGenerate::elaborate_sig_direct_(Design*des, NetScope*container) const
 		  for (generate_it_t icur = item->generate_schemes.begin()
 			     ; icur != item->generate_schemes.end() ; ++ icur ) {
 			PGenerate*case_item = *icur;
+<<<<<<< Updated upstream
 			if (case_item->directly_nested || !case_item->scope_list_.empty()) {
+=======
+			if (case_item->direct_nested_ || !case_item->scope_list_.empty()) {
+>>>>>>> Stashed changes
 			      flag &= case_item->elaborate_sig(des, container);
 			}
 		  }
 	    } else {
+<<<<<<< Updated upstream
 		  if (item->directly_nested || !item->scope_list_.empty()) {
+=======
+		  if (item->direct_nested_ || !item->scope_list_.empty()) {
+>>>>>>> Stashed changes
 			  // Found the item, and it is direct nested.
 			flag &= item->elaborate_sig(des, container);
 		  }
@@ -873,6 +889,40 @@ void PWhile::elaborate_sig(Design*des, NetScope*scope) const
 	    statement_->elaborate_sig(des, scope);
 }
 
+<<<<<<< Updated upstream
+=======
+static ivl_type_s*elaborate_type(Design*des, NetScope*scope,
+				 data_type_t*pform_type)
+{
+      if (struct_type_t*struct_type = dynamic_cast<struct_type_t*>(pform_type)) {
+	    ivl_type_s*use_type = struct_type->elaborate_type(des, scope);
+	    return use_type;
+      }
+
+      cerr << pform_type->get_fileline() << ": sorry: I don't know how to elaborate "
+	   << typeid(*pform_type).name() << " here." << endl;
+      des->errors += 1;
+
+      return 0;
+}
+
+static netparray_t* elaborate_parray_type(Design*des, NetScope*scope, const LineInfo*li,
+					  parray_type_t*data_type)
+{
+
+      vector<netrange_t>packed_dimensions;
+      bool dimensions_ok = evaluate_ranges(des, scope, li, packed_dimensions, * data_type->dims);
+      ivl_assert(*data_type, dimensions_ok);
+
+      ivl_type_s*element_type = elaborate_type(des, scope, data_type->base_type);
+
+      netparray_t*res = new netparray_t(packed_dimensions, element_type);
+	//res->set_line(*data_type);
+
+      return res;
+}
+
+>>>>>>> Stashed changes
 bool test_ranges_eeq(const vector<netrange_t>&lef, const vector<netrange_t>&rig)
 {
       if (lef.size() != rig.size())
@@ -1276,8 +1326,12 @@ NetNet* PWire::elaborate_sig(Design*des, NetScope*scope) const
 
 	      // The trick here is that the parray type has an
 	      // arbitrary sub-type, and not just a scalar bit...
+<<<<<<< Updated upstream
 	    ivl_type_t tmp_type = parray_type->elaborate_type(des, scope);
 	    const netparray_t*use_type = dynamic_cast<const netparray_t*>(tmp_type);
+=======
+	    netparray_t*use_type = elaborate_parray_type(des, scope, this, parray_type);
+>>>>>>> Stashed changes
 	      // Should not be getting packed dimensions other than
 	      // through the parray type declaration.
 	    ivl_assert(*this, packed_dimensions.empty());

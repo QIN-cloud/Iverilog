@@ -38,8 +38,11 @@
 # include  <iomanip>
 # include  <typeinfo>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 ostream& operator << (ostream&out, const PExpr&obj)
 {
       obj.dump(out);
@@ -677,6 +680,7 @@ void PGate::dump_delays(ostream&out) const
       delay_.dump_delays(out);
 }
 
+<<<<<<< Updated upstream
 void PGate::dump_ranges(ostream&out) const
 {
       for (list<pform_range_t>::iterator cur = ranges_->begin()
@@ -688,6 +692,8 @@ void PGate::dump_ranges(ostream&out) const
       }
 }
 
+=======
+>>>>>>> Stashed changes
 void PGate::dump(ostream&out, unsigned ind) const
 {
       out << setw(ind) << "" << typeid(*this).name() << " ";
@@ -750,7 +756,15 @@ void PGBuiltin::dump(ostream&out, unsigned ind) const
       out << "(" << strength0() << "0 " << strength1() << "1) ";
       dump_delays(out);
       out << " " << get_name();
+<<<<<<< Updated upstream
       dump_ranges(out);
+=======
+
+      if (msb_) {
+	    out << " [" << *msb_ << ":" << *lsb_ << "]";
+      }
+
+>>>>>>> Stashed changes
       out << "(";
       dump_pins(out);
       out << ");" << endl;
@@ -791,7 +805,20 @@ void PGModule::dump(ostream&out, unsigned ind) const
       }
 
       out << get_name();
+<<<<<<< Updated upstream
       dump_ranges(out);
+=======
+
+	// If the module is arrayed, print the index expressions.
+      if (msb_ || lsb_) {
+	    out << "[";
+	    if (msb_) out << *msb_;
+	    out << ":";
+	    if (lsb_) out << *lsb_;
+	    out << "]";
+      }
+
+>>>>>>> Stashed changes
       out << "(";
       if (pins_) {
 	    out << "." << pins_[0].name << "(";
@@ -863,6 +890,11 @@ void PBlock::dump(ostream&out, unsigned ind) const
       if (pscope_name() != 0) {
             dump_parameters_(out, ind+2);
 
+<<<<<<< Updated upstream
+=======
+            dump_localparams_(out, ind+2);
+
+>>>>>>> Stashed changes
             dump_events_(out, ind+2);
 
 	    dump_wires_(out, ind+2);
@@ -933,11 +965,16 @@ void PCase::dump(ostream&out, unsigned ind) const
       for (unsigned idx = 0 ;  idx < items_->count() ;  idx += 1) {
 	    PCase::Item*cur = (*items_)[idx];
 
+<<<<<<< Updated upstream
 	    if (cur->expr.empty()) {
+=======
+	    if (! cur->expr.empty()) {
+>>>>>>> Stashed changes
 		  out << setw(ind+2) << "" << "default:";
 
 	    } else {
 		  list<PExpr*>::iterator idx_exp = cur->expr.begin();
+<<<<<<< Updated upstream
 		  out << setw(ind+2) << "";
 		  (*idx_exp)->dump(out);
 
@@ -945,6 +982,12 @@ void PCase::dump(ostream&out, unsigned ind) const
 			out << ", ";
 			(*idx_exp)->dump(out);
 		  }
+=======
+		  out << setw(ind+2) << "" << *idx_exp;
+
+		  for( ; idx_exp != cur->expr.end() ; ++idx_exp)
+			out << ", " << *idx_exp;
+>>>>>>> Stashed changes
 
 		  out << ":";
 	    }
@@ -1131,6 +1174,11 @@ void PFunction::dump(ostream&out, unsigned ind) const
 
       dump_parameters_(out, ind+2);
 
+<<<<<<< Updated upstream
+=======
+      dump_localparams_(out, ind+2);
+
+>>>>>>> Stashed changes
       dump_events_(out, ind+2);
 
       dump_wires_(out, ind+2);
@@ -1203,6 +1251,11 @@ void PTask::dump(ostream&out, unsigned ind) const
 
       dump_parameters_(out, ind+2);
 
+<<<<<<< Updated upstream
+=======
+      dump_localparams_(out, ind+2);
+
+>>>>>>> Stashed changes
       dump_events_(out, ind+2);
 
       dump_wires_(out, ind+2);
@@ -1406,7 +1459,11 @@ void PGenerate::dump(ostream&out, unsigned indent) const
 
       out << endl;
 
+<<<<<<< Updated upstream
       dump_parameters_(out, indent+2);
+=======
+      dump_localparams_(out, indent+2);
+>>>>>>> Stashed changes
 
       typedef list<PGenerate::named_expr_t>::const_iterator parm_hiter_t;
       for (parm_hiter_t cur = defparms.begin()
@@ -1476,18 +1533,30 @@ void LexicalScope::dump_parameters_(ostream&out, unsigned indent) const
       typedef map<perm_string,param_expr_t*>::const_iterator parm_iter_t;
       for (parm_iter_t cur = parameters.begin()
 		 ; cur != parameters.end() ; ++ cur ) {
+<<<<<<< Updated upstream
 	    out << setw(indent) << "";
 	    if (cur->second->local_flag)
 		  out << "localparam ";
 	    else
 		  out << "parameter ";
+=======
+	    out << setw(indent) << "" << "parameter ";
+>>>>>>> Stashed changes
 	    if (cur->second->data_type)
 	          cur->second->data_type->debug_dump(out);
 	    else
 		  out << "(nil type)";
+<<<<<<< Updated upstream
 	    if ((*cur).second->expr)
 		  out << " " << (*cur).first << " = "
 		      << *(*cur).second->expr;
+=======
+	    out << " " << (*cur).first << " = ";
+	    if ((*cur).second->expr)
+		  out << *(*cur).second->expr;
+	    else
+		  out << "/* ERROR */";
+>>>>>>> Stashed changes
 	    for (LexicalScope::range_t*tmp = (*cur).second->range
 		       ; tmp ; tmp = tmp->next) {
 		  if (tmp->exclude_flag)
@@ -1520,9 +1589,33 @@ void LexicalScope::dump_parameters_(ostream&out, unsigned indent) const
       }
 }
 
+<<<<<<< Updated upstream
 void LexicalScope::dump_enumerations_(ostream&out, unsigned indent) const
 {
       for (vector<enum_type_t*>::const_iterator cur = enum_sets.begin()
+=======
+void LexicalScope::dump_localparams_(ostream&out, unsigned indent) const
+{
+      typedef map<perm_string,param_expr_t*>::const_iterator parm_iter_t;
+      for (parm_iter_t cur = localparams.begin()
+		 ; cur != localparams.end() ; ++ cur ) {
+	    out << setw(indent) << "" << "localparam ";
+	    if (cur->second->data_type) {
+		  cur->second->data_type->debug_dump(out);
+		  out << " ";
+	    }
+	    out << (*cur).first << " = ";
+	    if ((*cur).second->expr)
+		  out << *(*cur).second->expr << ";" << endl;
+	    else
+		  out << "/* ERROR */;" << endl;
+      }
+}
+
+void LexicalScope::dump_enumerations_(ostream&out, unsigned indent) const
+{
+      for (set<enum_type_t*>::const_iterator cur = enum_sets.begin()
+>>>>>>> Stashed changes
 		 ; cur != enum_sets.end() ; ++ cur) {
 	    out << setw(indent) << "" << "enum {" << endl;
 
@@ -1673,6 +1766,11 @@ void Module::dump(ostream&out) const
 
       dump_parameters_(out, 4);
 
+<<<<<<< Updated upstream
+=======
+      dump_localparams_(out, 4);
+
+>>>>>>> Stashed changes
       dump_specparams_(out, 4);
 
       dump_enumerations_(out, 4);
@@ -1823,6 +1921,10 @@ void pform_dump(std::ostream&out, const PPackage*pac)
 void PPackage::pform_dump(std::ostream&out) const
 {
       out << "package " << pscope_name() << endl;
+<<<<<<< Updated upstream
+=======
+      dump_localparams_(out, 4);
+>>>>>>> Stashed changes
       dump_parameters_(out, 4);
       dump_typedefs_(out, 4);
       dump_enumerations_(out, 4);

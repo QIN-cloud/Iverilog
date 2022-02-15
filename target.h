@@ -186,10 +186,18 @@ struct expr_scan_t {
 /* This function takes a fully qualified Verilog name (which may have,
    for example, dots in it) and produces a mangled version that can be
    used by most any language. */
+<<<<<<< Updated upstream
 extern std::string mangle(const std::string&str);
 
 /* This function takes a string and produces an escaped version that can be
    used inside a string constant for a C++ compiler. */
 extern std::string stresc(const std::string&str);
+=======
+extern string mangle(const string&str);
+
+/* This function takes a string and produces an escaped version that can be
+   used inside a string constant for a C++ compiler. */
+extern string stresc(const string&str);
+>>>>>>> Stashed changes
 
 #endif /* IVL_target_H */

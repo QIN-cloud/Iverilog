@@ -27,8 +27,11 @@
 # include  <cstdio> // Needed to get snprintf for as_string().
 # include  <algorithm>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 #if !defined(HAVE_LROUND)
 /*
  * If the system doesn't provide the lround function, then we provide

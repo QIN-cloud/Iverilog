@@ -54,7 +54,10 @@
 # include  <cassert>
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
+=======
+>>>>>>> Stashed changes
 
 void set_scope_timescale(Design*des, NetScope*scope, PScope*pscope)
 {
@@ -68,7 +71,11 @@ typedef map<perm_string,LexicalScope::param_expr_t*>::const_iterator mparm_it_t;
 
 static void collect_parm_item(Design*des, NetScope*scope, perm_string name,
 			      const LexicalScope::param_expr_t&cur,
+<<<<<<< Updated upstream
 			      bool is_annotatable)
+=======
+			      bool is_annotatable, bool local_flag)
+>>>>>>> Stashed changes
 {
       if (debug_scopes) {
 	    cerr << cur.get_fileline() << ": " << __func__  << ": "
@@ -125,8 +132,12 @@ static void collect_parm_item(Design*des, NetScope*scope, perm_string name,
       // not yet known, don't try to guess here, put the type guess off. Also
       // don't try to elaborate it here, because there may be references to
       // other parameters still being located during scope elaboration.
+<<<<<<< Updated upstream
       scope->set_parameter(name, is_annotatable, cur.expr, cur.data_type,
 			   cur.local_flag, cur.overridable, range_list, cur);
+=======
+      scope->set_parameter(name, is_annotatable, cur.expr, cur.data_type, local_flag, range_list, cur);
+>>>>>>> Stashed changes
 
 }
 
@@ -141,7 +152,26 @@ static void collect_scope_parameters(Design*des, NetScope*scope,
       for (mparm_it_t cur = parameters.begin()
 		 ; cur != parameters.end() ;  ++ cur ) {
 
+<<<<<<< Updated upstream
 	    collect_parm_item(des, scope, cur->first, *(cur->second), false);
+=======
+	    collect_parm_item(des, scope, cur->first, *(cur->second), false, false);
+      }
+}
+
+static void collect_scope_localparams(Design*des, NetScope*scope,
+      const map<perm_string,LexicalScope::param_expr_t*>&localparams)
+{
+      if (debug_scopes) {
+	    cerr << scope->get_fileline() << ": " << __func__ << ": "
+		 << "collect localparams for " << scope_path(scope) << "." << endl;
+      }
+
+      for (mparm_it_t cur = localparams.begin()
+		 ; cur != localparams.end() ;  ++ cur ) {
+
+	    collect_parm_item(des, scope, cur->first, *(cur->second), false, true);
+>>>>>>> Stashed changes
       }
 }
 
@@ -156,7 +186,11 @@ static void collect_scope_specparams(Design*des, NetScope*scope,
       for (mparm_it_t cur = specparams.begin()
 		 ; cur != specparams.end() ;  ++ cur ) {
 
+<<<<<<< Updated upstream
 	    collect_parm_item(des, scope, cur->first, *(cur->second), true);
+=======
+	    collect_parm_item(des, scope, cur->first, *(cur->second), true, false);
+>>>>>>> Stashed changes
       }
 }
 
@@ -166,6 +200,7 @@ static void collect_scope_specparams(Design*des, NetScope*scope,
 static void elaborate_scope_enumeration(Design*des, NetScope*scope,
 					enum_type_t*enum_type)
 {
+<<<<<<< Updated upstream
       std::vector<netrange_t> ranges;
       netrange_t range;
       bool rc_flag;
@@ -190,6 +225,28 @@ static void elaborate_scope_enumeration(Design*des, NetScope*scope,
 					 enum_type);
 
       use_enum->set_line(*enum_type);
+=======
+      bool rc_flag;
+      assert(enum_type->range->size() == 1);
+      pform_range_t&range = enum_type->range->front();
+      NetExpr*msb_ex = elab_and_eval(des, scope, range.first, -1);
+      NetExpr*lsb_ex = elab_and_eval(des, scope, range.second, -1);
+
+      long msb = 0;
+      rc_flag = eval_as_long(msb, msb_ex);
+      assert(rc_flag);
+      long lsb = 0;
+      rc_flag = eval_as_long(lsb, lsb_ex);
+      assert(rc_flag);
+
+      netenum_t*use_enum = new netenum_t(enum_type->base_type,
+					 enum_type->signed_flag,
+					 enum_type->integer_flag, msb, lsb,
+					 enum_type->names->size(),
+					 enum_type);
+
+      use_enum->set_line(enum_type->li);
+>>>>>>> Stashed changes
       scope->add_enumeration_set(enum_type, use_enum);
 
       size_t name_idx = 0;
@@ -379,7 +436,11 @@ static void elaborate_scope_enumeration(Design*des, NetScope*scope,
 }
 
 static void elaborate_scope_enumerations(Design*des, NetScope*scope,
+<<<<<<< Updated upstream
 					 const vector<enum_type_t*>&enum_types)
+=======
+					 const set<enum_type_t*>&enum_types)
+>>>>>>> Stashed changes
 {
       if (debug_scopes) {
 	    cerr << scope->get_fileline() << ": " << __func__ << ": "
@@ -388,7 +449,11 @@ static void elaborate_scope_enumerations(Design*des, NetScope*scope,
 		 << endl;
       }
 
+<<<<<<< Updated upstream
       for (vector<enum_type_t*>::const_iterator cur = enum_types.begin()
+=======
+      for (set<enum_type_t*>::const_iterator cur = enum_types.begin()
+>>>>>>> Stashed changes
 		 ; cur != enum_types.end() ; ++ cur) {
 	    enum_type_t*curp = *cur;
 	    elaborate_scope_enumeration(des, scope, curp);
@@ -500,7 +565,11 @@ static void elaborate_scope_class(Design*des, NetScope*scope, PClass*pclass)
 
       netclass_t*use_base_class = 0;
       if (base_class) {
+<<<<<<< Updated upstream
 	    use_base_class = base_class->save_elaborated_type;
+=======
+	    use_base_class = scope->find_class(des, base_class->name);
+>>>>>>> Stashed changes
 	    if (use_base_class == 0) {
 		  cerr << pclass->get_fileline() << ": error: "
 		       << "Base class " << base_class->name
@@ -609,7 +678,11 @@ static void elaborate_scope_classes(Design*des, NetScope*scope,
       }
 }
 
+<<<<<<< Updated upstream
 static void replace_scope_parameters(Design *des, NetScope*scope, const LineInfo&loc,
+=======
+static void replace_scope_parameters(NetScope*scope, const LineInfo&loc,
+>>>>>>> Stashed changes
 				     const Module::replace_t&replacements)
 {
       if (debug_scopes) {
@@ -635,7 +708,17 @@ static void replace_scope_parameters(Design *des, NetScope*scope, const LineInfo
 		  cerr << loc.get_fileline() << ":      : "
 		       << "Type=" << val->expr_type() << endl;
 	    }
+<<<<<<< Updated upstream
 	    scope->replace_parameter(des, (*cur).first, val, scope->parent());
+=======
+	    bool flag = scope->replace_parameter((*cur).first, val,
+                                                 scope->parent());
+	    if (! flag) {
+		  cerr << val->get_fileline() << ": warning: parameter "
+		       << (*cur).first << " not found in "
+		       << scope_path(scope) << "." << endl;
+	    }
+>>>>>>> Stashed changes
       }
 }
 
@@ -751,6 +834,10 @@ bool PPackage::elaborate_scope(Design*des, NetScope*scope)
       scope->add_typedefs(&typedefs);
 
       collect_scope_parameters(des, scope, parameters);
+<<<<<<< Updated upstream
+=======
+      collect_scope_localparams(des, scope, localparams);
+>>>>>>> Stashed changes
 
       if (debug_scopes) {
 	    cerr << get_fileline() << ": PPackage::elaborate_scope: "
@@ -790,12 +877,21 @@ bool Module::elaborate_scope(Design*des, NetScope*scope,
 
       collect_scope_parameters(des, scope, parameters);
 
+<<<<<<< Updated upstream
+=======
+      collect_scope_localparams(des, scope, localparams);
+
+>>>>>>> Stashed changes
       collect_scope_specparams(des, scope, specparams);
 
 	// Run parameter replacements that were collected from the
 	// containing scope and meant for me.
 
+<<<<<<< Updated upstream
       replace_scope_parameters(des, scope, *this, replacements);
+=======
+      replace_scope_parameters(scope, *this, replacements);
+>>>>>>> Stashed changes
 
       elaborate_scope_enumerations(des, scope, enum_sets);
 
@@ -923,6 +1019,7 @@ bool PGenerate::generate_scope(Design*des, NetScope*container)
       }
 }
 
+<<<<<<< Updated upstream
 void PGenerate::check_for_valid_genvar_value_(long value)
 {
       if (generation_flag < GN_VER2005 && value < 0) {
@@ -935,6 +1032,8 @@ void PGenerate::check_for_valid_genvar_value_(long value)
       }
 }
 
+=======
+>>>>>>> Stashed changes
 /*
  * This is the elaborate scope method for a generate loop.
  */
@@ -944,6 +1043,7 @@ bool PGenerate::generate_scope_loop_(Design*des, NetScope*container)
 	      // Check that the loop_index variable was declared in a
 	      // genvar statement.
 	    NetScope*cscope = container;
+<<<<<<< Updated upstream
 	    while (cscope && !cscope->find_genvar(loop_index)) {
 		  if (cscope->symbol_exists(loop_index)) {
 			cerr << get_fileline() << ": error: "
@@ -954,6 +1054,10 @@ bool PGenerate::generate_scope_loop_(Design*des, NetScope*container)
 		  }
 		  cscope = cscope->parent();
             }
+=======
+	    while (cscope && !cscope->find_genvar(loop_index))
+		  cscope = cscope->parent();
+>>>>>>> Stashed changes
 	    if (!cscope) {
 		  cerr << get_fileline() << ": error: genvar is missing for "
 			  "generate \"loop\" variable '" << loop_index << "'."
@@ -964,7 +1068,11 @@ bool PGenerate::generate_scope_loop_(Design*des, NetScope*container)
       }
 
 	// We're going to need a genvar...
+<<<<<<< Updated upstream
       long genvar;
+=======
+      int genvar;
+>>>>>>> Stashed changes
 
 	// The initial value for the genvar does not need (nor can it
 	// use) the genvar itself, so we can evaluate this expression
@@ -979,7 +1087,10 @@ bool PGenerate::generate_scope_loop_(Design*des, NetScope*container)
       }
 
       genvar = init->value().as_long();
+<<<<<<< Updated upstream
       check_for_valid_genvar_value_(genvar);
+=======
+>>>>>>> Stashed changes
       delete init_ex;
 
       if (debug_scopes)
@@ -1050,7 +1161,10 @@ bool PGenerate::generate_scope_loop_(Design*des, NetScope*container)
 		       << genvar << " to " << step->value().as_long() << endl;
 
 	    genvar = step->value().as_long();
+<<<<<<< Updated upstream
 	    check_for_valid_genvar_value_(genvar);
+=======
+>>>>>>> Stashed changes
 	    container->genvar_tmp_val = genvar;
 	    delete step;
 	    delete test_ex;
@@ -1097,7 +1211,12 @@ bool PGenerate::generate_scope_condit_(Design*des, NetScope*container, bool else
 		 << " value=" << test->value() << ": Generate scope="
 		 << use_name << endl;
 
+<<<<<<< Updated upstream
       if (directly_nested) {
+=======
+      probe_for_direct_nesting_();
+      if (direct_nested_) {
+>>>>>>> Stashed changes
 	    if (debug_scopes)
 		  cerr << get_fileline() << ": debug: Generate condition "
 		       << (else_flag? "(else)" : "(if)")
@@ -1195,7 +1314,12 @@ bool PGenerate::generate_scope_case_(Design*des, NetScope*container)
 	// The name of the scope to generate, whatever that item is.
       hname_t use_name (item->scope_name);
 
+<<<<<<< Updated upstream
       if (item->directly_nested) {
+=======
+      item->probe_for_direct_nesting_();
+      if (item->direct_nested_) {
+>>>>>>> Stashed changes
 	    if (debug_scopes)
 		  cerr << get_fileline() << ": debug: Generate case item " << scope_name
 		       << " detected direct nesting." << endl;
@@ -1261,11 +1385,19 @@ void PGenerate::elaborate_subscope_(Design*des, NetScope*scope)
 	    scope->add_genvar((*cur).first, (*cur).second);
       }
 
+<<<<<<< Updated upstream
 	// Scan the parameters in this scope, and store the information
         // needed to evaluate the parameter expressions. The expressions
 	// will be evaluated later, once all parameter overrides for this
 	// module have been done.
       collect_scope_parameters(des, scope, parameters);
+=======
+	// Scan the localparams in this scope, and store the information
+        // needed to evaluate the parameter expressions. The expressions
+	// will be evaluated later, once all parameter overrides for this
+	// module have been done.
+      collect_scope_localparams(des, scope, localparams);
+>>>>>>> Stashed changes
 
 	// Run through the defparams for this scope and save the result
 	// in a table for later final override.
@@ -1408,7 +1540,11 @@ void PGModule::elaborate_scope_mod_(Design*des, Module*mod, NetScope*sc) const
 	    return;
       }
 
+<<<<<<< Updated upstream
       if (is_array()) {
+=======
+      if (msb_ || lsb_) {
+>>>>>>> Stashed changes
 	      // If there are expressions to evaluate in order to know
 	      // the actual number of instances that will be
 	      // instantiated, then we have to delay further scope
@@ -1438,6 +1574,7 @@ void PGModule::elaborate_scope_mod_(Design*des, Module*mod, NetScope*sc) const
  */
 void PGModule::elaborate_scope_mod_instances_(Design*des, Module*mod, NetScope*sc) const
 {
+<<<<<<< Updated upstream
       long instance_low  = 0;
       long instance_high = 0;
       long instance_count = calculate_array_size_(des, sc, instance_high, instance_low);
@@ -1449,6 +1586,43 @@ void PGModule::elaborate_scope_mod_instances_(Design*des, Module*mod, NetScope*s
       struct attrib_list_t*attrib_list;
       unsigned attrib_list_n = 0;
       attrib_list = evaluate_attributes(attributes, attrib_list_n, des, sc);
+=======
+      NetExpr*mse = msb_ ? elab_and_eval(des, sc, msb_, -1, true) : 0;
+      NetExpr*lse = lsb_ ? elab_and_eval(des, sc, lsb_, -1, true) : 0;
+      NetEConst*msb = dynamic_cast<NetEConst*> (mse);
+      NetEConst*lsb = dynamic_cast<NetEConst*> (lse);
+
+      assert( (msb == 0) || (lsb != 0) );
+
+      long instance_low  = 0;
+      long instance_high = 0;
+      long instance_count  = 1;
+      bool instance_array = false;
+
+      if (msb) {
+	    instance_array = true;
+	    instance_high = msb->value().as_long();
+	    instance_low  = lsb->value().as_long();
+	    if (instance_high > instance_low)
+		  instance_count = instance_high - instance_low + 1;
+	    else
+		  instance_count = instance_low - instance_high + 1;
+
+	    delete mse;
+	    delete lse;
+      }
+
+      NetScope::scope_vec_t instances (instance_count);
+      if (debug_scopes) {
+	    cerr << get_fileline() << ": debug: Create " << instance_count
+		 << " instances of " << get_name()
+		 << "." << endl;
+      }
+
+	    struct attrib_list_t*attrib_list;
+	    unsigned attrib_list_n = 0;
+	    attrib_list = evaluate_attributes(attributes, attrib_list_n, des, sc);
+>>>>>>> Stashed changes
 
 	// Run through the module instances, and make scopes out of
 	// them. Also do parameter overrides that are done on the
@@ -1457,7 +1631,11 @@ void PGModule::elaborate_scope_mod_instances_(Design*des, Module*mod, NetScope*s
 
 	    hname_t use_name (get_name());
 
+<<<<<<< Updated upstream
 	    if (is_array()) {
+=======
+	    if (instance_array) {
+>>>>>>> Stashed changes
 		  int instance_idx;
 		  if (instance_low < instance_high)
 			instance_idx = instance_low + idx;
@@ -1604,6 +1782,11 @@ void PFunction::elaborate_scope(Design*des, NetScope*scope) const
 
       collect_scope_parameters(des, scope, parameters);
 
+<<<<<<< Updated upstream
+=======
+      collect_scope_localparams(des, scope, localparams);
+
+>>>>>>> Stashed changes
 	// Scan through all the named events in this scope.
       elaborate_scope_events_(des, scope, events);
 
@@ -1622,6 +1805,11 @@ void PTask::elaborate_scope(Design*des, NetScope*scope) const
 
       collect_scope_parameters(des, scope, parameters);
 
+<<<<<<< Updated upstream
+=======
+      collect_scope_localparams(des, scope, localparams);
+
+>>>>>>> Stashed changes
 	// Scan through all the named events in this scope.
       elaborate_scope_events_(des, scope, events);
 
@@ -1670,6 +1858,11 @@ void PBlock::elaborate_scope(Design*des, NetScope*scope) const
 
             collect_scope_parameters(des, my_scope, parameters);
 
+<<<<<<< Updated upstream
+=======
+            collect_scope_localparams(des, my_scope, localparams);
+
+>>>>>>> Stashed changes
               // Scan through all the named events in this scope.
             elaborate_scope_events_(des, my_scope, events);
       }

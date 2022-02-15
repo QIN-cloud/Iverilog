@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2011-2013 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  * Copyright CERN 2015
  * @author Maciej Suminski (maciej.suminski@cern.ch)
  *
@@ -25,8 +29,11 @@
 # include  <limits>
 # include  <cmath>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 bool ExpArithmetic::evaluate(Entity*ent, ScopeBase*scope, int64_t&val) const
 {
       int64_t val1, val2;

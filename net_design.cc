@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2000-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2000-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -39,8 +43,11 @@
 # include  <sstream>
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 Design:: Design()
     : errors(0), nodes_(0), procs_(0), aprocs_(0)
 {
@@ -433,7 +440,17 @@ void NetScope::run_defparams(Design*des)
 		  continue;
 	    }
 
+<<<<<<< Updated upstream
 	    targ_scope->replace_parameter(des, perm_name, val, this);
+=======
+	    bool flag = targ_scope->replace_parameter(perm_name, val, this);
+	    if (! flag) {
+		  cerr << val->get_fileline() << ": warning: parameter "
+		       << perm_name << " not found in "
+		       << scope_path(targ_scope) << "." << endl;
+	    }
+
+>>>>>>> Stashed changes
       }
 
 	// If some of the defparams didn't find a scope in the name,
@@ -468,7 +485,16 @@ void NetScope::run_defparams_later(Design*des)
 		  continue;
 	    }
 
+<<<<<<< Updated upstream
 	    targ_scope->replace_parameter(des, name, val, this);
+=======
+	    bool flag = targ_scope->replace_parameter(name, val, this);
+	    if (! flag) {
+		  cerr << val->get_fileline() << ": warning: parameter "
+		       << name << " not found in "
+		       << scope_path(targ_scope) << "." << endl;
+	    }
+>>>>>>> Stashed changes
 
 	      // We'll need to re-evaluate parameters in this scope
 	    target_scopes.insert(targ_scope);
@@ -636,7 +662,12 @@ void NetScope::evaluate_parameter_logic_(Design*des, param_ref_t cur)
 	    return;
 
       NetEConst*val = dynamic_cast<NetEConst*>((*cur).second.val);
+<<<<<<< Updated upstream
       ivl_assert(*expr, val);
+=======
+      ivl_assert(*(*cur).second.val, (*cur).second.val);
+      ivl_assert(*(*cur).second.val, val);
+>>>>>>> Stashed changes
 
       verinum value = val->value();
 
@@ -827,6 +858,7 @@ void NetScope::evaluate_parameter_(Design*des, param_ref_t cur)
       }
 
       // If the parameter has already been evaluated, quietly return.
+<<<<<<< Updated upstream
       if (cur->second.val != 0)
             return;
 
@@ -840,6 +872,11 @@ void NetScope::evaluate_parameter_(Design*des, param_ref_t cur)
 	    return;
       }
 
+=======
+      if (cur->second.val_expr == 0)
+            return;
+
+>>>>>>> Stashed changes
       // Guess the varaiable type of the parameter. If the parameter has no
       // given type, then guess the type from the expression and use that to
       // evaluate.

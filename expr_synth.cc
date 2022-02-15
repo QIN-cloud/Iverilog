@@ -28,8 +28,11 @@
 # include  "netmisc.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static NetNet* convert_to_real_const(Design*des, NetScope*scope, NetEConst*expr)
 {
       verireal vrl(expr->value().as_double());

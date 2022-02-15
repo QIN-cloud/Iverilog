@@ -1,7 +1,11 @@
 #ifndef IVL_config_H                                           /* -*- c++ -*- */
 #define IVL_config_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2001-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2001-2015 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -19,6 +23,17 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+<<<<<<< Updated upstream
+=======
+#if defined(__cplusplus)
+#  if !defined(__GNUC__)
+     using namespace std;
+#  elif (__GNUC__ == 3)
+     using namespace std;
+#  endif
+#endif
+
+>>>>>>> Stashed changes
 # undef NEED_LU
 # undef NEED_TU
 # undef WLU

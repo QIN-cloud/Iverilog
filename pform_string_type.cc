@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2012-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2012-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -21,8 +25,11 @@
 # include  "parse_misc.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static void pform_set_string_type(const struct vlltype&li, const string_type_t*, perm_string name, NetNet::Type net_type, list<named_pexpr_t>*attr)
 {
       PWire*net = pform_get_make_wire_in_scope(li, name, net_type, NetNet::NOT_A_PORT, IVL_VT_STRING);

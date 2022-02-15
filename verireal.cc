@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1999-2010 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -29,8 +33,11 @@
 # include  <cassert>
 # include  <cstring>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 verireal::verireal()
 {
       value_ = 0.0;
@@ -66,9 +73,15 @@ verireal::~verireal()
 {
 }
 
+<<<<<<< Updated upstream
 long verireal::as_long() const
 {
       double out = value_;
+=======
+long verireal::as_long(int shift) const
+{
+      double out = value_ * pow(10.0,shift);
+>>>>>>> Stashed changes
       double outf;
 
       if (out >= 0.0) {
@@ -133,6 +146,16 @@ verireal operator/ (const verireal&l, const verireal&r)
       return res;
 }
 
+<<<<<<< Updated upstream
+=======
+verireal operator/ (const verireal&l, const verinum&r)
+{
+      verireal res;
+      res.value_ = l.value_ / (double)r.as_long();
+      return res;
+}
+
+>>>>>>> Stashed changes
 verireal operator% (const verireal&l, const verireal&r)
 {
       verireal res;
@@ -144,6 +167,25 @@ verireal operator% (const verireal&l, const verireal&r)
       return res;
 }
 
+<<<<<<< Updated upstream
+=======
+verireal operator% (const verireal&l, const verinum&r)
+{
+      verireal res;
+	// See above.
+      assert(gn_icarus_misc_flag);
+      res.value_ = fmod(l.value_, (double)r.as_long());
+      return res;
+}
+
+verireal pow (const verireal&l, const verireal&r)
+{
+      verireal res;
+      res.value_ = pow(l.value_, r.value_);
+      return res;
+}
+
+>>>>>>> Stashed changes
 verireal operator- (const verireal&l)
 {
       verireal res;

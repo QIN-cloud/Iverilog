@@ -32,8 +32,11 @@
 # include  <cstring>
 # include  "ivl_alloc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static StringHeap api_strings;
 
 /* THE FOLLOWING ARE FUNCTIONS THAT ARE CALLED FROM THE TARGET. */

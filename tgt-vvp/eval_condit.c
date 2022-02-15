@@ -278,12 +278,16 @@ static int draw_condition_binary_le(ivl_expr_t expr)
 
 static int draw_condition_binary_lor(ivl_expr_t expr)
 {
+<<<<<<< Updated upstream
       unsigned label_out = local_count++;
 
+=======
+>>>>>>> Stashed changes
       ivl_expr_t le = ivl_expr_oper1(expr);
       ivl_expr_t re = ivl_expr_oper2(expr);
 
       int lx = draw_eval_condition(le);
+<<<<<<< Updated upstream
       int tmp_flag = lx;
 
       /* Short circuit right hand side if necessary */
@@ -292,10 +296,18 @@ static int draw_condition_binary_lor(ivl_expr_t expr)
       if (lx < 8) {
 	  tmp_flag = allocate_flag();
 	  fprintf(vvp_out, "    %%flag_mov %d, %d;\n", tmp_flag, lx);
+=======
+
+      if (lx < 8) {
+	    int tmp = allocate_flag();
+	    fprintf(vvp_out, "    %%flag_mov %d, %d;\n", tmp, lx);
+	    lx = tmp;
+>>>>>>> Stashed changes
       }
 
       int rx = draw_eval_condition(re);
 
+<<<<<<< Updated upstream
       /*
        * The flag needs to be in the same position regardless of whether the
        * right side is short-cicuited or not.
@@ -311,6 +323,11 @@ static int draw_condition_binary_lor(ivl_expr_t expr)
       fprintf(vvp_out, "T_%u.%u;\n", thread_count, label_out);
       clr_flag(rx);
       return lx;
+=======
+      fprintf(vvp_out, "    %%flag_or %d, %d;\n", rx, lx);
+      clr_flag(lx);
+      return rx;
+>>>>>>> Stashed changes
 }
 
 static int draw_condition_binary(ivl_expr_t expr)

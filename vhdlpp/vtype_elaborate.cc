@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2013-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2013 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  * Copyright CERN 2013 / Stephen Williams (steve@icarus.com)
  *
  *    This source code is free software; you can redistribute it
@@ -21,8 +25,11 @@
 # include  "vtype.h"
 # include  "expression.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 int VType::elaborate(Entity*, ScopeBase*) const
 {
       return 0;

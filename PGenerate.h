@@ -1,7 +1,11 @@
 #ifndef IVL_PGenerate_H
 #define IVL_PGenerate_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2006-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2006-2020 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -27,6 +31,14 @@
 # include  <map>
 # include  <valarray>
 # include  "pform_types.h"
+<<<<<<< Updated upstream
+=======
+# include  "PDesign.h"
+# include  "CfgNode.h"
+# include  "slice.h"
+# include  "PGate.h"
+# include  "Statement.h"
+>>>>>>> Stashed changes
 
 class Design;
 class NetScope;
@@ -69,8 +81,11 @@ class PGenerate : public PNamedItem, public LexicalScope {
 		     GS_CASE, GS_CASE_ITEM, GS_NBLOCK};
       scheme_t scheme_type;
 
+<<<<<<< Updated upstream
       bool directly_nested;
 
+=======
+>>>>>>> Stashed changes
 	// generate loops have an index variable and three
 	// expressions: for (index = <init>; <test>; index=<step>)
 	// the index is local if it was declared in the init expression,
@@ -86,6 +101,7 @@ class PGenerate : public PNamedItem, public LexicalScope {
       std::valarray<PExpr*> item_test;
 
 	// defparam assignments found in this scope.
+<<<<<<< Updated upstream
       typedef std::pair<pform_name_t,PExpr*> named_expr_t;
       std::list<named_expr_t>defparms;
 
@@ -100,6 +116,47 @@ class PGenerate : public PNamedItem, public LexicalScope {
       std::list<PGenerate*> generate_schemes;
 //      PGenerate*parent;
 
+=======
+      typedef pair<pform_name_t,PExpr*> named_expr_t;
+      list<named_expr_t>defparms;
+
+      list<PGate*> gates;
+      void add_gate(PGate*);
+
+	// Tasks instantiated within this scheme.
+      map<perm_string,PTask*> tasks;
+      map<perm_string,PFunction*>funcs;
+
+	// Generate schemes can contain further generate schemes.
+      list<PGenerate*> generate_schemes;
+//      PGenerate*parent;
+
+      virtual GenerateNode* build_node(PDesign& de);
+      void dump_slice(std::ostream&out, unsigned ind, slicer* s) const;
+      virtual svector<unsigned>& get_linenos()
+      {
+            svector<unsigned>* tmp = new svector<unsigned>();
+            tmp = new svector<unsigned>(*tmp, get_lineno());
+            for (list<PGate*>::const_iterator idx = gates.begin()
+             ; idx != gates.end() ; ++ idx ) {
+                tmp = new svector<unsigned>(*tmp, (*idx)->get_lineno());
+            }
+            for (list<PProcess*>::const_iterator idx = behaviors.begin()
+             ; idx != behaviors.end() ; ++ idx ) {
+                tmp = new svector<unsigned>(*tmp, (*idx)->get_linenos());
+            }
+            for (list<PCallTask*>::const_iterator idx = elab_tasks.begin()
+                   ; idx != elab_tasks.end() ; ++ idx ) {
+                tmp = new svector<unsigned>(*tmp, (*idx)->get_lineno());
+            }
+            for (list<PGenerate*>::const_iterator idx = generate_schemes.begin()
+             ; idx != generate_schemes.end() ; ++ idx ) {
+                tmp = new svector<unsigned>(*tmp, (*idx)->get_linenos());
+            }
+            return *tmp;
+      }
+
+>>>>>>> Stashed changes
 	// This method is called by the elaboration of a module to
 	// generate scopes. the container is the scope that is to
 	// contain the generated scope.
@@ -110,23 +167,44 @@ class PGenerate : public PNamedItem, public LexicalScope {
       bool elaborate_sig(Design*des, NetScope*container) const;
       bool elaborate(Design*des, NetScope*container) const;
 
+<<<<<<< Updated upstream
       void dump(std::ostream&out, unsigned indent) const;
+=======
+      void dump(ostream&out, unsigned indent) const;
+>>>>>>> Stashed changes
 
       SymbolType symbol_type() const;
 
     private:
+<<<<<<< Updated upstream
       void check_for_valid_genvar_value_(long value);
+=======
+>>>>>>> Stashed changes
       bool generate_scope_loop_(Design*des, NetScope*container);
       bool generate_scope_condit_(Design*des, NetScope*container, bool else_flag);
       bool generate_scope_case_(Design*des, NetScope*container);
       bool generate_scope_nblock_(Design*des, NetScope*container);
 
+<<<<<<< Updated upstream
+=======
+	// Call probe during elaborate_scope to calculate the
+	// direct_nested_ flag. It is OK to store the direct_nested_
+	// information here because "direct nested" is a property of
+	// the lexical generate code.
+      void probe_for_direct_nesting_(void);
+      bool direct_nested_;
+
+>>>>>>> Stashed changes
 	// Elaborate_scope within a generated scope.
       void elaborate_subscope_(Design*des, NetScope*scope);
       void elaborate_subscope_direct_(Design*des, NetScope*scope);
 
 	// These are the scopes created by generate_scope.
+<<<<<<< Updated upstream
       std::list<NetScope*>scope_list_;
+=======
+      list<NetScope*>scope_list_;
+>>>>>>> Stashed changes
 	// internal function called on each scope generated by this scheme.
       bool elaborate_sig_(Design*des, NetScope*scope) const;
       bool elaborate_sig_direct_(Design*des, NetScope*scope) const;

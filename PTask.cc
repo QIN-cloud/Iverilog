@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1999-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -21,7 +25,41 @@
 # include  "PTask.h"
 # include  <cassert>
 
+<<<<<<< Updated upstream
 using namespace std;
+=======
+svector<unsigned>& PTask::get_linenos()
+{
+	svector<unsigned>*tmp = new svector<unsigned>();
+	svector<unsigned> tmp1;
+
+	//tmp = new svector<unsigned>(*tmp, get_lineno());
+	if(statement_)
+	{
+		tmp1 = statement_->get_linenos();
+		for(unsigned i = 0; i < tmp1.count(); ++i)
+			tmp = new svector<unsigned>(*tmp, tmp1[i]);
+			//tmp->insert(tmp1[i]);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PFunction::get_linenos()
+{
+	svector<unsigned>*tmp = new svector<unsigned>();
+	svector<unsigned> tmp1;
+
+	//tmp = new svector<unsigned>(*tmp, get_lineno());
+	if(statement_)
+	{
+		tmp1 = statement_->get_linenos();
+		for(unsigned i = 0; i < tmp1.count(); ++i)
+			tmp = new svector<unsigned>(*tmp, tmp1[i]);
+			//tmp->insert(tmp1[i]);
+	}
+	return *tmp;
+}
+>>>>>>> Stashed changes
 
 PTaskFunc::PTaskFunc(perm_string n, LexicalScope*p)
 : PScope(n,p), this_type_(0), ports_(0)
@@ -43,6 +81,47 @@ void PTaskFunc::set_ports(vector<pform_tf_port_t>*p)
       ports_ = p;
 }
 
+<<<<<<< Updated upstream
+=======
+unsigned PTaskFunc::port_count() //2021.2.4
+{
+      if(ports_)
+            return ports_->size();
+}
+PWire* PTaskFunc::get_port(unsigned idx)
+{
+	assert(idx < ports_->size());
+	return (*ports_)[idx].port;
+}
+set<string>& PTask::get_funcs()
+{
+      set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+set<string>& PFunction::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+>>>>>>> Stashed changes
 void PTaskFunc::set_this(class_type_t*type, PWire*this_wire)
 {
       assert(this_type_ == 0);

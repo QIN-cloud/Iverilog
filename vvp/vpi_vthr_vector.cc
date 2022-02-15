@@ -35,8 +35,11 @@
 # include  <cassert>
 # include  "ivl_alloc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 /*
  * Hex digits that represent 4-value bits of Verilog are not as
  * trivially obvious to display as if the bits were the usual 2-value

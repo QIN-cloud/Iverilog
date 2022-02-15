@@ -57,12 +57,23 @@ extern void pform_dump(std::ostream&out, const PTaskFunc*tf);
  * through the command specified by ivlpp_string before being parsed.
  */
 extern int pform_parse(const char*path);
+<<<<<<< Updated upstream
 
 extern std::string vl_file;
+=======
+>>>>>>> Stashed changes
 
 extern void pform_set_timescale(int units, int prec, const char*file,
                                 unsigned lineno);
 extern int def_ts_units;
 extern int def_ts_prec;
 
+<<<<<<< Updated upstream
+=======
+extern void pform_set_timescale(int units, int prec, const char*file,
+                                unsigned lineno);
+extern int def_ts_units;
+extern int def_ts_prec;
+
+>>>>>>> Stashed changes
 #endif /* IVL_parse_api_H */

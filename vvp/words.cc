@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2003-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2003-2020 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -32,8 +36,11 @@
 # include  <iostream>
 # include  <cassert>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static void __compile_var_real(char*label, char*name,
 			       vvp_array_t array, unsigned long array_addr)
 {

@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2002-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2002-2010 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -21,12 +25,18 @@
 # include  "util.h"
 # include  "PExpr.h"
 # include  "netlist.h"
+<<<<<<< Updated upstream
 # include  "netmisc.h"
 # include  <iostream>
 # include  <cassert>
 
 using namespace std;
 
+=======
+# include  <iostream>
+# include  <cassert>
+
+>>>>>>> Stashed changes
 /*
  * The evaluate_attributes function evaluates the attribute
  * expressions from the map, and returns a table in a form suitable
@@ -53,6 +63,7 @@ attrib_list_t* evaluate_attributes(const map<perm_string,PExpr*>&att,
 	      /* If the attribute value is given in the source, then
 		 evaluate it as a constant. If the value is not
 		 given, then assume the value is 1. */
+<<<<<<< Updated upstream
 	    if (exp) {
 		  NetExpr *tmp = elab_and_eval(des, scope, exp, -1, true);
 		  if (!tmp)
@@ -63,15 +74,33 @@ attrib_list_t* evaluate_attributes(const map<perm_string,PExpr*>&att,
 		  } else if (NetECReal *cer = dynamic_cast<NetECReal*>(tmp)) {
 			table[idx].val = verinum(cer->value().as_long());
 		  } else {
+=======
+	    verinum*tmp = 0;
+	    if (exp) {
+		  tmp = exp->eval_const(des, scope);
+                  if (tmp == 0) {
+>>>>>>> Stashed changes
 			cerr << exp->get_fileline() << ": error: ``"
 			     << *exp << "'' is not a constant expression."
 			     << endl;
 			des->errors += 1;
+<<<<<<< Updated upstream
 		  }
 		  delete tmp;
 	    } else {
 		  table[idx].val = verinum(1);
 	    }
+=======
+                  }
+            }
+	    if (tmp == 0)
+		  tmp = new verinum(1);
+
+	    assert(tmp);
+
+	    table[idx].val = *tmp;
+	    delete tmp;
+>>>>>>> Stashed changes
       }
 
       assert(idx == natt);

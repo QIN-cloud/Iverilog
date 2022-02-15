@@ -1044,7 +1044,11 @@ static void find_ivl_root(void)
 	   if the user has overridden $(bindir) or $(libdir), but there's
 	   not a lot we can do in that case.
  */
+<<<<<<< Updated upstream
 #if defined(__MINGW32__)
+=======
+#ifdef __MINGW32__
+>>>>>>> Stashed changes
       char tmppath[MAXSIZE];
       len = GetModuleFileName(NULL, tmppath, sizeof tmppath);
       if (len >= (ssize_t) sizeof ivl_root) {
@@ -1052,9 +1056,12 @@ static void find_ivl_root(void)
       }
 	/* Convert to a short name to remove any embedded spaces. */
       len = GetShortPathName(tmppath, ivl_root, sizeof ivl_root);
+<<<<<<< Updated upstream
 #elif defined(__APPLE__)
 	  uint32_t size = sizeof ivl_root;
 	  len = _NSGetExecutablePath(ivl_root, &size) + 1;
+=======
+>>>>>>> Stashed changes
 #else
       len = readlink("/proc/self/exe", ivl_root, sizeof ivl_root);
 #endif
@@ -1156,11 +1163,15 @@ int main(int argc, char **argv)
 	      fclose(tmp_file);
 	}
       }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
       while ((opt = getopt(argc, argv, "B:c:D:d:Ef:g:hl:I:iL:M:m:N:o:P:p:Ss:T:t:uvVW:y:Y:")) != EOF) {
 
 	    switch (opt) {
 		case 'B':
+<<<<<<< Updated upstream
 		    /* The individual components can be located by a
 		       single base, or by individual bases. The first
 		       character of the path indicates which path the
@@ -1176,6 +1187,23 @@ int main(int argc, char **argv)
 			vhdlpp_dir = optarg+1;
 			break;
 		      default: /* Otherwise, this is a default base. */
+=======
+		    // The individual components can be located by a
+		      // single base, or by individual bases. The first
+		      // character of the path indicates which path the
+		      // user is specifying. 
+		  switch (optarg[0]) {
+		      case 'M': // Path for the VPI modules 
+			vpi_dir = optarg+1;
+			break;
+		      case 'P': // Path for the ivlpp preprocessor 
+			ivlpp_dir = optarg+1;
+			break;
+		      case 'V': // Path for the vhdlpp VHDL processor 
+			vhdlpp_dir = optarg+1;
+			break;
+		      default: // Otherwise, this is a default base. 
+>>>>>>> Stashed changes
 			base=optarg;
 			break;
 		  }
@@ -1303,7 +1331,10 @@ int main(int argc, char **argv)
 		  return 1;
 	    }
       }
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
       if (strcmp(gen_verilog_ams,"verilog-ams") == 0)
 	    fprintf(defines_file, "D:__VAMS_ENABLE__=1\n");
       if (synth_flag)

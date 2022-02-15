@@ -36,8 +36,11 @@
 # include  "ivl_assert.h"
 # include  "PExpr.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static ostream& operator<< (ostream&o, NetBlock::Type t)
 {
       switch (t) {

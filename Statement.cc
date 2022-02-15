@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
+ * Copyright (c) 1998-2019 Stephen Williams (steve@icarus.com)
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -23,7 +23,479 @@
 # include  "PExpr.h"
 # include  "ivl_assert.h"
 
-using namespace std;
+svector<unsigned>& PProcess::get_linenos()
+{
+	svector<unsigned>*tmp = new svector<unsigned>();
+	svector<unsigned> tmp1;
+
+	//tmp = new svector<unsigned>(*tmp, get_lineno());
+	if(statement_)
+	{
+		tmp1 = statement_->get_linenos();
+		for(unsigned i = 0; i < tmp1.count(); ++i)
+			tmp = new svector<unsigned>(*tmp, tmp1[i]);
+			//tmp->insert(tmp1[i]);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& Statement::get_linenos()
+{
+	svector<unsigned>*tmp = new svector<unsigned>();
+	tmp = new svector<unsigned>(*tmp, get_lineno());
+	return *tmp;
+}
+
+set<string>& Statement::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	return *tmp;
+}
+
+svector<string>& Statement::get_vars()
+{
+      svector<string>*tmp = new svector<string>;
+      return *tmp;
+}
+
+set<string>& Statement::get_funcname()
+{
+      set<string>* tmp = new set<string>;
+      return *tmp;
+}
+
+svector<string>& PAssign::get_vars()
+{
+      svector<string>*tmp = new svector<string>();
+      tmp = new svector<string>(*tmp, lval()->get_vars());
+      tmp = new svector<string>(*tmp, rval()->get_vars());
+      return *tmp;
+}
+
+set<string>& PAssign::get_funcname()
+{
+      set<string>* tmp = new set<string>;
+      set<string> lval_set = lval()->get_funcname();
+      set<string>::iterator lval_iter;
+      set<string> rval_set = rval()->get_funcname();
+      set<string>::iterator rval_iter;
+      if(lval())
+      {
+      	for(lval_iter = lval_set.begin(); lval_iter != lval_set.end(); lval_iter++)
+      		tmp->insert(*lval_iter);
+      }
+      if(rval()){
+      	for(rval_iter = rval_set.begin(); rval_iter != rval_set.end(); rval_iter++)
+      		tmp->insert(*rval_iter);
+      }
+      return *tmp;
+}
+
+set<string>& PAssign::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(lval())
+	{
+		tmp1 = lval()->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(rval())
+	{
+		tmp1 = rval()->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(event_)
+	{
+		tmp1 = event_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(delay_)
+	{
+		tmp1 = delay_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<string>& PAssignNB::get_vars()
+{
+      svector<string>*tmp = new svector<string>();
+      tmp = new svector<string>(*tmp, lval()->get_vars());
+      tmp = new svector<string>(*tmp, rval()->get_vars());
+      return *tmp;
+}
+
+set<string>& PAssignNB::get_funcname()
+{
+      set<string>* tmp = new set<string>;
+      tmp->insert(lval()->get_funcname().begin(), lval()->get_funcname().end());
+      tmp->insert(rval()->get_funcname().begin(), rval()->get_funcname().end());
+      return *tmp;
+}
+
+set<string>& PAssignNB::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(lval())
+	{
+		tmp1 = lval()->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(rval())
+	{
+		tmp1 = rval()->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(event_)
+	{
+		tmp1 = event_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(delay_)
+	{
+		tmp1 = delay_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PBlock::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>();
+	for(unsigned idx = 0; idx < list_.size(); ++idx)
+	{
+		svector<unsigned>*tmps = new svector<unsigned>(*tmp, list_[idx]->get_linenos());
+		delete tmp;
+		tmp = tmps;
+	}
+	return *tmp;
+}
+
+set<string>& PBlock::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	for(unsigned idx = 0; idx < list_.size(); ++idx)
+	{
+		tmp1 = list_[idx]->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+set<string>& PCallTask::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	tmp->insert(peek_tail_name(path_).str());
+	return *tmp;
+}
+
+set<string>& PCase::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = expr_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	for(unsigned i=0; i < items_->count(); ++i)
+	{
+		tmp1 = (*items_)[i]->stat->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+		for(list<PExpr*>::iterator it = (*items_)[i]->expr.begin();
+             it != (*items_)[i]->expr.end(); ++it)
+		{
+			tmp1 = (*it)->get_funcname();
+			for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+				tmp->insert(*pos);
+		}
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PCase::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>();
+	tmp = new svector<unsigned>(*tmp, get_lineno());
+	for(unsigned idx = 0; idx < items_->count(); ++idx)
+	{
+	    tmp = new svector<unsigned>(*tmp, (*items_)[idx]->stat->get_linenos());
+	}
+	return *tmp;
+}
+
+set<string>& PCAssign::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = lval_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	tmp1 = expr_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	return *tmp;
+}
+
+set<string>& PCondit::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = expr_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	if(if_)
+	{
+		tmp1 = if_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(else_)
+	{
+		tmp1 = else_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PCondit::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>();
+        tmp = new svector<unsigned>(*tmp, get_lineno());
+	if(if_)
+		tmp = new svector<unsigned>(*tmp, if_->get_linenos());
+	if(else_)
+		tmp = new svector<unsigned>(*tmp, else_->get_linenos());
+	return *tmp;
+}
+
+set<string>& PDeassign::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = lval_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	return *tmp;
+}
+
+set<string>& PDelayStatement::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = delay_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PDelayStatement::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>(statement_->get_linenos());
+	return *tmp;
+}
+
+set<string>& PEventStatement::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	for(unsigned idx = 0; idx < expr_.count(); ++idx)
+	{
+		tmp1 = expr_[idx]->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+set<string>& PForce::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = lval_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	tmp1 = expr_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	return *tmp;
+}
+
+set<string>& PForever::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PForever::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>(statement_->get_linenos());
+	return *tmp;
+}
+
+set<string>& PForStatement::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(name1_)
+	{
+		tmp1 = name1_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(expr1_)
+	{
+		tmp1 = expr1_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(step_)
+	{
+		tmp1 = step_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(cond_)
+	{
+		tmp1 = cond_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PForStatement::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>();
+	tmp = new svector<unsigned>(*tmp, get_lineno());
+	tmp = new svector<unsigned>(*tmp, statement_->get_linenos());
+	return *tmp;
+}
+
+set<string>& PProcess::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+set<string>& PRelease::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = lval_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	return *tmp;
+}
+
+set<string>& PRepeat::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = expr_->get_funcname();
+	for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+		tmp->insert(*pos);
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+set<string>& PWhile::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::const_iterator pos;
+	set<string> tmp1;
+	tmp1 = cond_->get_funcname();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	if(statement_)
+	{
+		tmp1 = statement_->get_funcs();
+		for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+			tmp->insert(*pos);
+	}
+	return *tmp;
+}
+
+svector<unsigned>& PWhile::get_linenos()
+{
+	svector<unsigned>* tmp = new svector<unsigned>();
+	tmp = new svector<unsigned>(*tmp, get_lineno());
+	tmp = new svector<unsigned>(*tmp, statement_->get_linenos());
+	return *tmp;
+}
+
+PNBTrigger::PNBTrigger(const pform_name_t&ev, PExpr*dly)
+: event_(ev), dly_(dly)
+{
+}
+
+PNBTrigger::~PNBTrigger()
+{
+}
 
 Statement::~Statement()
 {
@@ -418,21 +890,12 @@ PReturn::~PReturn()
       delete expr_;
 }
 
-PTrigger::PTrigger(PPackage*pkg, const pform_name_t&ev)
-: package_(pkg), event_(ev)
+PTrigger::PTrigger(PPackage*pkg, const pform_name_t&e)
+: package_(pkg), event_(e)
 {
 }
 
 PTrigger::~PTrigger()
-{
-}
-
-PNBTrigger::PNBTrigger(const pform_name_t&ev, PExpr*dly)
-: event_(ev), dly_(dly)
-{
-}
-
-PNBTrigger::~PNBTrigger()
 {
 }
 

@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2001-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2001-2020 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -35,11 +39,18 @@ using namespace std;
 
 static vector<vpiHandle> vpip_root_table;
 
+<<<<<<< Updated upstream
 static vpiHandle make_subset_iterator_(int type_code, vector<vpiHandle>&table);
 
 vpiHandle vpip_make_root_iterator(int type_code)
 {
       return make_subset_iterator_(type_code, vpip_root_table);
+=======
+vpiHandle vpip_make_root_iterator(void)
+{
+      return vpip_make_iterator(vpip_root_table.size(),
+				&vpip_root_table[0], false);
+>>>>>>> Stashed changes
 }
 
 void vpip_make_root_iterator(__vpiHandle**&table, unsigned&ntable)
@@ -64,7 +75,10 @@ static void delete_sub_scopes(__vpiScope *scope)
 		case vpiFunction:
 		case vpiTask:
 		  contexts_delete(lscope);
+<<<<<<< Updated upstream
 		  // fallthrough
+=======
+>>>>>>> Stashed changes
 		case vpiModule:
 		case vpiGenScope:
 		case vpiNamedBegin:
@@ -279,6 +293,7 @@ static int compare_types(int code, int type)
 	     type == vpiNamedFork) )
 	    return 1;
 
+<<<<<<< Updated upstream
       if ( code == vpiInstance &&
 	    (type == vpiModule ||
 	     type == vpiProgram ||
@@ -286,6 +301,8 @@ static int compare_types(int code, int type)
 	     type == vpiPackage) )
 	    return 1;
 
+=======
+>>>>>>> Stashed changes
       if ( code == vpiVariables &&
 	     (type == vpiIntegerVar  ||
 	      type == vpiBitVar      ||
@@ -300,22 +317,37 @@ static int compare_types(int code, int type)
       return 0;
 }
 
+<<<<<<< Updated upstream
 static vpiHandle make_subset_iterator_(int type_code, vector<vpiHandle>&table)
+=======
+static vpiHandle module_iter_subset(int code, __vpiScope*ref)
+>>>>>>> Stashed changes
 {
       unsigned mcnt = 0, ncnt = 0;
       vpiHandle*args;
 
+<<<<<<< Updated upstream
       for (unsigned idx = 0; idx < table.size(); idx += 1)
 	    if (compare_types(type_code, table[idx]->get_type_code()))
+=======
+      for (unsigned idx = 0 ;  idx < ref->intern.size() ;  idx += 1)
+	    if (compare_types(code, ref->intern[idx]->get_type_code()))
+>>>>>>> Stashed changes
 		  mcnt += 1;
 
       if (mcnt == 0)
 	    return 0;
 
       args = (vpiHandle*)calloc(mcnt, sizeof(vpiHandle));
+<<<<<<< Updated upstream
       for (unsigned idx = 0; idx < table.size(); idx += 1)
 	    if (compare_types(type_code, table[idx]->get_type_code()))
 		  args[ncnt++] = table[idx];
+=======
+      for (unsigned idx = 0 ;  idx < ref->intern.size() ;  idx += 1)
+	    if (compare_types(code, ref->intern[idx]->get_type_code()))
+		  args[ncnt++] = ref->intern[idx];
+>>>>>>> Stashed changes
 
       assert(ncnt == mcnt);
 
@@ -333,7 +365,11 @@ static vpiHandle module_iter(int code, vpiHandle obj)
       __vpiScope*ref = dynamic_cast<__vpiScope*>(obj);
       assert(ref);
 
+<<<<<<< Updated upstream
       return make_subset_iterator_(code, ref->intern);
+=======
+      return module_iter_subset(code, ref);
+>>>>>>> Stashed changes
 }
 
 

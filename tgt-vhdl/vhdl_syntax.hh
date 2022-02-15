@@ -27,12 +27,21 @@
 #include "vhdl_element.hh"
 #include "vhdl_type.hh"
 
+<<<<<<< Updated upstream
+=======
+using namespace std;
+
+>>>>>>> Stashed changes
 class vhdl_scope;
 class vhdl_entity;
 class vhdl_arch;
 class vhdl_var_ref;
 
+<<<<<<< Updated upstream
 typedef std::set<vhdl_var_ref*> vhdl_var_set_t;
+=======
+typedef set<vhdl_var_ref*> vhdl_var_set_t;
+>>>>>>> Stashed changes
 
 class vhdl_expr : public vhdl_element {
 public:
@@ -54,8 +63,13 @@ public:
    virtual void find_vars(vhdl_var_set_t&) {}
 
 protected:
+<<<<<<< Updated upstream
    static void open_parens(std::ostream& of);
    static void close_parens(std::ostream& of);
+=======
+   static void open_parens(ostream& of);
+   static void close_parens(ostream& of);
+>>>>>>> Stashed changes
    static int paren_levels;
 
    const vhdl_type *type_;
@@ -68,7 +82,11 @@ protected:
  */
 class vhdl_var_ref : public vhdl_expr {
 public:
+<<<<<<< Updated upstream
    vhdl_var_ref(const std::string& name, const vhdl_type *type,
+=======
+   vhdl_var_ref(const string& name, const vhdl_type *type,
+>>>>>>> Stashed changes
                 vhdl_expr *slice = NULL)
       : vhdl_expr(type), name_(name), slice_(slice), slice_width_(0) {}
    ~vhdl_var_ref();
@@ -176,7 +194,11 @@ private:
 
 class vhdl_const_string : public vhdl_expr {
 public:
+<<<<<<< Updated upstream
    explicit vhdl_const_string(const std::string& value)
+=======
+   explicit vhdl_const_string(const string& value)
+>>>>>>> Stashed changes
       : vhdl_expr(vhdl_type::string(), true), value_(value) {}
 
    void emit(std::ostream &of, int level) const;
@@ -270,7 +292,11 @@ private:
  */
 class vhdl_fcall : public vhdl_expr {
 public:
+<<<<<<< Updated upstream
    vhdl_fcall(const std::string& name, const vhdl_type *rtype)
+=======
+   vhdl_fcall(const string& name, const vhdl_type *rtype)
+>>>>>>> Stashed changes
       : vhdl_expr(rtype), name_(name) {};
    ~vhdl_fcall() {}
 
@@ -466,7 +492,11 @@ public:
                              vhdl_severity_t severity = SEVERITY_NOTE);
    virtual ~vhdl_report_stmt() {}
 
+<<<<<<< Updated upstream
    virtual void emit(std::ostream& of, int level) const;
+=======
+   virtual void emit(ostream& of, int level) const;
+>>>>>>> Stashed changes
    void find_vars(vhdl_var_set_t& read, vhdl_var_set_t& write);
 private:
    vhdl_severity_t severity_;
@@ -478,7 +508,11 @@ class vhdl_assert_stmt : public vhdl_report_stmt {
 public:
    explicit vhdl_assert_stmt(const char *reason);
 
+<<<<<<< Updated upstream
    void emit(std::ostream &of, int level) const;
+=======
+   void emit(ostream &of, int level) const;
+>>>>>>> Stashed changes
 };
 
 
@@ -600,7 +634,11 @@ private:
  */
 class vhdl_decl : public vhdl_element {
 public:
+<<<<<<< Updated upstream
    explicit vhdl_decl(const std::string& name, const vhdl_type *type = NULL,
+=======
+   explicit vhdl_decl(const string& name, const vhdl_type *type = NULL,
+>>>>>>> Stashed changes
                       vhdl_expr *initial = NULL)
       : name_(name), type_(type), initial_(initial),
         has_initial_(initial != NULL) {}
@@ -664,7 +702,11 @@ private:
 
 class vhdl_type_decl : public vhdl_decl {
 public:
+<<<<<<< Updated upstream
    vhdl_type_decl(const std::string& name, const vhdl_type *base)
+=======
+   vhdl_type_decl(const string& name, const vhdl_type *base)
+>>>>>>> Stashed changes
       : vhdl_decl(name, base) {}
    void emit(std::ostream &of, int level) const;
 };
@@ -675,7 +717,11 @@ public:
  */
 class vhdl_var_decl : public vhdl_decl {
 public:
+<<<<<<< Updated upstream
    vhdl_var_decl(const std::string& name, const vhdl_type *type)
+=======
+   vhdl_var_decl(const string& name, const vhdl_type *type)
+>>>>>>> Stashed changes
       : vhdl_decl(name, type) {}
    void emit(std::ostream &of, int level) const;
    assign_type_t assignment_type() const { return ASSIGN_BLOCK; }
@@ -687,7 +733,11 @@ public:
  */
 class vhdl_signal_decl : public vhdl_decl {
 public:
+<<<<<<< Updated upstream
    vhdl_signal_decl(const std::string& name, const vhdl_type* type)
+=======
+   vhdl_signal_decl(const string& name, const vhdl_type* type)
+>>>>>>> Stashed changes
       : vhdl_decl(name, type) {}
    virtual void emit(std::ostream &of, int level) const;
    assign_type_t assignment_type() const { return ASSIGN_NONBLOCK; }
@@ -753,7 +803,11 @@ public:
    ~vhdl_comp_inst();
 
    void emit(std::ostream &of, int level) const;
+<<<<<<< Updated upstream
    void map_port(const std::string& name, vhdl_expr *expr);
+=======
+   void map_port(const string& name, vhdl_expr *expr);
+>>>>>>> Stashed changes
 
    const std::string &get_comp_name() const { return comp_name_; }
    const std::string &get_inst_name() const { return inst_name_; }
@@ -777,7 +831,11 @@ public:
    void add_forward_decl(vhdl_decl *decl);
    vhdl_decl *get_decl(const std::string &name) const;
    bool have_declared(const std::string &name) const;
+<<<<<<< Updated upstream
    bool name_collides(const std::string& name) const;
+=======
+   bool name_collides(const string& name) const;
+>>>>>>> Stashed changes
    bool contained_within(const vhdl_scope *other) const;
    vhdl_scope *get_parent() const;
 
@@ -832,7 +890,11 @@ protected:
 
    // The set of variable we have performed a blocking
    // assignment to
+<<<<<<< Updated upstream
    std::set<std::string> blocking_targets_;
+=======
+   set<string> blocking_targets_;
+>>>>>>> Stashed changes
 };
 
 
@@ -876,7 +938,11 @@ private:
  */
 class vhdl_arch : public vhdl_element {
 public:
+<<<<<<< Updated upstream
    vhdl_arch(const std::string& entity, const std::string& name)
+=======
+   vhdl_arch(const string& entity, const string& name)
+>>>>>>> Stashed changes
       : name_(name), entity_(entity) {}
    virtual ~vhdl_arch();
 
@@ -898,7 +964,11 @@ private:
  */
 class vhdl_entity : public vhdl_element {
 public:
+<<<<<<< Updated upstream
    vhdl_entity(const std::string& name, vhdl_arch *arch, int depth=0);
+=======
+   vhdl_entity(const string& name, vhdl_arch *arch, int depth=0);
+>>>>>>> Stashed changes
    virtual ~vhdl_entity();
 
    void emit(std::ostream &of, int level=0) const;
@@ -928,3 +998,7 @@ private:
 typedef std::list<vhdl_entity*> entity_list_t;
 
 #endif
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

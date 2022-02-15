@@ -1,7 +1,11 @@
 #ifndef IVL_PGate_H
 #define IVL_PGate_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1998-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -50,6 +54,7 @@ class Module;
 class PGate : public PNamedItem {
 
     public:
+<<<<<<< Updated upstream
       explicit PGate(perm_string name, std::list<PExpr*>*pins,
 		     const std::list<PExpr*>*del);
 
@@ -63,6 +68,18 @@ class PGate : public PNamedItem {
       void set_ranges(std::list<pform_range_t>*ranges);
       bool is_array() const { return ranges_ != 0; }
 
+=======
+      explicit PGate(perm_string name, list<PExpr*>*pins,
+		     const list<PExpr*>*del);
+
+      explicit PGate(perm_string name, list<PExpr*>*pins,
+		     PExpr*del);
+
+      explicit PGate(perm_string name, list<PExpr*>*pins);
+
+      virtual ~PGate();
+
+>>>>>>> Stashed changes
       perm_string get_name() const { return name_; }
 
 	// This evaluates the delays as far as possible, but returns
@@ -84,14 +101,21 @@ class PGate : public PNamedItem {
       void strength0(ivl_drive_t);
       void strength1(ivl_drive_t);
 
+<<<<<<< Updated upstream
       std::map<perm_string,PExpr*> attributes;
 
       virtual void dump(std::ostream&out, unsigned ind =4) const;
+=======
+      map<perm_string,PExpr*> attributes;
+
+      virtual void dump(ostream&out, unsigned ind =4) const;
+>>>>>>> Stashed changes
       virtual void elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*sc) const;
       virtual bool elaborate_sig(Design*des, NetScope*scope) const;
 
       SymbolType symbol_type() const;
+<<<<<<< Updated upstream
 
     protected:
       const std::vector<PExpr*>& get_pins() const { return pins_; }
@@ -102,10 +126,32 @@ class PGate : public PNamedItem {
       void dump_pins(std::ostream&out) const;
       void dump_delays(std::ostream&out) const;
       void dump_ranges(std::ostream&out) const;
+=======
+      //2021.2.24
+      virtual CfgNode* build_node(PDesign& de){return 0;};\
+      virtual set<string>& get_modname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+      virtual set<string>& get_funcname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+
+    protected:
+      const vector<PExpr*>& get_pins() const { return pins_; }
+      PDelays& get_delay() { return delay_; }
+
+      void dump_pins(ostream&out) const;
+      void dump_delays(ostream&out) const;
+>>>>>>> Stashed changes
 
     private:
       perm_string name_;
       PDelays delay_;
+<<<<<<< Updated upstream
       std::vector<PExpr*>pins_;
 
       std::list<pform_range_t>*ranges_;
@@ -113,6 +159,13 @@ class PGate : public PNamedItem {
       ivl_drive_t str0_, str1_;
 
       void set_pins_(std::list<PExpr*>*pins);
+=======
+      vector<PExpr*>pins_;
+
+      ivl_drive_t str0_, str1_;
+
+      void set_pins_(list<PExpr*>*pins);
+>>>>>>> Stashed changes
 
     private: // not implemented
       PGate(const PGate&);
@@ -126,6 +179,7 @@ class PGate : public PNamedItem {
 class PGAssign  : public PGate {
 
     public:
+<<<<<<< Updated upstream
       explicit PGAssign(std::list<PExpr*>*pins);
       explicit PGAssign(std::list<PExpr*>*pins, std::list<PExpr*>*dels);
       ~PGAssign();
@@ -134,6 +188,34 @@ class PGAssign  : public PGate {
       virtual void elaborate(Design*des, NetScope*scope) const;
       virtual bool elaborate_sig(Design*des, NetScope*scope) const;
 
+=======
+      explicit PGAssign(list<PExpr*>*pins);
+      explicit PGAssign(list<PExpr*>*pins, list<PExpr*>*dels);
+      ~PGAssign();
+
+      void dump(ostream&out, unsigned ind =4) const;
+      virtual void elaborate(Design*des, NetScope*scope) const;
+      virtual bool elaborate_sig(Design*des, NetScope*scope) const;
+      //2021.2.24
+      virtual CfgNode* build_node(PDesign& de);
+      virtual set<string>& get_modname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+      virtual set<string>& get_funcname()
+      {
+            set<string>* tmp = new set<string>;
+            set<string>::const_iterator pos;
+            set<string> tmp1;
+            tmp1 = get_pins()[1]->get_funcname();
+            for(pos = tmp1.begin();
+            pos != tmp1.end();
+                  ++pos)
+                        tmp->insert(*pos);
+            return *tmp;
+      };
+>>>>>>> Stashed changes
     private:
       void elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval) const;
 };
@@ -159,15 +241,23 @@ class PGBuiltin  : public PGate {
 
     public:
       explicit PGBuiltin(Type t, perm_string name,
+<<<<<<< Updated upstream
 			 std::list<PExpr*>*pins,
 			 std::list<PExpr*>*del);
       explicit PGBuiltin(Type t, perm_string name,
 			 std::list<PExpr*>*pins,
+=======
+			 list<PExpr*>*pins,
+			 list<PExpr*>*del);
+      explicit PGBuiltin(Type t, perm_string name,
+			 list<PExpr*>*pins,
+>>>>>>> Stashed changes
 			 PExpr*del);
       ~PGBuiltin();
 
       Type type() const { return type_; }
       const char * gate_name() const;
+<<<<<<< Updated upstream
 
       virtual void dump(std::ostream&out, unsigned ind =4) const;
       virtual void elaborate(Design*, NetScope*scope) const;
@@ -184,6 +274,42 @@ class PGBuiltin  : public PGate {
       bool check_delay_count(Design*des) const;
 
       Type type_;
+=======
+      void set_range(PExpr*msb, PExpr*lsb);
+
+      virtual void dump(ostream&out, unsigned ind =4) const;
+      virtual void elaborate(Design*, NetScope*scope) const;
+      virtual bool elaborate_sig(Design*des, NetScope*scope) const;
+      //2021.2.24
+      virtual CfgNode* build_node(PDesign& de);
+      virtual set<string>& get_modname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+      virtual set<string>& get_funcname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+
+    private:
+      unsigned calculate_array_count_(Design*, NetScope*,
+				      long&high, long&low) const;
+
+      void calculate_gate_and_lval_count_(unsigned&gate_count,
+                                          unsigned&lval_count) const;
+
+      NetNode* create_gate_for_output_(Design*, NetScope*,
+				       perm_string gate_name,
+				       unsigned instance_width) const;
+
+      bool check_delay_count(Design*des) const;
+
+      Type type_;
+      PExpr*msb_;
+      PExpr*lsb_;
+>>>>>>> Stashed changes
 };
 
 /*
@@ -200,7 +326,11 @@ class PGModule  : public PGate {
 	// If the binding of ports is by position, this constructor
 	// builds everything all at once.
       explicit PGModule(perm_string type, perm_string name,
+<<<<<<< Updated upstream
 			std::list<PExpr*>*pins);
+=======
+			list<PExpr*>*pins);
+>>>>>>> Stashed changes
 
 	// If the binding of ports is by name, this constructor takes
 	// the bindings and stores them for later elaboration.
@@ -215,12 +345,25 @@ class PGModule  : public PGate {
 
 	// Parameter overrides can come as an ordered list, or a set
 	// of named expressions.
+<<<<<<< Updated upstream
       void set_parameters(std::list<PExpr*>*o);
       void set_parameters(named<PExpr*>*pa, unsigned npa);
 
       std::map<perm_string,PExpr*> attributes;
 
       virtual void dump(std::ostream&out, unsigned ind =4) const;
+=======
+      void set_parameters(list<PExpr*>*o);
+      void set_parameters(named<PExpr*>*pa, unsigned npa);
+
+	// Modules can be instantiated in ranges. The parser uses this
+	// method to pass the range to the pform.
+      void set_range(PExpr*msb, PExpr*lsb);
+
+      map<perm_string,PExpr*> attributes;
+
+      virtual void dump(ostream&out, unsigned ind =4) const;
+>>>>>>> Stashed changes
       virtual void elaborate(Design*, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*sc) const;
       virtual bool elaborate_sig(Design*des, NetScope*scope) const;
@@ -228,11 +371,31 @@ class PGModule  : public PGate {
 	// This returns the module name of this module. It is a
 	// permallocated string.
       perm_string get_type() const;
+<<<<<<< Updated upstream
+=======
+      //2021.2.24
+      virtual CfgNode* build_node(PDesign& de);
+      virtual set<string>& get_modname()
+      {
+            set<string>* tmp = new set<string>;
+            tmp->insert(type_.str());
+            return *tmp;
+      };
+      virtual set<string>& get_funcname()
+      {
+            set<string>* tmp = new set<string>;
+            return *tmp;
+      };
+>>>>>>> Stashed changes
 
     private:
       Module*bound_type_;
       perm_string type_;
+<<<<<<< Updated upstream
       std::list<PExpr*>*overrides_;
+=======
+      list<PExpr*>*overrides_;
+>>>>>>> Stashed changes
       named<PExpr*>*pins_;
       unsigned npins_;
 
@@ -240,9 +403,19 @@ class PGModule  : public PGate {
       named<PExpr*>*parms_;
       unsigned nparms_;
 
+<<<<<<< Updated upstream
+=======
+	// Arrays of modules are give if these are set.
+      PExpr*msb_;
+      PExpr*lsb_;
+
+>>>>>>> Stashed changes
       friend class delayed_elaborate_scope_mod_instances;
       void elaborate_mod_(Design*, Module*mod, NetScope*scope) const;
       void elaborate_udp_(Design*, PUdp  *udp, NetScope*scope) const;
+      unsigned calculate_instance_count_(Design*, NetScope*,
+                                         long&high, long&low,
+                                         perm_string name) const;
       void elaborate_scope_mod_(Design*des, Module*mod, NetScope*sc) const;
       void elaborate_scope_mod_instances_(Design*des, Module*mod, NetScope*sc) const;
       bool elaborate_sig_mod_(Design*des, NetScope*scope, Module*mod) const;

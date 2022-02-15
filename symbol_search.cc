@@ -25,7 +25,10 @@
 # include  "compiler.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
+=======
+>>>>>>> Stashed changes
 
 /*
  * Search for the hierarchical name. The path may have multiple components. If
@@ -152,26 +155,44 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 	    //    endmodule
 	    if (!passed_module_boundary) {
 		  if (NetNet*net = scope->find_signal(path_tail.name)) {
+<<<<<<< Updated upstream
 			path.push_back(path_tail);
 			res->scope = scope;
 			res->net = net;
 			res->path_head = path;
+=======
+			res->scope = scope;
+			res->net = net;
+			res->path_item = path_tail;
+>>>>>>> Stashed changes
 			return true;
 		  }
 
 		  if (NetEvent*eve = scope->find_event(path_tail.name)) {
+<<<<<<< Updated upstream
 			path.push_back(path_tail);
 			res->scope = scope;
 			res->eve = eve;
 			res->path_head = path;
+=======
+			res->scope = scope;
+			res->eve = eve;
+			res->path_item = path_tail;
+>>>>>>> Stashed changes
 			return true;
 		  }
 
 		  if (const NetExpr*par = scope->get_parameter(des, path_tail.name, res->par_type)) {
+<<<<<<< Updated upstream
 		    path.push_back(path_tail);
 		    res->scope = scope;
 		    res->par_val = par;
 		    res->path_head = path;
+=======
+		    res->scope = scope;
+		    res->par_val = par;
+		    res->path_item = path_tail;
+>>>>>>> Stashed changes
 		    return true;
 		  }
 
@@ -183,10 +204,16 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 			      ivl_type_t prop_type = clsnet->get_prop_type(pidx);
 			      const netuarray_t*tmp_ua = dynamic_cast<const netuarray_t*>(prop_type);
 			      if (tmp_ua) prop_type = tmp_ua->element_type();
+<<<<<<< Updated upstream
 			      path.push_back(path_tail);
 			      res->scope = scope;
 			      res->cls_val = prop_type;
 			      res->path_head = path;
+=======
+			      res->scope = scope;
+			      res->cls_val = prop_type;
+			      res->path_item = path_tail;
+>>>>>>> Stashed changes
 			      return true;
 			}
 		  }
@@ -198,7 +225,11 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 	    }
 
 	    // Could not find an object. Maybe this is a child scope name? If
+<<<<<<< Updated upstream
 	    // so, evaluate the path components to find the exact scope this
+=======
+	    // so, evaluate the path conponents to find the exact scope this
+>>>>>>> Stashed changes
 	    // refers to. This item might be:
 	    //     <scope>.s
 	    //     <scope>.s[n]
@@ -213,9 +244,14 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 		  if (flag) {
 			cerr << li->get_fileline() << ": XXXXX: Errors evaluating scope index" << endl;
 		  } else if (NetScope*chld = scope->child(path_item)) {
+<<<<<<< Updated upstream
 			path.push_back(path_tail);
 			res->scope = chld;
 			res->path_head = path;
+=======
+			res->scope = chld;
+			res->path_item = path_tail;
+>>>>>>> Stashed changes
 			return true;
 		  }
 	    }
@@ -238,9 +274,14 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 	    // foo by the name "foo" as well. In general, anything within
 	    // "foo" can use the name "foo" to reference it.
 	    if (scope->type()==NetScope::MODULE && scope->module_name()==path_tail.name) {
+<<<<<<< Updated upstream
 		  path.push_back(path_tail);
 		  res->scope = scope;
 		  res->path_head = path;
+=======
+		  res->scope = scope;
+		  res->path_item = path_tail;
+>>>>>>> Stashed changes
 		  return true;
 	    }
 
@@ -282,9 +323,14 @@ bool symbol_search(const LineInfo*li, Design*des, NetScope*scope,
 	    hname_t path_item (path_tail.name);
 	    scope = des->find_scope(path_item);
 	    if (scope) {
+<<<<<<< Updated upstream
 		  path.push_back(path_tail);
 		  res->scope = scope;
 		  res->path_head = path;
+=======
+		  res->scope = scope;
+		  res->path_item = path_tail;
+>>>>>>> Stashed changes
 		  return true;
 	    }
       }

@@ -360,9 +360,20 @@ bool NetAssign::eval_func_lval_(const LineInfo&loc,
 
 	    long base = base_const->value().as_long();
 
+<<<<<<< Updated upstream
 	    if (old_lval == 0)
 		  old_lval = make_const_x(lval->sig()->vector_width());
 
+=======
+	    list<long>prefix (0);
+	    base = lval->sig()->sb_to_idx(prefix, base);
+
+	    if (old_lval == 0)
+		  old_lval = make_const_x(lval->sig()->vector_width());
+
+	    ivl_assert(loc, base + lval->lwidth() <= old_lval->expr_width());
+
+>>>>>>> Stashed changes
 	    NetEConst*lval_const = dynamic_cast<NetEConst*>(old_lval);
 	    ivl_assert(loc, lval_const);
 	    verinum lval_v = lval_const->value();
@@ -372,20 +383,31 @@ bool NetAssign::eval_func_lval_(const LineInfo&loc,
 
 	    verinum lpart(verinum::Vx, lval->lwidth());
 	    if (op_) {
+<<<<<<< Updated upstream
 		  for (unsigned idx = 0 ; idx < lpart.len() ; idx += 1) {
 			long ldx = base + idx;
 			if (ldx >= 0 && ldx < lval_v.len())
 			      lpart.set(idx, lval_v[ldx]);
 		  }
+=======
+		  for (unsigned idx = 0 ; idx < lpart.len() ; idx += 1)
+			lpart.set(idx, lval_v[base+idx]);
+
+>>>>>>> Stashed changes
 		  eval_func_lval_op_(loc, lpart, rval_v);
 	    } else {
 		  lpart = cast_to_width(rval_v, lval->lwidth());
 	    }
+<<<<<<< Updated upstream
 	    for (unsigned idx = 0 ; idx < lpart.len() ; idx += 1) {
 		  long ldx = base + idx;
 		  if (ldx >= 0 && ldx < lval_v.len())
 			lval_v.set(idx+base, lpart[idx]);
 	    }
+=======
+	    for (unsigned idx = 0 ; idx < lpart.len() ; idx += 1)
+		  lval_v.set(idx+base, lpart[idx]);
+>>>>>>> Stashed changes
 
 	    delete base_result;
 	    delete rval_result;
@@ -960,11 +982,16 @@ NetExpr* NetESelect::evaluate_function(const LineInfo&loc,
       }
 
       verinum res (verinum::Vx, expr_width());
+<<<<<<< Updated upstream
       for (unsigned idx = 0 ; idx < res.len() ; idx += 1) {
 	    long sdx = base + idx;
 	    if (sdx >= 0 && sdx < sub.len())
 		  res.set(idx, sub[sdx]);
       }
+=======
+      for (unsigned idx = 0 ; idx < res.len() ; idx += 1)
+	    res.set(idx, sub[base+idx]);
+>>>>>>> Stashed changes
 
       NetEConst*res_const = new NetEConst(res);
       return res_const;

@@ -34,8 +34,11 @@
 # include  "ivl_assert.h"
 # include  "ivl_alloc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 struct dll_target dll_target_obj;
 
 #if defined(__WIN32__)

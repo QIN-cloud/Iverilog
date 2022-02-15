@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2019-2021 Martin Whitaker (icarus@martin-whitaker.me.uk)
+=======
+ * Copyright (c) 2019-2020 Martin Whitaker (icarus@martin-whitaker.me.uk)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -23,8 +27,11 @@
 #include "sv_vpi_user.h"
 #include "vvp/ivl_dlfcn.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 /* The only VPI routines that can be legally called when the functions in
    the vlog_startup_routines[] array are executed are vpi_register_systf()
    and vpi_register_cb(), so we can simply provide stubs for the rest. We

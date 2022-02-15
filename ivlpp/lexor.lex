@@ -33,8 +33,11 @@
 static void output_init(void);
 #define YY_USER_INIT output_init()
 
+<<<<<<< Updated upstream
 static void  handle_line_directive(void);
 
+=======
+>>>>>>> Stashed changes
 static void  def_start(void);
 static void  def_add_arg(void);
 static void  def_finish(void);
@@ -217,6 +220,7 @@ W        [ \t\b\f]+
  * older versions of flex (at least 2.5.31); they are supposed to
  * be implied, according to the flex manual.
  */
+<<<<<<< Updated upstream
 keywords (line|include|define|undef|ifdef|ifndef|else|elsif|endif)
 
 %%
@@ -228,6 +232,12 @@ keywords (line|include|define|undef|ifdef|ifndef|else|elsif|endif)
 
  /* Detect single line comments, passing them directly to the output.
   */
+=======
+keywords (include|define|undef|ifdef|ifndef|else|elsif|endif)
+
+%%
+
+>>>>>>> Stashed changes
 "//"[^\r\n]* { ECHO; }
 
  /* detect multiline, c-style comments, passing them directly to the
@@ -702,6 +712,7 @@ keywords (line|include|define|undef|ifdef|ifndef|else|elsif|endif)
 <<EOF>> { if (!load_next_input()) yyterminate(); }
 
 %%
+<<<<<<< Updated upstream
 /*
  * Parse a `line directive and set the current file name and line
  * number accordingly. This ensures we restore the correct name
@@ -783,6 +794,8 @@ static void handle_line_directive(void)
     istack->lineno = lineno - 2;
 }
 
+=======
+>>>>>>> Stashed changes
  /* Defined macros are kept in this table for convenient lookup. As
   * `define directives are matched (and the do_define() function
   * called) the tree is built up to match names with values. If a

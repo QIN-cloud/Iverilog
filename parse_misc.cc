@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1998-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -24,8 +28,11 @@
 # include  <cstdio>
 # include  <iostream>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 extern const char*vl_file;
 unsigned error_count = 0;
 unsigned warn_count = 0;
@@ -77,3 +84,7 @@ int VLwrap()
 {
       return -1;
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

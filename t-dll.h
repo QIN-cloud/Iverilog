@@ -576,7 +576,11 @@ struct ivl_udp_s {
       ccharp_t*table; // zero terminated array of pointers
       perm_string file;
       unsigned lineno;
+<<<<<<< Updated upstream
       std::string*ports;
+=======
+      string*ports;
+>>>>>>> Stashed changes
 };
 
 /*
@@ -617,7 +621,11 @@ struct ivl_nexus_ptr_s {
  */
 struct ivl_nexus_s {
       ivl_nexus_s() : ptrs_(1), nexus_(0), name_(0), private_data(0) { }
+<<<<<<< Updated upstream
       std::vector<ivl_nexus_ptr_s>ptrs_;
+=======
+      vector<ivl_nexus_ptr_s>ptrs_;
+>>>>>>> Stashed changes
       const Nexus*nexus_;
       const char*name_;
       void*private_data;

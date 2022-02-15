@@ -33,8 +33,11 @@
 # include  <limits>
 # include  <ivl_assert.h>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 int SequentialStmt::emit(ostream&out, Entity*, ScopeBase*)
 {
       out << " // " << get_fileline() << ": internal error: "

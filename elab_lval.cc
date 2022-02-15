@@ -36,8 +36,11 @@
 # include  <climits>
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 /*
  * These methods generate a NetAssign_ object for the l-value of the
  * assignment. This is common code for the = and <= statements.
@@ -259,6 +262,7 @@ NetAssign_* PEIdent::elaborate_lval(Design*des,
 	    use_sel = name_tail.index.back().sel;
 
 	// Special case: The l-value is an entire memory, or array
+<<<<<<< Updated upstream
 	// slice. Detect the situation by noting if the index count
 	// is less than the array dimensions (unpacked).
       if (reg->unpacked_dimensions() > name_tail.index.size()) {
@@ -271,6 +275,14 @@ NetAssign_* PEIdent::elaborate_lval(Design*des,
 		        " array or to an array slice requires SystemVerilog."
 		       << endl;
 	    }
+=======
+	// slice. This is, in fact, an error in l-values. Detect the
+	// situation by noting if the index count is less than the
+	// array dimensions (unpacked).
+      if (reg->unpacked_dimensions() > name_tail.index.size()) {
+	    cerr << get_fileline() << ": error: Cannot assign to array "
+		 << path_ << ". Did you forget a word index?" << endl;
+>>>>>>> Stashed changes
 	    des->errors += 1;
 	    return 0;
       }
@@ -871,6 +883,7 @@ bool PEIdent::elaborate_lval_net_part_(Design*des,
 	      // If there are fewer indices then there are packed
 	      // dimensions, then this is a range of slices. Calculate
 	      // it into a big slice.
+<<<<<<< Updated upstream
 	    bool lrc, mrc;
 	    unsigned long tmp_lwid, tmp_mwid;
 	    lrc = reg->sb_to_slice(prefix_indices, lsb, loff, tmp_lwid);
@@ -885,6 +898,14 @@ bool PEIdent::elaborate_lval_net_part_(Design*des,
 		  des->errors += 1;
 		  return 0;
 	    }
+=======
+	    bool lrc;
+	    unsigned long tmp_lwid, tmp_mwid;
+	    lrc = reg->sb_to_slice(prefix_indices,lsb, loff, tmp_lwid);
+	    ivl_assert(*this, lrc);
+	    lrc = reg->sb_to_slice(prefix_indices,msb, moff, tmp_mwid);
+	    ivl_assert(*this, lrc);
+>>>>>>> Stashed changes
 
 	    if (loff < moff) {
 		  moff = moff + tmp_mwid - 1;
@@ -964,6 +985,7 @@ bool PEIdent::elaborate_lval_net_idx_(Design*des,
 	      // we will handle it in the code generator.
 	    if (base_c->value().is_defined()) {
 		  long lsv = base_c->value().as_long();
+<<<<<<< Updated upstream
 		  long rel_base = 0;
 		    // Get the signal range.
 		  const vector<netrange_t>&packed = reg->packed_dims();
@@ -1016,6 +1038,23 @@ bool PEIdent::elaborate_lval_net_idx_(Design*des,
 			rel_base = reg->sb_to_idx(prefix_indices,lsv) + offset;
 		  }
 		  delete base;
+=======
+		  long offset = 0;
+		    // Get the signal range.
+		  const vector<netrange_t>&packed = reg->packed_dims();
+		  ivl_assert(*this, packed.size() == prefix_indices.size()+1);
+
+		    // We want the last range, which is where we work.
+		  const netrange_t&rng = packed.back();
+		  if (((rng.get_msb() < rng.get_lsb()) &&
+                       use_sel == index_component_t::SEL_IDX_UP) ||
+		      ((rng.get_msb() > rng.get_lsb()) &&
+		       use_sel == index_component_t::SEL_IDX_DO)) {
+			offset = -wid + 1;
+		  }
+		  delete base;
+		  long rel_base = reg->sb_to_idx(prefix_indices,lsv) + offset;
+>>>>>>> Stashed changes
 		    /* If we cover the entire lvalue just skip the select. */
 		  if (rel_base == 0 && wid == reg->vector_width()) return true;
 		  base = new NetEConst(verinum(rel_base));

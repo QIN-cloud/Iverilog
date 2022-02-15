@@ -1,7 +1,11 @@
 #ifndef IVL_entity_H
 #define IVL_entity_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2011-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -127,15 +131,25 @@ class Entity : public ComponentBase {
 	// declaration to allow for that case.
       void set_declaration_l_value(perm_string by_name, bool flag);
 
+<<<<<<< Updated upstream
       int emit(std::ostream&out);
 
       void dump(std::ostream&out, int indent = 0) const;
+=======
+      int emit(ostream&out);
+
+      void dump(ostream&out, int indent = 0) const;
+>>>>>>> Stashed changes
 
     private:
       std::map<perm_string,Architecture*>arch_;
       Architecture*bind_arch_;
 
+<<<<<<< Updated upstream
       std::map<perm_string,VType::decl_t> declarations_;
+=======
+      map<perm_string,VType::decl_t> declarations_;
+>>>>>>> Stashed changes
 
       int elaborate_generic_exprs_(void);
       int elaborate_ports_(void);
@@ -159,6 +173,10 @@ extern int emit_entities(void);
  * Use this function to dump a description of the design entities to a
  * file. This is for debug, not for any useful purpose.
  */
+<<<<<<< Updated upstream
 extern void dump_design_entities(std::ostream&file);
+=======
+extern void dump_design_entities(ostream&file);
+>>>>>>> Stashed changes
 
 #endif /* IVL_entity_H */

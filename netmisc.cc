@@ -30,7 +30,10 @@
 # include  "compiler.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
+=======
+>>>>>>> Stashed changes
 
 NetNet* sub_net_from(Design*des, NetScope*scope, long val, NetNet*sig)
 {
@@ -544,7 +547,11 @@ void indices_to_expressions(Design*des, NetScope*scope,
 	    }
 	    ivl_assert(*loc, cur->msb);
 
+<<<<<<< Updated upstream
 	    NetExpr*word_index = elab_and_eval(des, scope, cur->msb, -1, need_const);
+=======
+	    NetExpr*word_index = elab_and_eval_lossless(des, scope, cur->msb, -2, need_const);
+>>>>>>> Stashed changes
 
 	    if (word_index == 0)
 		  flags.invalid = true;
@@ -845,13 +852,26 @@ NetExpr* condition_reduce(NetExpr*expr)
       return cmp;
 }
 
+<<<<<<< Updated upstream
 NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
 		       int context_width, bool need_const, bool annotatable,
 		       ivl_variable_type_t cast_type, bool force_unsigned)
+=======
+static NetExpr* do_elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
+				 int context_width, bool need_const,
+				 bool annotatable, bool force_expand,
+				 ivl_variable_type_t cast_type,
+				 bool force_unsigned)
+>>>>>>> Stashed changes
 {
       PExpr::width_mode_t mode = PExpr::SIZED;
       if ((context_width == -2) && !gn_strict_expr_width_flag)
             mode = PExpr::EXPAND;
+<<<<<<< Updated upstream
+=======
+      if (force_expand)
+	    mode = PExpr::EXPAND;
+>>>>>>> Stashed changes
 
       pe->test_width(des, scope, mode);
 
@@ -884,6 +904,10 @@ NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
                  << "returns type=" << pe->expr_type()
 		 << ", context_width=" << context_width
                  << ", signed=" << pe->has_sign()
+<<<<<<< Updated upstream
+=======
+		 << ", force_expand=" << force_expand
+>>>>>>> Stashed changes
                  << ", expr_width=" << expr_width
                  << ", mode=" << PExpr::width_mode_name(mode) << endl;
 	    cerr << pe->get_fileline() << ":              : "
@@ -956,6 +980,16 @@ NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
             }
       }
 
+<<<<<<< Updated upstream
+=======
+	// If the context_width sent is is actually the minimum width,
+	// then raise the context_width to be big enough for the
+	// lossless expression.
+      if (force_expand && context_width > 0) {
+	    context_width = max(context_width, (int)expr_width);
+      }
+
+>>>>>>> Stashed changes
       eval_expr(tmp, context_width);
 
       if (NetEConst*ce = dynamic_cast<NetEConst*>(tmp)) {
@@ -967,6 +1001,32 @@ NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
 }
 
 NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
+<<<<<<< Updated upstream
+=======
+		       int context_width, bool need_const, bool annotatable,
+		       ivl_variable_type_t cast_type, bool force_unsigned)
+{
+      return do_elab_and_eval(des, scope, pe, context_width,
+			      need_const, annotatable, false,
+			      cast_type, force_unsigned);
+}
+
+/*
+ * This variant of elab_and_eval does the expression losslessly, no
+ * matter what the generation of Verilog. This is in support of
+ * certain special contexts, notably index expressions.
+ */
+NetExpr* elab_and_eval_lossless(Design*des, NetScope*scope, PExpr*pe,
+				 int context_width, bool need_const, bool annotatable,
+				 ivl_variable_type_t cast_type)
+{
+      return do_elab_and_eval(des, scope, pe, context_width,
+			      need_const, annotatable, true,
+			      cast_type, false);
+}
+
+NetExpr* elab_and_eval(Design*des, NetScope*scope, PExpr*pe,
+>>>>>>> Stashed changes
 		       ivl_type_t lv_net_type, bool need_const)
 {
       if (debug_elaborate) {

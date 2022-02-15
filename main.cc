@@ -61,8 +61,11 @@ const char NOTICE[] =
 # include  "discipline.h"
 # include  "t-dll.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 #if defined(__MINGW32__) && !defined(HAVE_GETOPT_H)
 extern "C" int getopt(int argc, char*argv[], const char*fmt);
 extern "C" int optind;
@@ -91,6 +94,13 @@ static void signals_handler(int sig)
 
 # include  "ivl_alloc.h"
 
+<<<<<<< Updated upstream
+=======
+# include  "PDesign.h"
+# include  "cfg.h"
+# include  "slice.h"
+
+>>>>>>> Stashed changes
 /* Count errors detected in flag processing. */
 unsigned flag_errors = 0;
 static unsigned long pre_process_fail_count = 0;
@@ -906,6 +916,13 @@ int main(int argc, char*argv[])
       bool times_flag = false;
       bool version_flag = false;
 
+<<<<<<< Updated upstream
+=======
+	  const char* slice_module = 0;
+	  const char* slice_criterion = NULL;
+	  const char* target_file = 0; //target output file for slice or testgen;
+
+>>>>>>> Stashed changes
       const char* net_path = 0;
       const char* pf_path = 0;
       int opt;
@@ -932,7 +949,32 @@ int main(int argc, char*argv[])
       min_typ_max_flag = TYP;
       min_typ_max_warn = 10;
 
+<<<<<<< Updated upstream
       while ((opt = getopt(argc, argv, "C:F:f:hN:P:p:Vv")) != EOF) switch (opt) {
+=======
+	  char *tmp0;
+	  //unsigned i;
+
+      while ((opt = getopt(argc, argv, "M:A:o:C:F:f:hN:P:p:Vv")) != EOF) switch (opt) {
+	  case 'M':
+	  	  printf("optarg:%s\n",optarg);
+		  slice_module = optarg;
+		  break;
+	  case 'A':
+	  	  printf("optarg:%s\n",optarg);
+		  /*tmp0 = strdup(optarg);
+		  tmp0 = new char[strlen(optarg)-2];
+		  for(i = 1; i < strlen(optarg)-1; ++i)
+			  tmp0[i-1] = optarg[i];
+		  tmp0[i-1] = '\0';
+		  tmp0 = optarg;
+		  tmp0[strlen(optarg)] = '\0';*/
+		  slice_criterion = optarg;
+		  break;
+
+	  case 'o':
+		  target_file = optarg;
+>>>>>>> Stashed changes
 
 	  case 'C':
 	    read_iconfig_file(optarg);
@@ -985,6 +1027,7 @@ int main(int argc, char*argv[])
 
 	    return 0;
       }
+<<<<<<< Updated upstream
 
       if (help_flag) {
 	    cout << "Icarus Verilog Parser/Elaborator version "
@@ -998,11 +1041,28 @@ int main(int argc, char*argv[])
 "\t-P <file>        Write the parsed input to <file>.\n"
 "\t-p <assign>      Set a parameter value.\n"
 "\t-v               Print progress indications"
+=======
+      if (help_flag) {
+	    cout << "Icarus Verilog Parser/Elaborator version " << VERSION << " (" << VERSION_TAG << ")"  << endl <<
+				"usage: ivl <options> <file>\n"
+				"options:\n"
+				"\t-C <name>        Config file from driver.\n"
+				"\t-F <file>        List of source files from driver.\n"
+				"\t-h               Print usage information, and exit.\n"
+				"\t-N <file>        Dump the elaborated netlist to <file>.\n"
+				"\t-P <file>        Write the parsed input to <file>.\n"
+				"\t-p <assign>      Set a parameter value.\n"
+				"\t-v               Print progress indications"
+>>>>>>> Stashed changes
 #if defined(HAVE_TIMES)
                                            " and execution times"
 #endif
                                            ".\n"
+<<<<<<< Updated upstream
 "\t-V               Print version and copyright information, and exit.\n"
+=======
+				"\t-V               Print version and copyright information, and exit.\n"
+>>>>>>> Stashed changes
 
 		  ;
 	    return 0;
@@ -1164,6 +1224,104 @@ int main(int argc, char*argv[])
 	    return rc;
       }
 
+<<<<<<< Updated upstream
+=======
+	//perm_string perm_slice_module(slice_module);
+
+	PDesign design;
+	design.set_modules(pform_modules);
+	design.set_udps(pform_primitives);
+	if(slice_module)
+	{
+		if(pform_modules.find(perm_string(slice_module)) == pform_modules.end())
+		{
+			cerr<<"Invalid top Module name for slicing!"<<endl;
+			exit(0);
+		}
+		cout<<"slice_module: "<<slice_module<<endl;
+
+		svector<ModuleNode*>* mns = design.build_nodes(design, slice_module);
+		
+		string module_name = slice_module;
+		string cfg_path = "/home/smc/Documents/testfile/cfg_out/" + module_name + ".cfg.v";
+		ofstream cfg_out(cfg_path);
+		for(unsigned idx = 0; idx < mns->count(); idx++)
+		{
+			Module_Cfgs* mcfgs = (*mns)[idx]->build_cfgs();
+			for(unsigned midx = 0; midx < mcfgs->cfgs->count(); midx++)
+			{
+				Cfg* scfg = (*(mcfgs->cfgs))[midx];
+				for(unsigned ridx = 0; ridx < scfg->root->count(); ridx++)
+				{
+					cfg_out << (*(*scfg->root)[ridx]);
+				}
+			}
+		}
+		if(slice_criterion != NULL)
+		{
+			cout<<"slice_criterion: "<<slice_criterion<<endl;
+			slicer slice ;
+			slice = program_slicing(mns, slice_criterion);
+			cout<<"slice finish"<<endl;
+			string slice_path = "/home/smc/Documents/testfile/slice_out/" + module_name + ".slice.v";
+			if(!target_file)
+			{
+				target_file = slice_path.c_str();
+			}
+			cout<<"target_file: ";
+			cout<<target_file<<endl;
+			ofstream slice_out(target_file);
+			/*
+			map<perm_string, Module*>::iterator itmodule = design.get_modules().find(perm_string(slice_module));
+
+			if(itmodule != design.get_modules().end())
+			{
+				cout<<"slice:"<<slice_module<<"<->"<<itmodule->second->mod_name()<<endl;;
+				slice_dump(slice_out, itmodule->second, &slice);
+			}
+			*/
+			map<perm_string, Module*>::iterator itmodule = pform_modules.find(perm_string(slice_module));
+
+			if(itmodule != pform_modules.end())
+			{
+				cout<<"slice:"<<slice_module<<"<->"<<itmodule->second->mod_name()<<endl;;
+				slice_dump(slice_out, itmodule->second, &slice);
+			}
+			std::set<std::string> tmp, tmp1;;
+			tmp = slice.mods;
+			std::set<std::string>::const_iterator pos;
+			map<perm_string, Module*> modules = design.get_modules();
+			for (map<perm_string,Module*>::iterator mod = modules.begin();
+			mod != modules.end();
+			mod ++ )
+			{
+				if(slice.mods.find((*mod).first.str()) != slice.mods.end())
+				{
+					tmp1 = (*mod).second->get_mods();
+					for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
+						tmp.insert(*pos);
+				}
+			}
+			for (map<perm_string,Module*>::iterator mod = modules.begin();
+			mod != modules.end();
+			mod ++ )
+			{
+				if(tmp.find((*mod).first.str()) != tmp.end())
+					pform_dump(slice_out, (*mod).second);
+			}
+			
+			for (map<perm_string,PUdp*>::iterator idx = pform_primitives.begin();
+			idx != pform_primitives.end();
+			idx ++ )
+			{
+				if(slice.mods.find((*idx).first.str()) != slice.mods.end())
+					(*idx).second->dump(slice_out);
+			}
+
+			slice_out.close();
+		}
+	}
+>>>>>>> Stashed changes
       if (pre_process_fail_count) {
 	    cerr << "Preprocessor failed with " << pre_process_fail_count
 	         << " errors." << endl;
@@ -1187,7 +1345,12 @@ int main(int argc, char*argv[])
 	    for (mod = pform_modules.begin()
 		       ; mod != pform_modules.end() ; ++ mod ) {
 
+<<<<<<< Updated upstream
 		  if (!(*mod).second->can_be_toplevel())
+=======
+		    /* Don't choose library modules. */
+		  if ((*mod).second->library_flag)
+>>>>>>> Stashed changes
 			continue;
 
 		    /* Don't choose modules instantiated in other

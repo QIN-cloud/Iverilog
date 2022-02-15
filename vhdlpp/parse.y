@@ -6,7 +6,11 @@
 %parse-param {perm_string parse_library_name}
 %{
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2011-2013 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  * Copyright CERN 2012-2016 / Stephen Williams (steve@icarus.com),
  * @author Maciej Suminski (maciej.suminski@cern.ch)
  *
@@ -51,8 +55,11 @@
 # include  <ivl_assert.h>
 # include  <assert.h>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 inline void FILE_NAME(LineInfo*tmp, const struct yyltype&where)
 {
       tmp->set_lineno(where.first_line);

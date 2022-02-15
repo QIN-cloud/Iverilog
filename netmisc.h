@@ -38,8 +38,13 @@ class netsarray_t;
  *
  * The search will stop when it finds a component in the path that is an
  * object of some sort (other then a scope. So for example, if a.b is an
+<<<<<<< Updated upstream
  * array, then the search for a.b[1].c will stop at a.b, leave a.b[1] in
  * path_head, and "c" in path_tail. It is up to the caller to then note that
+=======
+ * array, then the search for a.b[1].c will stop at a.b, leave b[1] in
+ * path_item, and "c" in path_tail. It is up to the caller to then note that
+>>>>>>> Stashed changes
  * "c" must be a method of some sort.
  */
 struct symbol_search_results {
@@ -84,6 +89,7 @@ struct symbol_search_results {
 	// If this is a named event, ...
       NetEvent*eve;
 
+<<<<<<< Updated upstream
         // Store bread crumbs of the search here. The path_tail is the parts
         // of the original path that were not found, or are after an object
         // (and so are probably members or methods).
@@ -94,6 +100,19 @@ struct symbol_search_results {
         // index expressions. If the search result is a scope, then this name
         // is also the name of the scope identified.
       pform_name_t path_head;
+=======
+      // Store bread crumbs of the search here. The path_tail is the parts of
+      // the original path that were not found, or are after an object (and so
+      // are probably members or methods.)
+      pform_name_t path_tail;
+      // The path_item is the final name (possibly before the path_tail items)
+      // that identifies the object. This name may contain index
+      // expressions. Parts of the path left of the path_item name scopes, and
+      // should have all been resolved into the "scope" member above. If the
+      // search result is a scope, then this path_item is also the name of the
+      // scope identified.
+      name_component_t path_item;
+>>>>>>> Stashed changes
 };
 
 /*
@@ -161,6 +180,7 @@ inline NetScope* symbol_search(const LineInfo*li,
  * signed_flag.
  */
 extern NetExpr*pad_to_width(NetExpr*expr, unsigned wid, bool signed_flag,
+<<<<<<< Updated upstream
 			    const LineInfo&info, ivl_type_t use_type = 0);
 /*
  * This version determines the extension method from the base expression type.
@@ -168,6 +188,15 @@ extern NetExpr*pad_to_width(NetExpr*expr, unsigned wid, bool signed_flag,
 inline NetExpr*pad_to_width(NetExpr*expr, unsigned wid, const LineInfo&info, ivl_type_t use_type = 0)
 {
       return pad_to_width(expr, wid, expr->has_sign(), info, use_type);
+=======
+			    const LineInfo&info);
+/*
+ * This version determines the extension method from the base expression type.
+ */
+inline NetExpr*pad_to_width(NetExpr*expr, unsigned wid, const LineInfo&info)
+{
+      return pad_to_width(expr, wid, expr->has_sign(), info);
+>>>>>>> Stashed changes
 }
 
 /*
@@ -224,7 +253,11 @@ extern NetExpr*normalize_variable_base(NetExpr *base, long msb, long lsb,
                                        unsigned long wid, bool is_up,
 				       long slice_off =0);
 extern NetExpr*normalize_variable_base(NetExpr *base,
+<<<<<<< Updated upstream
 				       const std::list<netrange_t>&dims,
+=======
+				       const list<netrange_t>&dims,
+>>>>>>> Stashed changes
 				       unsigned long wid, bool is_up);
 
 /*
@@ -235,6 +268,7 @@ extern NetExpr*normalize_variable_base(NetExpr *base,
  *   ... foo[1][x] ...
  * base is (x) and the generated expression will be (x+8).
  */
+<<<<<<< Updated upstream
 extern NetExpr*normalize_variable_bit_base(const std::list<long>&indices, NetExpr *base,
 					   const NetNet*reg);
 
@@ -282,6 +316,55 @@ extern std::ostream& operator << (std::ostream&o, __IndicesManip<NetExpr*>);
  * Given a list of index expressions, generate elaborated expressions
  * and constant values, if possible.
  */
+=======
+extern NetExpr*normalize_variable_bit_base(const list<long>&indices, NetExpr *base,
+					   const NetNet*reg);
+
+/*
+ * This is similar to normalize_variable_bit_base, but the tail index
+ * it a base and width, instead of a bit. This is used for handling
+ * indexed part selects:
+ *   reg [3:0][7:0] foo;
+ *   ... foo[1][x +: 2]
+ * base is (x), wid input is (2), and is_up is (true). The output
+ * expression is (x+8).
+ */
+extern NetExpr *normalize_variable_part_base(const list<long>&indices, NetExpr*base,
+					     const NetNet*reg,
+					     unsigned long wid, bool is_up);
+/*
+ * Calculate a canonicalizing expression for a slice select. The
+ * indices array is less than needed to fully address a bit, so the
+ * result is a slice of the packed array. The return value is an
+ * expression that gets to the base of the slice, and (lwid) becomes
+ * the width of the slice, in bits. For example:
+ *   reg [4:1][7:0] foo
+ *   ...foo[x]...
+ * base is (x) and the generated expression will be (x*8 - 8), with
+ * lwid set to (8).
+ */
+extern NetExpr*normalize_variable_slice_base(const list<long>&indices, NetExpr *base,
+					     const NetNet*reg, unsigned long&lwid);
+
+/*
+ * The as_indices() manipulator is a convenient way to emit a list of
+ * index values in the form [<>][<>]....
+ */
+template <class TYPE> struct __IndicesManip {
+      explicit inline __IndicesManip(const std::list<TYPE>&v) : val(v) { }
+      const std::list<TYPE>&val;
+};
+template <class TYPE> inline __IndicesManip<TYPE> as_indices(const std::list<TYPE>&indices)
+{ return __IndicesManip<TYPE>(indices); }
+
+extern ostream& operator << (ostream&o, __IndicesManip<long>);
+extern ostream& operator << (ostream&o, __IndicesManip<NetExpr*>);
+
+/*
+ * Given a list of index expressions, generate elaborated expressions
+ * and constant values, if possible.
+ */
+>>>>>>> Stashed changes
 struct indices_flags {
       bool invalid;    // at least one index failed elaboration
       bool variable;   // at least one index is a dynamic value
@@ -292,11 +375,16 @@ extern void indices_to_expressions(Design*des, NetScope*scope,
 				   const LineInfo*loc,
 				     // src is the index list, and count is
 				     // the number of items in the list to use.
+<<<<<<< Updated upstream
 				   const std::list<index_component_t>&src, unsigned count,
+=======
+				   const list<index_component_t>&src, unsigned count,
+>>>>>>> Stashed changes
 				     // True if the expression MUST be constant.
 				   bool need_const,
 				     // These are the outputs.
 				   indices_flags&flags,
+<<<<<<< Updated upstream
 				   std::list<NetExpr*>&indices,std::list<long>&indices_const);
 
 extern NetExpr*normalize_variable_unpacked(const NetNet*net, std::list<long>&indices);
@@ -304,6 +392,15 @@ extern NetExpr*normalize_variable_unpacked(const netsarray_t*net, std::list<long
 
 extern NetExpr*normalize_variable_unpacked(const NetNet*net, std::list<NetExpr*>&indices);
 extern NetExpr*normalize_variable_unpacked(const LineInfo&loc, const netsarray_t*net, std::list<NetExpr*>&indices);
+=======
+				   list<NetExpr*>&indices,list<long>&indices_const);
+
+extern NetExpr*normalize_variable_unpacked(const NetNet*net, list<long>&indices);
+extern NetExpr*normalize_variable_unpacked(const netsarray_t*net, list<long>&indices);
+
+extern NetExpr*normalize_variable_unpacked(const NetNet*net, list<NetExpr*>&indices);
+extern NetExpr*normalize_variable_unpacked(const LineInfo&loc, const netsarray_t*net, list<NetExpr*>&indices);
+>>>>>>> Stashed changes
 
 extern NetExpr*make_canonical_index(Design*des, NetScope*scope,
 				      // loc for error messages
@@ -375,6 +472,15 @@ extern NetExpr* elab_and_eval(Design*des, NetScope*scope,
 			      ivl_variable_type_t cast_type =IVL_VT_NO_TYPE,
 			      bool force_unsigned =false);
 
+<<<<<<< Updated upstream
+=======
+extern NetExpr* elab_and_eval_lossless(Design*des, NetScope*scope,
+			      PExpr*pe, int context_width,
+                              bool need_const =false,
+                              bool annotatable =false,
+			      ivl_variable_type_t cast_type =IVL_VT_NO_TYPE);
+
+>>>>>>> Stashed changes
 /*
  * This form of elab_and_eval uses the ivl_type_t to carry type
  * information instead of the piecemeal form. We should transition to
@@ -481,15 +587,24 @@ extern uint64_t get_scaled_time_from_real(Design*des,
 extern void collapse_partselect_pv_to_concat(Design*des, NetNet*sig);
 
 extern bool evaluate_index_prefix(Design*des, NetScope*scope,
+<<<<<<< Updated upstream
 				  std::list<long>&prefix_indices,
 				  const std::list<index_component_t>&indices);
+=======
+				  list<long>&prefix_indices,
+				  const list<index_component_t>&indices);
+>>>>>>> Stashed changes
 
 extern NetExpr*collapse_array_indices(Design*des, NetScope*scope, NetNet*net,
 				      const std::list<index_component_t>&indices);
 
 extern NetExpr*collapse_array_exprs(Design*des, NetScope*scope,
 				    const LineInfo*loc, NetNet*net,
+<<<<<<< Updated upstream
 				    const std::list<index_component_t>&indices);
+=======
+				    const list<index_component_t>&indices);
+>>>>>>> Stashed changes
 
 extern void assign_unpacked_with_bufz(Design*des, NetScope*scope,
 				      const LineInfo*loc,

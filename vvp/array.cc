@@ -36,8 +36,11 @@
 # include  <cassert>
 # include  "ivl_alloc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 unsigned long count_net_arrays = 0;
 unsigned long count_net_array_words = 0;
 unsigned long count_var_arrays = 0;
@@ -719,9 +722,12 @@ double __vpiArray::get_word_r(unsigned address)
 	    return val;
       }
 
+<<<<<<< Updated upstream
       if (address >= get_size())
 	    return 0.0;
 
+=======
+>>>>>>> Stashed changes
       assert(nets);
       vpiHandle word = nets[address];
       struct __vpiRealVar*vsig = dynamic_cast<__vpiRealVar*>(word);

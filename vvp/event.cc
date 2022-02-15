@@ -780,8 +780,12 @@ void vvp_fun_anyedge_aa::recv_string(vvp_net_ptr_t port, const std::string&bit,
       }
 }
 
+<<<<<<< Updated upstream
 vvp_fun_event_or::vvp_fun_event_or(vvp_net_t*base_net)
 : base_net_(base_net)
+=======
+vvp_fun_event_or::vvp_fun_event_or()
+>>>>>>> Stashed changes
 {
 }
 
@@ -789,8 +793,13 @@ vvp_fun_event_or::~vvp_fun_event_or()
 {
 }
 
+<<<<<<< Updated upstream
 vvp_fun_event_or_sa::vvp_fun_event_or_sa(vvp_net_t*base_net)
 : vvp_fun_event_or(base_net), threads_(0)
+=======
+vvp_fun_event_or_sa::vvp_fun_event_or_sa()
+: threads_(0)
+>>>>>>> Stashed changes
 {
 }
 
@@ -806,6 +815,7 @@ vthread_t vvp_fun_event_or_sa::add_waiting_thread(vthread_t thread)
       return tmp;
 }
 
+<<<<<<< Updated upstream
 void vvp_fun_event_or_sa::recv_vec4(vvp_net_ptr_t, const vvp_vector4_t&bit,
                                     vvp_context_t)
 {
@@ -815,6 +825,17 @@ void vvp_fun_event_or_sa::recv_vec4(vvp_net_ptr_t, const vvp_vector4_t&bit,
 
 vvp_fun_event_or_aa::vvp_fun_event_or_aa(vvp_net_t*base_net)
 : vvp_fun_event_or(base_net)
+=======
+void vvp_fun_event_or_sa::recv_vec4(vvp_net_ptr_t port, const vvp_vector4_t&bit,
+                                    vvp_context_t)
+{
+      run_waiting_threads_(threads_);
+      vvp_net_t*net = port.ptr();
+      net->send_vec4(bit, 0);
+}
+
+vvp_fun_event_or_aa::vvp_fun_event_or_aa()
+>>>>>>> Stashed changes
 {
       context_scope_ = vpip_peek_context_scope();
       context_idx_ = vpip_add_item_to_context(this, context_scope_);
@@ -865,7 +886,12 @@ void vvp_fun_event_or_aa::recv_vec4(vvp_net_ptr_t port, const vvp_vector4_t&bit,
                   (vvp_get_context_item(context, context_idx_));
 
             run_waiting_threads_(state->threads);
+<<<<<<< Updated upstream
             base_net_->send_vec4(bit, context);
+=======
+            vvp_net_t*net = port.ptr();
+            net->send_vec4(bit, context);
+>>>>>>> Stashed changes
       } else {
             context = context_scope_->live_contexts;
             while (context) {
@@ -1032,6 +1058,7 @@ void compile_event(char*label, char*type, unsigned argc, struct symb_s*argv)
 
 static void compile_event_or(char*label, unsigned argc, struct symb_s*argv)
 {
+<<<<<<< Updated upstream
       vvp_net_t*base_net = new vvp_net_t;
       if (vpip_peek_current_scope()->is_automatic()) {
             base_net->fun = new vvp_fun_event_or_aa(base_net);
@@ -1051,6 +1078,22 @@ static void compile_event_or(char*label, unsigned argc, struct symb_s*argv)
 		  curr_net->fun = base_net->fun;
 	    }
 	    input_connect(curr_net, idx % 4, argv[idx].text);
+=======
+      vvp_net_t* ptr = new vvp_net_t;
+      if (vpip_peek_current_scope()->is_automatic()) {
+            ptr->fun = new vvp_fun_event_or_aa;
+      } else {
+            ptr->fun = new vvp_fun_event_or_sa;
+      }
+      define_functor_symbol(label, ptr);
+      free(label);
+
+	/* This is a very special case. Point all the source inputs to
+	   the same input. It doesn't matter that the streams get
+	   tangled because data values are irrelevant. */
+      for (unsigned idx = 0 ;  idx < argc ;  idx += 1) {
+	    input_connect(ptr, 0, argv[idx].text);
+>>>>>>> Stashed changes
       }
       free(argv);
 }

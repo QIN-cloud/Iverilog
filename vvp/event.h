@@ -305,18 +305,27 @@ class vvp_fun_anyedge_aa : public vvp_fun_anyedge, public automatic_hooks_s {
 
 /*
  * This functor triggers anytime any input is set, no matter what the
+<<<<<<< Updated upstream
  * value. This is similar to a named event, but it has no handle. It
  * supports wide (more than 4) inputs, so needs a pointer to the base
  * net that is used for output.
+=======
+ * value. This is similar to a named event, but it has no handle.
+>>>>>>> Stashed changes
  */
 class vvp_fun_event_or : public vvp_net_fun_t, public waitable_hooks_s {
 
     public:
+<<<<<<< Updated upstream
       explicit vvp_fun_event_or(vvp_net_t*base_net);
       ~vvp_fun_event_or();
 
     protected:
       vvp_net_t*base_net_;
+=======
+      explicit vvp_fun_event_or();
+      ~vvp_fun_event_or();
+>>>>>>> Stashed changes
 };
 
 /*
@@ -325,7 +334,11 @@ class vvp_fun_event_or : public vvp_net_fun_t, public waitable_hooks_s {
 class vvp_fun_event_or_sa : public vvp_fun_event_or {
 
     public:
+<<<<<<< Updated upstream
       explicit vvp_fun_event_or_sa(vvp_net_t*base_net);
+=======
+      explicit vvp_fun_event_or_sa();
+>>>>>>> Stashed changes
       ~vvp_fun_event_or_sa();
 
       vthread_t add_waiting_thread(vthread_t thread);
@@ -343,7 +356,11 @@ class vvp_fun_event_or_sa : public vvp_fun_event_or {
 class vvp_fun_event_or_aa : public vvp_fun_event_or, public automatic_hooks_s {
 
     public:
+<<<<<<< Updated upstream
       explicit vvp_fun_event_or_aa(vvp_net_t*base_net);
+=======
+      explicit vvp_fun_event_or_aa();
+>>>>>>> Stashed changes
       ~vvp_fun_event_or_aa();
 
       void alloc_instance(vvp_context_t context);

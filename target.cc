@@ -24,8 +24,11 @@
 # include  "target.h"
 # include  <typeinfo>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 target_t::~target_t()
 {
 }

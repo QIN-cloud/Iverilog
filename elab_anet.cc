@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream:elab_anet.cc
  * Copyright (c) 2000-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2000-2003 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes:elab_anet.cpp
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -28,8 +32,11 @@
 # include  "netlist.h"
 # include  "netmisc.h"
 # include  <iostream>
+<<<<<<< Updated upstream:elab_anet.cc
 
 using namespace std;
+=======
+>>>>>>> Stashed changes:elab_anet.cpp
 
 NetNet* PExpr::elaborate_anet(Design*des, NetScope*scope) const
 {
@@ -165,3 +172,7 @@ NetNet* PEIdent::elaborate_anet(Design*des, NetScope*scope) const
 
       return sig;
 }
+<<<<<<< Updated upstream:elab_anet.cc
+=======
+
+>>>>>>> Stashed changes:elab_anet.cpp

@@ -35,6 +35,47 @@
 using namespace std;
 
 /*
+<<<<<<< Updated upstream
+=======
+ * Some types have a list of ranges that need to be elaborated. This
+ * function elaborates the ranges referenced by "dims" into the vector
+ * "ranges".
+ */
+static void elaborate_array_ranges(Design*des, NetScope*scope,
+				   vector<netrange_t>&ranges,
+				   const list<pform_range_t>*dims)
+{
+      if (dims == 0)
+	    return;
+
+      for (list<pform_range_t>::const_iterator cur = dims->begin()
+		 ; cur != dims->end() ; ++ cur) {
+
+	    NetExpr*me = elab_and_eval(des, scope, cur->first, 0, true);
+
+	    NetExpr*le = elab_and_eval(des, scope, cur->second, 0, true);
+
+	      /* If elaboration failed for either expression, we
+		 should have already reported the error, so just
+		 skip the following evaluation to recover. */
+
+	    long mnum = 0, lnum = 0;
+	    if ( me && ! eval_as_long(mnum, me) ) {
+		  assert(0);
+		  des->errors += 1;
+	    }
+
+	    if ( le && ! eval_as_long(lnum, le) ) {
+		  assert(0);
+		  des->errors += 1;
+	    }
+
+	    ranges.push_back(netrange_t(mnum, lnum));
+      }
+}
+
+/*
+>>>>>>> Stashed changes
  * Elaborations of types may vary depending on the scope that it is
  * done in, so keep a per-scope cache of the results.
  */
@@ -126,8 +167,12 @@ ivl_type_s* enum_type_t::elaborate_type_raw(Design*, NetScope*scope) const
 ivl_type_s* vector_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       vector<netrange_t> packed;
+<<<<<<< Updated upstream
       if (pdims.get())
 	    evaluate_ranges(des, scope, this, packed, *pdims);
+=======
+      elaborate_array_ranges(des, scope, packed, pdims.get());
+>>>>>>> Stashed changes
 
       netvector_t*tmp = new netvector_t(packed, base_type);
       tmp->set_signed(signed_flag);
@@ -155,6 +200,7 @@ ivl_type_s* string_type_t::elaborate_type_raw(Design*, NetScope*) const
 ivl_type_s* parray_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       vector<netrange_t>packed;
+<<<<<<< Updated upstream
       if (dims.get())
 	    evaluate_ranges(des, scope, this, packed, *dims);
 
@@ -170,6 +216,10 @@ ivl_type_s* parray_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 		cerr << "` is not packed." << endl;
 		des->errors++;
       }
+=======
+      elaborate_array_ranges(des, scope, packed, dims.get());
+
+>>>>>>> Stashed changes
       ivl_type_t etype = base_type->elaborate_type(des, scope);
 
       return new netparray_t(packed, etype);
@@ -179,10 +229,14 @@ netstruct_t* struct_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       netstruct_t*res = new netstruct_t;
 
+<<<<<<< Updated upstream
       res->set_line(*this);
 
       res->packed(packed_flag);
       res->set_signed(signed_flag);
+=======
+      res->packed(packed_flag);
+>>>>>>> Stashed changes
 
       if (union_flag)
 	    res->union_flag(true);

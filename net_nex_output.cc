@@ -26,8 +26,11 @@
 # include  "netlist.h"
 # include  "netmisc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 void NetProc::nex_output(NexusSet&)
 {
       cerr << get_fileline()

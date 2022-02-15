@@ -21,8 +21,11 @@
 #include "std_types.h"
 #include "scope.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static map<perm_string, VTypeDef*> std_types;
 // this list contains enums used by typedefs in the std_types map
 static list<const VTypeEnum*> std_enums;
@@ -142,3 +145,7 @@ bool is_global_type(perm_string name)
 
       return std_types.count(name) > 0;
 }
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes

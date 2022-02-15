@@ -34,8 +34,13 @@ class netstruct_t : public LineInfo, public ivl_type_s {
 	    ivl_type_t net_type;
 	    inline ivl_variable_type_t data_type() const
 	    { return net_type->base_type(); };
+<<<<<<< Updated upstream
 	    bool get_signed() const
 	    { return net_type->get_signed(); }
+=======
+	      // We need to keep the individual element sign information.
+	    bool get_signed() const { return false; };
+>>>>>>> Stashed changes
       };
 
     public:
@@ -51,10 +56,13 @@ class netstruct_t : public LineInfo, public ivl_type_s {
       void packed(bool flag);
       bool packed(void) const;
 
+<<<<<<< Updated upstream
         // When the struct is accessed as a primary it can be signed or unsigned
       void set_signed(bool flag) { signed_ = flag; }
       bool get_signed(void) const { return signed_; }
 
+=======
+>>>>>>> Stashed changes
 	// Append a new member to the struct/union. This must be done
 	// after the union_flag and packed settings are set. This
 	// function does error checking, and the "des" argument is
@@ -78,7 +86,10 @@ class netstruct_t : public LineInfo, public ivl_type_s {
     private:
       bool union_;
       bool packed_;
+<<<<<<< Updated upstream
       bool signed_;
+=======
+>>>>>>> Stashed changes
       std::vector<member_t>members_;
 };
 

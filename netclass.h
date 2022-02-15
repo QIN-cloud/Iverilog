@@ -1,7 +1,11 @@
 #ifndef IVL_netclass_H
 #define IVL_netclass_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2012-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2012-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -110,7 +114,11 @@ class netclass_t : public ivl_type_s {
       bool emit_defs(struct target_t*tgt) const;
 
       std::ostream& debug_dump(std::ostream&fd) const;
+<<<<<<< Updated upstream
       void dump_scope(std::ostream&fd) const;
+=======
+      void dump_scope(ostream&fd) const;
+>>>>>>> Stashed changes
 
     private:
       perm_string name_;

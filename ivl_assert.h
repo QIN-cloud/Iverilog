@@ -1,7 +1,11 @@
 #ifndef IVL_ivl_assert_H
 #define IVL_ivl_assert_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2007-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2007-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -24,9 +28,15 @@
 #define ivl_assert(tok, expression)  \
       do { \
 	    if (! (expression)) { \
+<<<<<<< Updated upstream
 		  std::cerr << (tok).get_fileline() << ": assert: " \
 			    << __FILE__ << ":" << __LINE__ \
 			    << ": failed assertion " << #expression << std::endl; \
+=======
+		  cerr << (tok).get_fileline() << ": assert: " \
+		       << __FILE__ << ":" << __LINE__ \
+		       << ": failed assertion " << #expression << endl; \
+>>>>>>> Stashed changes
 		  abort(); \
 	    } \
       } while (0)

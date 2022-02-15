@@ -48,6 +48,7 @@ ivl_variable_type_t vector_type_t::figure_packed_base_type(void) const
       return base_type;
 }
 
+<<<<<<< Updated upstream
 ivl_variable_type_t enum_type_t::figure_packed_base_type() const
 {
       return base_type;
@@ -58,6 +59,8 @@ ivl_variable_type_t atom2_type_t::figure_packed_base_type() const
       return IVL_VT_BOOL;
 }
 
+=======
+>>>>>>> Stashed changes
 atom2_type_t size_type (32, true);
 
 PNamedItem::SymbolType enum_type_t::symbol_type() const

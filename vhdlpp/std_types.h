@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright CERN 2015-2021
+=======
+ * Copyright CERN 2015
+>>>>>>> Stashed changes
  * @author Maciej Suminski (maciej.suminski@cern.ch)
  *
  *    This source code is free software; you can redistribute it
@@ -22,7 +26,11 @@
 
 class ActiveScope;
 
+<<<<<<< Updated upstream
 void emit_std_types(std::ostream&out);
+=======
+void emit_std_types(ostream&out);
+>>>>>>> Stashed changes
 void generate_global_types(ActiveScope*res);
 bool is_global_type(perm_string type_name);
 void delete_global_types();

@@ -29,8 +29,11 @@
 # include  "ivl_assert.h"
 # include  "netmisc.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 NetExpr* NetExpr::eval_tree()
 {
       return 0;
@@ -811,6 +814,7 @@ NetEConst* NetEBLogic::eval_arguments_(const NetExpr*l, const NetExpr*r) const
 
       const NetEConst*lc = dynamic_cast<const NetEConst*>(l);
       const NetEConst*rc = dynamic_cast<const NetEConst*>(r);
+<<<<<<< Updated upstream
 
       // If the left side is constant and the right side is short circuited
       // replace the expression with a constant
@@ -841,6 +845,8 @@ NetEConst* NetEBLogic::eval_arguments_(const NetExpr*l, const NetExpr*r) const
 	    }
       }
 
+=======
+>>>>>>> Stashed changes
       if (lc == 0 || rc == 0) return 0;
 
       verinum::V lv = verinum::V0;

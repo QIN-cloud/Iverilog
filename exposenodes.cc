@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2016-2021 Martin Whitaker (icarus@martin-whitaker.me.uk)
+=======
+ * Copyright (c) 2016 Martin Whitaker (icarus@martin-whitaker.me.uk)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -26,7 +30,10 @@
 # include  "compiler.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
+=======
+>>>>>>> Stashed changes
 
 /*
  * The exposenodes functor is primarily provided for use by the vlog95

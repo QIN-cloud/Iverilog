@@ -1,7 +1,11 @@
 #ifndef IVL_parse_misc_H
 #define IVL_parse_misc_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1998-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -57,7 +61,10 @@ extern YYLTYPE yylloc;
  */
 extern int  VLlex();
 extern void VLerror(const char*msg);
+<<<<<<< Updated upstream
 extern void VLerror(const YYLTYPE&loc, va_list ap);
+=======
+>>>>>>> Stashed changes
 extern void VLerror(const YYLTYPE&loc, const char*msg, ...) __attribute__((format(printf,2,3)));
 #define yywarn VLwarn
 extern void VLwarn(const char*msg);
@@ -65,7 +72,11 @@ extern void VLwarn(const YYLTYPE&loc, const char*msg);
 
 extern void destroy_lexor();
 
+<<<<<<< Updated upstream
 extern std::ostream& operator << (std::ostream&, const YYLTYPE&loc);
+=======
+extern ostream& operator << (ostream&, const YYLTYPE&loc);
+>>>>>>> Stashed changes
 
 extern unsigned error_count, warn_count;
 extern unsigned long based_size;

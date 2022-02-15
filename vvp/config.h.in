@@ -19,6 +19,17 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+<<<<<<< Updated upstream
+=======
+#if defined(__cplusplus)
+#  if !defined(__GNUC__)
+     using namespace std;
+#  elif (__GNUC__ == 3)
+     using namespace std;
+#  endif
+#endif
+
+>>>>>>> Stashed changes
 # define SIZEOF_UNSIGNED_LONG_LONG 0
 #ifndef SIZEOF_UNSIGNED_LONG
 # define SIZEOF_UNSIGNED_LONG 0

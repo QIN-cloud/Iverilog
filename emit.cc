@@ -33,8 +33,11 @@
 # include  <cassert>
 # include  <cstring>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 bool NetNode::emit_node(struct target_t*) const
 {
       cerr << "EMIT: Gate type? " << typeid(*this).name() << endl;

@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2004-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2004-2020 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -41,8 +45,11 @@
 # include  "ivl_alloc.h"
 #endif
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 /* This is the size of an unsigned long in bits. This is just a
    convenience macro. */
 # define CPU_WORD_BITS (8*sizeof(unsigned long))

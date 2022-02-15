@@ -35,8 +35,11 @@
 # include  "ivl_alloc.h"
 #endif
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 unsigned long count_assign_events = 0;
 unsigned long count_gen_events = 0;
 unsigned long count_thread_events = 0;

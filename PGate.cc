@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1999-2019 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -24,8 +28,11 @@
 # include  "verinum.h"
 # include  <cassert>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 void PGate::set_pins_(list<PExpr*>*pins)
 {
       assert(pins);
@@ -41,7 +48,11 @@ void PGate::set_pins_(list<PExpr*>*pins)
 }
 
 PGate::PGate(perm_string name, list<PExpr*>*pins, const list<PExpr*>*del)
+<<<<<<< Updated upstream
 : name_(name), pins_(pins? pins->size() : 0), ranges_(0)
+=======
+: name_(name), pins_(pins? pins->size() : 0)
+>>>>>>> Stashed changes
 {
       if (pins) set_pins_(pins);
       if (del) delay_.set_delays(del);
@@ -50,7 +61,11 @@ PGate::PGate(perm_string name, list<PExpr*>*pins, const list<PExpr*>*del)
 }
 
 PGate::PGate(perm_string name, list<PExpr*>*pins, PExpr*del)
+<<<<<<< Updated upstream
 : name_(name), pins_(pins? pins->size() : 0), ranges_(0)
+=======
+: name_(name), pins_(pins? pins->size() : 0)
+>>>>>>> Stashed changes
 {
       if (pins) set_pins_(pins);
       if (del) delay_.set_delay(del);
@@ -59,7 +74,11 @@ PGate::PGate(perm_string name, list<PExpr*>*pins, PExpr*del)
 }
 
 PGate::PGate(perm_string name, list<PExpr*>*pins)
+<<<<<<< Updated upstream
 : name_(name), pins_(pins? pins->size() : 0), ranges_(0)
+=======
+: name_(name), pins_(pins? pins->size() : 0)
+>>>>>>> Stashed changes
 {
       if (pins) set_pins_(pins);
       str0_ = IVL_DR_STRONG;
@@ -70,12 +89,15 @@ PGate::~PGate()
 {
 }
 
+<<<<<<< Updated upstream
 void PGate::set_ranges(list<pform_range_t>*ranges)
 {
       assert(ranges_ == 0);
       ranges_ = ranges;
 }
 
+=======
+>>>>>>> Stashed changes
 ivl_drive_t PGate::strength0() const
 {
       return str0_;
@@ -149,14 +171,22 @@ PGAssign::~PGAssign()
 PGBuiltin::PGBuiltin(Type t, perm_string name,
 		     list<PExpr*>*pins,
 		     list<PExpr*>*del)
+<<<<<<< Updated upstream
 : PGate(name, pins, del), type_(t)
+=======
+: PGate(name, pins, del), type_(t), msb_(0), lsb_(0)
+>>>>>>> Stashed changes
 {
 }
 
 PGBuiltin::PGBuiltin(Type t, perm_string name,
 		     list<PExpr*>*pins,
 		     PExpr*del)
+<<<<<<< Updated upstream
 : PGate(name, pins, del), type_(t)
+=======
+: PGate(name, pins, del), type_(t), msb_(0), lsb_(0)
+>>>>>>> Stashed changes
 {
 }
 
@@ -165,6 +195,18 @@ PGBuiltin::~PGBuiltin()
 {
 }
 
+<<<<<<< Updated upstream
+=======
+void PGBuiltin::set_range(PExpr*msb, PExpr*lsb)
+{
+      assert(msb_ == 0);
+      assert(lsb_ == 0);
+
+      msb_ = msb;
+      lsb_ = lsb;
+}
+
+>>>>>>> Stashed changes
 const char* PGBuiltin::gate_name() const
 {
       switch(type_) {
@@ -265,20 +307,32 @@ const char* PGBuiltin::gate_name() const
 
 PGModule::PGModule(perm_string type, perm_string name, list<PExpr*>*pins)
 : PGate(name, pins), bound_type_(0), type_(type), overrides_(0), pins_(0),
+<<<<<<< Updated upstream
   npins_(0), parms_(0), nparms_(0)
+=======
+  npins_(0), parms_(0), nparms_(0), msb_(0), lsb_(0)
+>>>>>>> Stashed changes
 {
 }
 
 PGModule::PGModule(perm_string type, perm_string name,
 		   named<PExpr*>*pins, unsigned npins)
 : PGate(name, 0), bound_type_(0), type_(type), overrides_(0), pins_(pins),
+<<<<<<< Updated upstream
   npins_(npins), parms_(0), nparms_(0)
+=======
+  npins_(npins), parms_(0), nparms_(0), msb_(0), lsb_(0)
+>>>>>>> Stashed changes
 {
 }
 
 PGModule::PGModule(Module*type, perm_string name)
 : PGate(name, 0), bound_type_(type), overrides_(0), pins_(0),
+<<<<<<< Updated upstream
   npins_(0), parms_(0), nparms_(0)
+=======
+  npins_(0), parms_(0), nparms_(0), msb_(0), lsb_(0)
+>>>>>>> Stashed changes
 {
 }
 
@@ -300,6 +354,18 @@ void PGModule::set_parameters(named<PExpr*>*pa, unsigned npa)
       nparms_ = npa;
 }
 
+<<<<<<< Updated upstream
+=======
+void PGModule::set_range(PExpr*msb, PExpr*lsb)
+{
+      assert(msb_ == 0);
+      assert(lsb_ == 0);
+
+      msb_ = msb;
+      lsb_ = lsb;
+}
+
+>>>>>>> Stashed changes
 perm_string PGModule::get_type() const
 {
       return type_;

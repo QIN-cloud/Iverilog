@@ -30,8 +30,11 @@
 # include  "util.h"
 # include  <typeinfo>
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 PExpr::PExpr()
 : expr_type_(IVL_VT_NO_TYPE)
 {
@@ -58,6 +61,30 @@ bool PExpr::is_the_same(const PExpr*that) const
       return typeid(this) == typeid(that);
 }
 
+<<<<<<< Updated upstream
+=======
+string& PExpr::get_var(unsigned idx)
+{
+	assert(idx < vars_.count());
+	return vars_[idx];
+}
+
+unsigned PExpr::vars_count()
+{
+	return vars_.count();
+}
+
+svector<string>& PExpr::get_vars()
+{
+	return vars_;
+}
+
+svector<string>& PEEvent::get_vars()
+{
+  return expr_->get_vars();
+}
+
+>>>>>>> Stashed changes
 NetNet* PExpr::elaborate_lnet(Design*, NetScope*) const
 {
       cerr << get_fileline() << ": error: "
@@ -120,6 +147,11 @@ PEAssignPattern::~PEAssignPattern()
 PEBinary::PEBinary(char op, PExpr*l, PExpr*r)
 : op_(op), left_(l), right_(r)
 {
+<<<<<<< Updated upstream
+=======
+  set_vars(svector<string>(vars_, l->get_vars()) );
+  set_vars(svector<string>(vars_, r->get_vars()) );
+>>>>>>> Stashed changes
 }
 
 PEBinary::~PEBinary()
@@ -207,11 +239,27 @@ PEBShift::~PEBShift()
 PECallFunction::PECallFunction(const pform_name_t&n, const vector<PExpr *> &parms)
 : package_(0), path_(n), parms_(parms), is_overridden_(false)
 {
+<<<<<<< Updated upstream
+=======
+  for(vector<PExpr*>::const_iterator idx = parms.begin();
+    idx != parms.end(); idx++)
+  {
+    set_vars(svector<string>(vars_, (*idx)->get_vars()));
+  }
+>>>>>>> Stashed changes
 }
 
 PECallFunction::PECallFunction(PPackage*pkg, const pform_name_t&n, const vector<PExpr *> &parms)
 : package_(pkg), path_(n), parms_(parms), is_overridden_(false)
 {
+<<<<<<< Updated upstream
+=======
+  for(vector<PExpr*>::const_iterator idx = parms.begin();
+    idx != parms.end(); idx++)
+  {
+    set_vars(svector<string>(vars_, (*idx)->get_vars()));
+  }
+>>>>>>> Stashed changes
 }
 
 static pform_name_t pn_from_ps(perm_string n)
@@ -290,7 +338,14 @@ PEConcat::PEConcat(const list<PExpr*>&p, PExpr*r)
       assert(parms_.size() == p.size());
       for (list<PExpr*>::const_iterator idx = p.begin()
 		 ; idx != p.end() ; ++idx)
+<<<<<<< Updated upstream
 	    parms_[tmp_idx++] = *idx;
+=======
+      {
+        parms_[tmp_idx++] = *idx;
+        set_vars(svector<string>(vars_, (*idx)->get_vars()));
+      }
+>>>>>>> Stashed changes
 
       tested_scope_ = 0;
       repeat_count_ = 1;
@@ -371,23 +426,40 @@ const verireal& PEFNumber::value() const
 PEIdent::PEIdent(const pform_name_t&that)
 : package_(0), path_(that), no_implicit_sig_(false)
 {
+<<<<<<< Updated upstream
+=======
+      string tmps(peek_tail_name(that).str());
+      set_vars(svector<string>(vars_, tmps));
+      //vars_ = svector<string>(vars_, tmps);
+>>>>>>> Stashed changes
 }
 
 PEIdent::PEIdent(perm_string s, bool no_implicit_sig)
 : package_(0), no_implicit_sig_(no_implicit_sig)
 {
       path_.push_back(name_component_t(s));
+<<<<<<< Updated upstream
+=======
+      string tmps(s.str());
+      set_vars(svector<string>(vars_, tmps));
+>>>>>>> Stashed changes
 }
 
 PEIdent::PEIdent(PPackage*pkg, const pform_name_t&that)
 : package_(pkg), path_(that), no_implicit_sig_(true)
 {
+<<<<<<< Updated upstream
+=======
+      string tmps(peek_tail_name(that).str());
+      set_vars(svector<string>(vars_, tmps));
+>>>>>>> Stashed changes
 }
 
 PEIdent::~PEIdent()
 {
 }
 
+<<<<<<< Updated upstream
 static bool find_enum_constant(LexicalScope*scope, perm_string name)
 {
       for (vector<enum_type_t*>::const_iterator cur = scope->enum_sets.begin() ;
@@ -400,6 +472,8 @@ static bool find_enum_constant(LexicalScope*scope, perm_string name)
       return false;
 }
 
+=======
+>>>>>>> Stashed changes
 void PEIdent::declare_implicit_nets(LexicalScope*scope, NetNet::Type type)
 {
         /* We create an implicit wire if:
@@ -415,14 +489,22 @@ void PEIdent::declare_implicit_nets(LexicalScope*scope, NetNet::Type type)
             while (ss) {
                   if (ss->wires.find(name) != ss->wires.end())
                         return;
+<<<<<<< Updated upstream
+=======
+                  if (ss->localparams.find(name) != ss->localparams.end())
+                        return;
+>>>>>>> Stashed changes
                   if (ss->parameters.find(name) != ss->parameters.end())
                         return;
                   if (ss->genvars.find(name) != ss->genvars.end())
                         return;
                   if (ss->events.find(name) != ss->events.end())
                         return;
+<<<<<<< Updated upstream
                   if (find_enum_constant(ss, name))
                         return;
+=======
+>>>>>>> Stashed changes
                   /* Strictly speaking, we should also check for name clashes
                      with tasks, functions, named blocks, module instances,
                      and generate blocks. However, this information is not
@@ -541,6 +623,12 @@ string PEString::value() const
 PETernary::PETernary(PExpr*e, PExpr*t, PExpr*f)
 : expr_(e), tru_(t), fal_(f)
 {
+<<<<<<< Updated upstream
+=======
+  set_vars(svector<string>(vars_, e->get_vars()));
+  set_vars(svector<string>(vars_, t->get_vars()));
+  set_vars(svector<string>(vars_, f->get_vars()));
+>>>>>>> Stashed changes
 }
 
 PETernary::~PETernary()

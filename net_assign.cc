@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 2000-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 2000-2015 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,8 +29,11 @@
 # include  "netenum.h"
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 /*
  * NetAssign
  */

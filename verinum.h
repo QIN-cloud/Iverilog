@@ -1,7 +1,11 @@
 #ifndef IVL_verinum_H
 #define IVL_verinum_H
 /*
+<<<<<<< Updated upstream
  * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
+=======
+ * Copyright (c) 1998-2014 Stephen Williams (steve@icarus.com)
+>>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,9 +29,17 @@
 #ifdef HAVE_IOSFWD
 # include  <iosfwd>
 #else
+<<<<<<< Updated upstream
 # include  <iostream>
 #endif
 
+=======
+class ostream;
+#endif
+
+using namespace std;
+
+>>>>>>> Stashed changes
 /*
  * Numbers in Verilog are multibit strings, where each bit has 4
  * possible values: 0, 1, x or z. The verinum number is store in
@@ -40,7 +52,11 @@ class verinum {
       enum V { V0 = 0, V1, Vx, Vz };
 
       verinum();
+<<<<<<< Updated upstream
       explicit verinum(const std::string&str);
+=======
+      explicit verinum(const string&str);
+>>>>>>> Stashed changes
       verinum(const V*v, unsigned nbits, bool has_len =true);
       explicit verinum(V, unsigned nbits =1, bool has_len =true);
       verinum(uint64_t val, unsigned bits);
@@ -108,7 +124,11 @@ class verinum {
 
       signed long   as_long() const;
       double as_double() const;
+<<<<<<< Updated upstream
       std::string as_string() const;
+=======
+      string as_string() const;
+>>>>>>> Stashed changes
     private:
       void signed_trim();
 
@@ -158,6 +178,12 @@ extern std::ostream& operator<< (std::ostream&, verinum::V);
 inline verinum::V bit4_z2x(verinum::V bit)
 { return bit<2? bit : verinum::Vx; /* Relies on V0 and V1 being <2 */}
 
+<<<<<<< Updated upstream
+=======
+inline verinum::V bit4_z2x(verinum::V bit)
+{ return bit<2? bit : verinum::Vx; /* Relies on V0 and V1 being <2 */}
+
+>>>>>>> Stashed changes
 extern verinum::V operator ~ (verinum::V l);
 extern verinum::V operator | (verinum::V l, verinum::V r);
 extern verinum::V operator & (verinum::V l, verinum::V r);
@@ -189,6 +215,7 @@ extern verinum operator - (const verinum&left, const verinum&right);
 extern verinum operator * (const verinum&left, const verinum&right);
 extern verinum operator / (const verinum&left, const verinum&right);
 extern verinum operator % (const verinum&left, const verinum&right);
+<<<<<<< Updated upstream
 
 extern verinum pow(const verinum&left, const verinum&right);
 
@@ -197,6 +224,16 @@ extern verinum operator>> (const verinum&left, unsigned shift);
 
 extern verinum concat(const verinum&left, const verinum&right);
 
+=======
+
+extern verinum pow(const verinum&left, const verinum&right);
+
+extern verinum operator<< (const verinum&left, unsigned shift);
+extern verinum operator>> (const verinum&left, unsigned shift);
+
+extern verinum concat(const verinum&left, const verinum&right);
+
+>>>>>>> Stashed changes
 /* Bitwise not returns the ones complement. */
 extern verinum operator ~ (const verinum&left);
 

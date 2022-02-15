@@ -49,8 +49,11 @@ const char COPYRIGHT[] =
 # include  <windows.h>
 #endif
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 ofstream debug_file;
 
 #if defined(__MINGW32__) && !defined(HAVE_GETOPT_H)

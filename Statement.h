@@ -30,6 +30,11 @@
 # include  "PScope.h"
 # include  "HName.h"
 # include  "LineInfo.h"
+<<<<<<< Updated upstream
+=======
+# include  "slice.h"     //2020.2.4
+# include  "PDesign.h"
+>>>>>>> Stashed changes
 class PExpr;
 class PChainConstructor;
 class PPackage;
@@ -57,6 +62,7 @@ class PProcess : public LineInfo {
       virtual ~PProcess();
 
       bool elaborate(Design*des, NetScope*scope) const;
+<<<<<<< Updated upstream
 
       ivl_process_type_t type() const { return type_; }
       Statement*statement() { return statement_; }
@@ -64,10 +70,34 @@ class PProcess : public LineInfo {
       std::map<perm_string,PExpr*> attributes;
 
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+
+      ivl_process_type_t type() const { return type_; }
+      Statement*statement() { return statement_; }
+
+      map<perm_string,PExpr*> attributes;
+
+      ProcessNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      unsigned get_id(){return id_;};
+      void set_id(unsigned id){id_ = id;};
+      bool is_synchronous(){return sync_;};
+      void set_synchronous(bool sync) {sync_ = sync;};
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer* s) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       ivl_process_type_t type_;
       Statement*statement_;
+<<<<<<< Updated upstream
+=======
+      //2021.2.24
+  	  bool sync_;
+	    unsigned id_;
+>>>>>>> Stashed changes
 };
 
 /*
@@ -80,13 +110,29 @@ class Statement : virtual public LineInfo {
     public:
       Statement() { }
       virtual ~Statement() =0;
+<<<<<<< Updated upstream
 
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual svector<string>& get_vars();
+      virtual set<string>& get_funcname();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
 
+<<<<<<< Updated upstream
       std::map<perm_string,PExpr*> attributes;
+=======
+      map<perm_string,PExpr*> attributes;
+>>>>>>> Stashed changes
 };
 
 /*
@@ -101,7 +147,12 @@ class PAssign_  : public Statement {
       explicit PAssign_(PExpr*lval, PExpr*cnt, PEventStatement*de, PExpr*ex);
       virtual ~PAssign_() =0;
 
+<<<<<<< Updated upstream
       const PExpr* lval() const  { return lval_; }
+=======
+      //const PExpr* lval() const  { return lval_; }
+      PExpr* lval() const  { return lval_; } //2021.2.4
+>>>>>>> Stashed changes
       PExpr* rval() const  { return rval_; }
 
     protected:
@@ -139,7 +190,17 @@ class PAssign  : public PAssign_ {
       explicit PAssign(PExpr*lval, PExpr*ex, bool is_constant);
       ~PAssign();
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<string>& get_vars();
+      virtual set<string>& get_funcname();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
 
     private:
@@ -155,9 +216,21 @@ class PAssignNB  : public PAssign_ {
       explicit PAssignNB(PExpr*lval, PExpr*cnt, PEventStatement*de, PExpr*ex);
       ~PAssignNB();
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
 
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<string>& get_vars();
+      virtual set<string>& get_funcname();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+
+>>>>>>> Stashed changes
     private:
       NetProc*assign_to_memory_(class NetMemory*, PExpr*,
 				Design*des, NetScope*scope) const;
@@ -183,6 +256,7 @@ class PBlock  : public PScope, public Statement, public PNamedItem {
 
       BL_TYPE bl_type() const { return bl_type_; }
 
+<<<<<<< Updated upstream
       bool var_init_needs_explicit_lifetime() const;
 
 	// This is only used if this block is the statement list for a
@@ -194,13 +268,35 @@ class PBlock  : public PScope, public Statement, public PNamedItem {
 	// with JOIN_NONE or JOIN_ANY. This is to help the parser.
       void set_join_type(BL_TYPE);
 
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      bool var_init_needs_explicit_lifetime() const;
+
+	// This is only used if this block is the statement list for a
+	// constructor. We look for a PChainConstructor as the first
+	// statement, and if it is there, extract it.
+      PChainConstructor*extract_chain_constructor();
+
+	// If the bl_type() is BL_PAR, it is possible to replace it
+	// with JOIN_NONE or JOIN_ANY. This is to help the parser.
+      void set_join_type(BL_TYPE);
+
+>>>>>>> Stashed changes
       void set_statement(const std::vector<Statement*>&st);
 
 	// Copy the statement from that block to the front of this
 	// block.
       void push_statement_front(Statement*that);
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
@@ -210,19 +306,37 @@ class PBlock  : public PScope, public Statement, public PNamedItem {
     private:
       BL_TYPE bl_type_;
       std::vector<Statement*>list_;
+<<<<<<< Updated upstream
+=======
+      //svector<Statement*>list_; //2021.2.4
+>>>>>>> Stashed changes
 };
 
 class PCallTask  : public Statement {
 
     public:
+<<<<<<< Updated upstream
       explicit PCallTask(PPackage*pkg, const pform_name_t&n, const std::list<PExpr*>&parms);
       explicit PCallTask(const pform_name_t&n, const std::list<PExpr*>&parms);
       explicit PCallTask(perm_string n, const std::list<PExpr*>&parms);
+=======
+      explicit PCallTask(PPackage*pkg, const pform_name_t&n, const list<PExpr*>&parms);
+      explicit PCallTask(const pform_name_t&n, const list<PExpr*>&parms);
+      explicit PCallTask(perm_string n, const list<PExpr*>&parms);
+>>>>>>> Stashed changes
       ~PCallTask();
 
       const pform_name_t& path() const;
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
 
       bool elaborate_elab(Design*des, NetScope*scope) const;
@@ -258,24 +372,44 @@ class PCallTask  : public Statement {
 
       PPackage*package_;
       pform_name_t path_;
+<<<<<<< Updated upstream
       std::vector<PExpr*> parms_;
+=======
+      vector<PExpr*> parms_;
+>>>>>>> Stashed changes
 };
 
 class PCase  : public Statement {
 
     public:
       struct Item {
+<<<<<<< Updated upstream
 	    std::list<PExpr*>expr;
+=======
+	    list<PExpr*>expr;
+>>>>>>> Stashed changes
 	    Statement*stat;
       };
 
       PCase(ivl_case_quality_t, NetCase::TYPE, PExpr*ex, svector<Item*>*);
       ~PCase();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       ivl_case_quality_t quality_;
@@ -295,8 +429,17 @@ class PCAssign  : public Statement {
       explicit PCAssign(PExpr*l, PExpr*r);
       ~PCAssign();
 
+<<<<<<< Updated upstream
       virtual NetCAssign* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetCAssign* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*lval_;
@@ -310,11 +453,19 @@ class PCAssign  : public Statement {
  */
 class PChainConstructor : public Statement {
     public:
+<<<<<<< Updated upstream
       explicit PChainConstructor(const std::list<PExpr*>&parms);
       ~PChainConstructor();
 
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      explicit PChainConstructor(const list<PExpr*>&parms);
+      ~PChainConstructor();
+
+      virtual NetProc* elaitborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
       inline const std::vector<PExpr*>& chain_args(void) const
       { return parms_; }
@@ -329,10 +480,22 @@ class PCondit  : public Statement {
       PCondit(PExpr*ex, Statement*i, Statement*e);
       ~PCondit();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*expr_;
@@ -350,8 +513,17 @@ class PDeassign  : public Statement {
       explicit PDeassign(PExpr*l);
       ~PDeassign();
 
+<<<<<<< Updated upstream
       virtual NetDeassign* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetDeassign* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*lval_;
@@ -363,7 +535,16 @@ class PDelayStatement  : public Statement {
       PDelayStatement(PExpr*d, Statement*st);
       ~PDelayStatement();
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
@@ -383,8 +564,15 @@ class PDisable  : public Statement {
       explicit PDisable(const pform_name_t&sc);
       ~PDisable();
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+=======
+      virtual void dump(ostream&out, unsigned ind) const;
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      //2021.2.27
+	    virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+>>>>>>> Stashed changes
 
     private:
       pform_name_t scope_;
@@ -399,7 +587,11 @@ class PDoWhile  : public Statement {
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*cond_;
@@ -428,6 +620,7 @@ class PEventStatement  : public Statement {
 
       void set_statement(Statement*st);
 
+<<<<<<< Updated upstream
       virtual void dump(std::ostream&out, unsigned ind) const;
 	// Call this with a NULL statement only. It is used to print
 	// the event expression for inter-assignment event controls.
@@ -438,6 +631,22 @@ class PEventStatement  : public Statement {
 
       bool has_aa_term(Design*des, NetScope*scope);
 
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual void dump(ostream&out, unsigned ind) const;
+	// Call this with a NULL statement only. It is used to print
+	// the event expression for inter-assignment event controls.
+      virtual void dump_inline(ostream&out) const;
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+
+      bool has_aa_term(Design*des, NetScope*scope);
+
+>>>>>>> Stashed changes
 	// This method is used to elaborate, but attach a previously
 	// elaborated statement to the event.
       NetProc* elaborate_st(Design*des, NetScope*scope, NetProc*st) const;
@@ -451,7 +660,11 @@ class PEventStatement  : public Statement {
       bool always_sens_;
 };
 
+<<<<<<< Updated upstream
 std::ostream& operator << (std::ostream&o, const PEventStatement&obj);
+=======
+ostream& operator << (ostream&o, const PEventStatement&obj);
+>>>>>>> Stashed changes
 
 class PForce  : public Statement {
 
@@ -459,8 +672,18 @@ class PForce  : public Statement {
       explicit PForce(PExpr*l, PExpr*r);
       ~PForce();
 
+<<<<<<< Updated upstream
       virtual NetForce* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      //virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetForce* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*lval_;
@@ -472,10 +695,22 @@ class PForeach : public Statement {
       explicit PForeach(perm_string var, const std::list<perm_string>&ix, Statement*stmt);
       ~PForeach();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      //virtual CfgNode* build_node(PDesign& de);
+      //virtual svector<unsigned>& get_linenos();
+      //virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      //virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       NetProc* elaborate_static_array_(Design*des, NetScope*scope,
@@ -492,10 +727,22 @@ class PForever : public Statement {
       explicit PForever(Statement*s);
       ~PForever();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       Statement*statement_;
@@ -508,10 +755,22 @@ class PForStatement  : public Statement {
 		    Statement*step, Statement*body);
       ~PForStatement();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr* name1_;
@@ -536,10 +795,22 @@ class PRepeat : public Statement {
       explicit PRepeat(PExpr*expr, Statement*s);
       ~PRepeat();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      //virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*expr_;
@@ -552,8 +823,17 @@ class PRelease  : public Statement {
       explicit PRelease(PExpr*l);
       ~PRelease();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*lval_;
@@ -582,6 +862,7 @@ class PTrigger  : public Statement {
       explicit PTrigger(PPackage*pkg, const pform_name_t&ev);
       ~PTrigger();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
 
@@ -599,6 +880,31 @@ class PNBTrigger  : public Statement {
       virtual void dump(std::ostream&out, unsigned ind) const;
 
     private:
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+
+    private:
+      PPackage*package_;
+      pform_name_t event_;
+};
+
+class PNBTrigger  : public Statement {
+    public:
+      explicit PNBTrigger(const pform_name_t&ev, PExpr*dly);
+      ~PNBTrigger();
+
+      //virtual CfgNode* build_node(PDesign& de);
+      //virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+
+    private:
+>>>>>>> Stashed changes
       pform_name_t event_;
       PExpr*dly_;
 };
@@ -609,10 +915,22 @@ class PWhile  : public Statement {
       PWhile(PExpr*ex, Statement*st);
       ~PWhile();
 
+<<<<<<< Updated upstream
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
       virtual void dump(std::ostream&out, unsigned ind) const;
+=======
+      virtual CfgNode* build_node(PDesign& de);
+      virtual svector<unsigned>& get_linenos();
+      virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
+      virtual set<string>& get_funcs();
+
+      virtual NetProc* elaborate(Design*des, NetScope*scope) const;
+      virtual void elaborate_scope(Design*des, NetScope*scope) const;
+      virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      virtual void dump(ostream&out, unsigned ind) const;
+>>>>>>> Stashed changes
 
     private:
       PExpr*cond_;

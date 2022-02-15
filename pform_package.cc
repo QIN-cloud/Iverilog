@@ -124,12 +124,19 @@ void pform_package_import(const struct vlltype&loc, PPackage*pkg, const char*ide
 	    scope->explicit_imports[use_ident] = pkg;
 
       } else {
+<<<<<<< Updated upstream
 	    list<PPackage*>::const_iterator cur_pkg
 		  = find(scope->potential_imports.begin(),
                          scope->potential_imports.end(),
                          pkg);
 	    if (cur_pkg == scope->potential_imports.end())
 		  scope->potential_imports.push_back(pkg);
+=======
+	    set<PPackage*>::const_iterator cur_pkg
+		  = scope->potential_imports.find(pkg);
+	    if (cur_pkg == scope->potential_imports.end())
+		  scope->potential_imports.insert(pkg);
+>>>>>>> Stashed changes
       }
 }
 

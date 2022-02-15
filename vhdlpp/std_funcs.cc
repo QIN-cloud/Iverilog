@@ -1,5 +1,9 @@
 /*
+<<<<<<< Updated upstream
  * Copyright CERN 2016-2021
+=======
+ * Copyright CERN 2016-2018
+>>>>>>> Stashed changes
  * @author Maciej Suminski (maciej.suminski@cern.ch)
  *
  *    This source code is free software; you can redistribute it
@@ -22,8 +26,11 @@
 #include "std_types.h"
 #include "scope.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 static std::map<perm_string,SubHeaderList> std_subprograms;
 
 void register_std_subprogram(SubprogramHeader*header)

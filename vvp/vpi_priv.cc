@@ -497,7 +497,11 @@ int vpip_time_units_from_handle(vpiHandle obj)
 
 	  default:
 	    fprintf(stderr, "ERROR: vpip_time_units_from_handle called with "
+<<<<<<< Updated upstream
 		    "object handle type=%d\n", obj->get_type_code());
+=======
+		    "object handle type=%u\n", obj->get_type_code());
+>>>>>>> Stashed changes
 	    assert(0);
 	    return 0;
       }
@@ -529,7 +533,11 @@ int vpip_time_precision_from_handle(vpiHandle obj)
 
 	  default:
 	    fprintf(stderr, "ERROR: vpip_time_precision_from_handle called "
+<<<<<<< Updated upstream
 		    "with object handle type=%d\n", obj->get_type_code());
+=======
+		    "with object handle type=%u\n", obj->get_type_code());
+>>>>>>> Stashed changes
 	    assert(0);
 	    return 0;
       }
@@ -1240,6 +1248,7 @@ static vpiHandle vpip_make_udp_iterator()
 static vpiHandle vpi_iterate_global(int type)
 {
       switch (type) {
+<<<<<<< Updated upstream
 	  case vpiInstance:
 	    // fallthrough
 	  case vpiModule:
@@ -1250,6 +1259,10 @@ static vpiHandle vpi_iterate_global(int type)
 	    // fallthrough
 	  case vpiPackage:
 	    return vpip_make_root_iterator(type);
+=======
+	  case vpiModule:
+	    return vpip_make_root_iterator();
+>>>>>>> Stashed changes
 
 	  case vpiUdpDefn:
 	    return vpip_make_udp_iterator();

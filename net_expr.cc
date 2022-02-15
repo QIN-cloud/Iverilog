@@ -28,8 +28,11 @@
 # include  <iostream>
 # include  "ivl_assert.h"
 
+<<<<<<< Updated upstream
 using namespace std;
 
+=======
+>>>>>>> Stashed changes
 NetExpr::NetExpr(unsigned w)
 : net_type_(0), width_(w), signed_flag_(false)
 {
@@ -263,8 +266,13 @@ void NetEConcat::set(unsigned idx, NetExpr*e)
       expr_width( expr_width() + repeat_ * e->expr_width() );
 }
 
+<<<<<<< Updated upstream
 NetEConstEnum::NetEConstEnum(perm_string n, const netenum_t*eset, const verinum&v)
 : NetEConst(v), enum_set_(eset), name_(n)
+=======
+NetEConstEnum::NetEConstEnum(Definitions*s, perm_string n, const netenum_t*eset, const verinum&v)
+: NetEConst(v), scope_(s), enum_set_(eset), name_(n)
+>>>>>>> Stashed changes
 {
       assert(has_width());
 }
