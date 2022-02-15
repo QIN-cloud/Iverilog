@@ -1,112 +1,61 @@
-#ifndef IVL_HName_H
-#define IVL_HName_H
-/*
- * Copyright (c) 2001-2021 Stephen Williams (steve@icarus.com)
- *
- *    This source code is free software; you can redistribute it
- *    and/or modify it in source code form under the terms of the GNU
- *    General Public License as published by the Free Software
- *    Foundation; either version 2 of the License, or (at your option)
- *    any later version.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program; if not, write to the Free Software
- *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+#ifndef __HName_H
+#define __HName_H
 
-# include  <iostream>
-# include  <list>
-# include  <vector>
-# include  "StringHeap.h"
+#include <iostream>
 
-# include  <cassert>
+using namespace std;
 
 /*
- * This class represents a component of a Verilog hierarchical name. A
- * hierarchical component contains a name string (represented here
- * with a perm_string) and an optional signed number. This signed
- * number is used if the scope is part of an array, for example an
- * array of module instances or a loop generated scope.
+ * This class represents a Verilog hierarchical name. A hierarchical
+ * name is an ordered list of simple names.
  */
 
 class hname_t {
 
-      friend std::ostream& operator<< (std::ostream&out, const hname_t&that);
-
     public:
       hname_t ();
-      explicit hname_t (perm_string text);
-      explicit hname_t (perm_string text, int num);
-      explicit hname_t (perm_string text, const std::vector<int>&nums);
+      explicit hname_t (const char*text);
       hname_t (const hname_t&that);
       ~hname_t();
 
-      hname_t& operator= (const hname_t&);
+	// This method adds a name to the end of the hierarchical
+	// path. This becomes a new base name.
+      void append(const char*text);
 
-      bool operator == (const hname_t&that) const;
-      bool operator <  (const hname_t&that) const;
+	// This method adds a name to the *front* of the hierarchical
+	// path. The base name remains the same, unless this is the
+	// only component.
+      void prepend(const char*text);
 
-	// Return the string part of the hname_t.
-      perm_string peek_name(void) const;
+	// This method removes the tail name from the hierarchy, and
+	// returns a pointer to that tail name. That tail name now
+	// must be removed by the caller.
+      char* remove_tail_name();
 
-      size_t has_numbers() const;
-      int peek_number(size_t idx) const;
-      const std::vector<int>&peek_numbers() const;
+	// Return the given component in the hierarchical name. If the
+	// idx is too large, return 0.
+      const char*peek_name(unsigned idx) const;
+      const char*peek_tail_name() const;
 
-    private:
-      perm_string name_;
-	// If this vector has size, then the numbers all together make
-	// up part of the hierarchical name.
-      std::vector<int> number_;
+	// Return the number of components in the hierarchical
+	// name. If this is a simple name, this will return 1.
+      unsigned component_count() const;
+
+      //friend ostream& operator<< (ostream&out, const hname_t&that);
+
+    //private:
+      union {
+	    char**array_;
+	    char* item_;
+      };
+      unsigned count_;
 
     private: // not implemented
+      hname_t& operator= (const hname_t&);
 };
 
-inline hname_t::~hname_t()
-{
-}
+extern bool operator <  (const hname_t&, const hname_t&);
+extern bool operator == (const hname_t&, const hname_t&);
+ostream& operator<< (ostream&out, const hname_t&that);
 
-inline perm_string hname_t::peek_name(void) const
-{
-      return name_;
-}
-
-inline int hname_t::peek_number(size_t idx) const
-{
-      assert(number_.size() > idx);
-      return number_[idx];
-}
-
-inline const std::vector<int>& hname_t::peek_numbers(void) const
-{
-      return number_;
-}
-
-inline size_t hname_t::has_numbers() const
-{
-      return number_.size();
-}
-
-extern std::ostream& operator<< (std::ostream&, const hname_t&);
-
-inline bool operator != (const hname_t&l, const hname_t&r)
-{ return ! (l == r); }
-
-inline std::ostream& operator<< (std::ostream&out, const std::list<hname_t>&ll)
-{
-      std::list<hname_t>::const_iterator cur = ll.begin();
-      out << *cur;
-      ++ cur;
-      while (cur != ll.end()) {
-	    out << "." << *cur;
-	    ++ cur;
-      }
-      return out;
-}
-
-#endif /* IVL_HName_H */
+#endif

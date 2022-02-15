@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="PProcess" Collapsed="true">
+    <Position X="43.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAACAAEACBQAJAAAAUAAIBEAAAAAAAEAAAQkA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Statement" Collapsed="true">
+    <Position X="20.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAACAAABAAACSAAIAAAAFCAAAAAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PAssign_" Collapsed="true">
+    <Position X="19.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAABAEAAAAAAAAAAgCgAAAAAIAAAAAgEAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PAssign" Collapsed="true">
+    <Position X="18.5" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAACAAABAAAAQAAIAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PAssignNB" Collapsed="true">
+    <Position X="20.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAABAAAAQAAIAAgAACAgAAAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PBlock" Collapsed="true">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAEQAAAAAAASAAABAAAAQAAIAAAABCAAAABAAIIA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PCallTask" Collapsed="true">
+    <Position X="9.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAIAAAEACAABBCAAAQAAIAAAAAGAgAAACAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PCase" Collapsed="true">
+    <Position X="23" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQQIACAAAACAAAhAAAAQAAIAAAABCAAgABAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PCAssign" Collapsed="true">
+    <Position X="29.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAACAAABAAAAQAAMAAAAACAAAgBAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PCondit" Collapsed="true">
+    <Position X="36.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAACgAQCAAABAAAAwAAIAAAABCAAgABAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PDeassign" Collapsed="true">
+    <Position X="2.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAABAAAAQAAIAAAAACAAQhAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PDelayStatement" Collapsed="true">
+    <Position X="11.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAQAAAAAAACAQABAAAgQAAIAAAABCAAAAAAAAAQ=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PDisable" Collapsed="true">
+    <Position X="25.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAADAAABgAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PEventStatement" Collapsed="true">
+    <Position X="32" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACIAQAAAAACAQABAAAAQAAIgAAABCAAAABAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PForce" Collapsed="true">
+    <Position X="38.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAQAAAAAACAAABAAgAQAAIAAAAACAAAgBAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PForever" Collapsed="true">
+    <Position X="5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAACAQABAAAAQAAIAAAABCAAAAAAAAAQ=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PForStatement" Collapsed="true">
+    <Position X="14" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABQAAAAAAACAQADAAAAQIAIAQAAFCAAAIAAAABA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PNoop" Collapsed="true">
+    <Position X="27.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PRepeat" Collapsed="true">
+    <Position X="34.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAACAQABAAAAQEAIAAAABCAAgABAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PRelease" Collapsed="true">
+    <Position X="41" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAKAAABAAAAQAAIAAAAACAAAgAAAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PTrigger" Collapsed="true">
+    <Position X="7.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAABAAAAAAAIAAAIACAAAAAAoAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PWhile" Collapsed="true">
+    <Position X="16.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAAAAAACAQABAAAAQIAIAAABBCAAAAABAAAA=</HashCode>
+      <FileName>Statement.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Microsoft YaHei UI" Size="9" />
+</ClassDiagram>

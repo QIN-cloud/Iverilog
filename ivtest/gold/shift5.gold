@@ -1,1 +1,0 @@
-PASS: 32'sh80000000 >>> 6'd32 = 0xffffffff

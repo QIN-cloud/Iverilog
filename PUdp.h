@@ -1,37 +1,18 @@
-#ifndef IVL_PUdp_H
-#define IVL_PUdp_H
-/*
- * Copyright (c) 1998-2021 Stephen Williams (steve@picturel.com)
- *
- *    This source code is free software; you can redistribute it
- *    and/or modify it in source code form under the terms of the GNU
- *    General Public License as published by the Free Software
- *    Foundation; either version 2 of the License, or (at your option)
- *    any later version.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program; if not, write to the Free Software
- *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+#ifndef __PUdp_H
+#define __PUdp_H
 
-# include  <map>
-# include  "LineInfo.h"
-# include  "StringHeap.h"
-# include  "svector.h"
-# include  "verinum.h"
+#include <map>
+#include "svector.h"
+#include <string>
+#include "verinum.h"
 
 class PExpr;
 
 /*
  * This class represents a parsed UDP. This is a much simpler object
- * than a module or macromodule.
+ * then a module or macromodule.
  *
- *   - all ports are scalar,
+ *   - all ports are scaler,
  *   - pin 0 (the first port) is always output,
  *     and the remaining pins are input.
  *
@@ -46,29 +27,27 @@ class PExpr;
  * the current output.
  *
  * If the UDP is sequential, the "initial" member is taken to be the
- * initial value assigned in the source, or 'x' if none is given.
+ * intial value assigned in the source, or 'x' if none is given.
  */
-class PUdp : public LineInfo {
+class PUdp {
 
     public:
-      explicit PUdp(perm_string n, unsigned nports);
+      explicit PUdp(const string&n, unsigned nports);
 
-      svector<std::string>ports;
-      unsigned find_port(const char*name);
-
+      svector<string>ports;
       bool sequential;
 
-      svector<std::string>tinput;
+      svector<string>tinput;
       svector<char>  tcurrent;
       svector<char>  toutput;
 
-      verinum::V initial;
+	  verinum::V initial;
 
-      std::map<std::string,PExpr*> attributes;
+      map<string,PExpr*> attributes;
 
       void dump(std::ostream&out) const;
 
-      perm_string name_;
+      const string name_;
     private:
 
     private: // Not implemented
@@ -76,4 +55,4 @@ class PUdp : public LineInfo {
       PUdp& operator= (const PUdp&);
 };
 
-#endif /* IVL_PUdp_H */
+#endif

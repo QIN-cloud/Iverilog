@@ -1,35 +1,16 @@
-#ifndef IVL_svector_H
-#define IVL_svector_H
-/*
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
- *
- *    This source code is free software; you can redistribute it
- *    and/or modify it in source code form under the terms of the GNU
- *    General Public License as published by the Free Software
- *    Foundation; either version 2 of the License, or (at your option)
- *    any later version. In order to redistribute the software in
- *    binary form, you will need a Picture Elements Binary Software
- *    License.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program; if not, write to the Free Software
- *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+#ifndef __svector_H
+#define __svector_H
 
-# include  "config.h"
-# include  <string>
-# include  <vector>
-# include  <cassert>
+#include "config.h"
+#include <string>
+#include <assert.h>
+
+using namespace std;
 
 /*
  * This is a way simplified vector class that cannot grow or shrink,
  * and is really only able to handle values. It is intended to be
- * lighter weight than the STL list class.
+ * lighter weight then the STL list class.
  */
 
 template <class TYPE> class svector {
@@ -38,8 +19,8 @@ template <class TYPE> class svector {
       explicit svector() : nitems_(0), items_(0) { }
 
       explicit svector(unsigned size) : nitems_(size), items_(new TYPE[size])
-	    { for (unsigned idx = 0 ;  idx < size ;  idx += 1)
-		  items_[idx] = TYPE(0);
+	    { for (unsigned idx = 0 ;  idx < size ;  idx += 1);
+		  //items_[idx] = 0;
 	    }
 
       svector(const svector<TYPE>&that)
@@ -50,14 +31,15 @@ template <class TYPE> class svector {
 
       svector(const svector<TYPE>&l, const svector<TYPE>&r)
             : nitems_(l.nitems_ + r.nitems_), items_(new TYPE[nitems_])
-	    { for (unsigned idx = 0 ;  idx < l.nitems_ ;  idx += 1)
+	    { unsigned idx;
+		  for (idx = 0 ;  idx < l.nitems_ ;  idx += 1)
 		    items_[idx] = l[idx];
 
-	      for (unsigned idx = 0 ;  idx < r.nitems_ ;  idx += 1)
+	      for (idx = 0 ;  idx < r.nitems_ ;  idx += 1)
 		    items_[l.nitems_+idx] = r[idx];
 	    }
 
-      svector(const svector<TYPE>&l, const TYPE&r)
+      svector(const svector<TYPE>&l, TYPE r)
             : nitems_(l.nitems_ + 1), items_(new TYPE[nitems_])
 	    { for (unsigned idx = 0 ;  idx < l.nitems_ ;  idx += 1)
 		    items_[idx] = l[idx];
@@ -99,23 +81,9 @@ template <class TYPE> class svector {
  * Override the implementation of the above template for the string
  * type parameter. The initialization to nil works different here.
  */
-template <> inline svector<std::string>::svector(unsigned size)
-: nitems_(size), items_(new std::string[size])
+inline svector<string>::svector<string>(unsigned size)
+: nitems_(size), items_(new string[size])
 {
 }
 
-/*
-* This is a convenience function that converts an svector to a
-* vector. This is to ease the transition from svector to vector so
-* that the svector class can be gradually removed.
-*/
-template <class T> inline std::vector<T> vector_from_svector(const svector<T>&that)
-{
-      std::vector<T> res (that.count());
-      for (unsigned idx = 0 ; idx < that.count() ; idx += 1)
-	    res[idx] = that[idx];
-
-      return res;
-}
-
-#endif /* IVL_svector_H */
+#endif

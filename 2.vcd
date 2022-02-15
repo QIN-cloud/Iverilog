@@ -1,0 +1,46 @@
+$date
+    May  7, 2003  23:16:00
+$end
+$version
+    VERILOG-XL 3.0.s002
+$end
+$timescale
+     1s
+$end
+
+$scope module main $end
+$var reg       2 !    a [1:0] $end
+$var reg       2 "    b [1:0] $end
+$var reg       2 #    c [1:0] $end
+$var reg       2 $    d [1:0] $end
+
+$scope begin begin1 $end
+$upscope $end
+
+$upscope $end
+
+$enddefinitions $end
+$dumpvars
+b10 !
+b01 "
+b11 #
+b00 $
+$end
+#5
+b01 !
+b11 "
+b01 #
+b11 $
+b01 $
+#10
+b11 !
+b00 "
+b11 #
+b00 #
+b11 $
+#15
+b01 !
+b11 "
+b11 #
+b01 #
+b01 $

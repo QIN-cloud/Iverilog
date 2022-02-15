@@ -1,2 +1,0 @@
-./ivltests/pr498b.v:23: error: parameter `foo` not found in `main`.
-1 error(s) during elaboration.

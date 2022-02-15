@@ -1,23 +1,5 @@
-#ifndef IVL_functor_H
-#define IVL_functor_H
-/*
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
- *
- *    This source code is free software; you can redistribute it
- *    and/or modify it in source code form under the terms of the GNU
- *    General Public License as published by the Free Software
- *    Foundation; either version 2 of the License, or (at your option)
- *    any later version.
- *
- *    This program is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *    GNU General Public License for more details.
- *
- *    You should have received a copy of the GNU General Public License
- *    along with this program; if not, write to the Free Software
- *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+#ifndef __functor_H
+#define __functor_H
 
 /*
  * The functor is an object that can be applied to a design to
@@ -33,72 +15,47 @@
  */
 
 class Design;
-class NetNet;
+//class NetNet;
 class NetProcTop;
 
 struct functor_t {
       virtual ~functor_t();
 
 	/* Events are scanned here. */
-      virtual void event(Design*des, class NetEvent*);
+      virtual void event(class Design*des, class NetEvent*);
 
 	/* This is called once for each signal in the design. */
-      virtual void signal(Design*des, NetNet*);
+      virtual void signal(class Design*des, class NetNet*);
 
 	/* This method is called for each process in the design. */
-      virtual void process(Design*des, NetProcTop*);
-
-	/* This method is called for each structural abs(). */
-      virtual void lpm_abs(Design*des, class NetAbs*);
+      virtual void process(class Design*des, class NetProcTop*);
 
 	/* This method is called for each structural adder. */
-      virtual void lpm_add_sub(Design*des, class NetAddSub*);
+      virtual void lpm_add_sub(class Design*des, class NetAddSub*);
 
 	/* This method is called for each structural comparator. */
-      virtual void lpm_compare(Design*des, const class NetCompare*);
-
-	/* This method is called for each structural concatenation. */
-      virtual void lpm_concat(Design*des, class NetConcat*);
+      virtual void lpm_compare(class Design*des, class NetCompare*);
 
 	/* This method is called for each structural constant. */
-      virtual void lpm_const(Design*des, class NetConst*);
+      virtual void lpm_const(class Design*des, class NetConst*);
 
 	/* This method is called for each structural constant. */
-      virtual void lpm_divide(Design*des, class NetDivide*);
-
-	/* Constant literals. */
-      virtual void lpm_literal(Design*des, class NetLiteral*);
+      virtual void lpm_divide(class Design*des, class NetDivide*);
 
 	/* This method is called for each structural constant. */
-      virtual void lpm_modulo(Design*des, class NetModulo*);
+      virtual void lpm_modulo(class Design*des, class NetModulo*);
 
 	/* This method is called for each FF in the design. */
-      virtual void lpm_ff(Design*des, class NetFF*);
-
-	/* This method is called for each LATCH in the design. */
-      virtual void lpm_latch(Design*des, class NetLatch*);
+      virtual void lpm_ff(class Design*des, class NetFF*);
 
 	/* Handle LPM combinational logic devices. */
-      virtual void lpm_logic(Design*des, class NetLogic*);
+      virtual void lpm_logic(class Design*des, class NetLogic*);
 
 	/* This method is called for each multiplier. */
-      virtual void lpm_mult(Design*des, class NetMult*);
+      virtual void lpm_mult(class Design*des, class NetMult*);
 
 	/* This method is called for each MUX. */
-      virtual void lpm_mux(Design*des, class NetMux*);
-
-      virtual void lpm_part_select(Design*des, class NetPartSelect*);
-
-	/* This method is called for each power. */
-      virtual void lpm_pow(Design*des, class NetPow*);
-
-	/* This method is called for each part substitute. */
-      virtual void lpm_substitute(Design*des, class NetSubstitute*);
-
-	/* This method is called for each unary reduction gate. */
-      virtual void lpm_ureduce(Design*des, class NetUReduce*);
-
-      virtual void sign_extend(Design*des, class NetSignExtend*);
+      virtual void lpm_mux(class Design*des, class NetMux*);
 };
 
 struct proc_match_t {
@@ -111,4 +68,4 @@ struct proc_match_t {
       virtual int block(class NetBlock*);
 };
 
-#endif /* IVL_functor_H */
+#endif
