@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2005-2021 Stephen Williams <steve@icarus.com>
-=======
  * Copyright (c) 2005-2020 Stephen Williams <steve@icarus.com>
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -35,11 +31,6 @@
 #include <cmath>
 #include "ivl_alloc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 void vvp_delay_t::calculate_min_delay_()
 {
       min_delay_ = rise_;

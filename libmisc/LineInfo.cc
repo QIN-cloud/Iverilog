@@ -20,6 +20,7 @@
 # include  "LineInfo.h"
 # include  <sstream>
 
+
 using namespace std;
 
 LineInfo::LineInfo()
@@ -42,6 +43,7 @@ string LineInfo::get_fileline() const
       buf << (file_.str()? file_.str() : "") << ":" << lineno_;
 
       string res = buf.str();
+
       return res;
 }
 

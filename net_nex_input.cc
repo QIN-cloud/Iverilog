@@ -27,11 +27,6 @@
 # include  "netlist.h"
 # include  "netmisc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 NexusSet* NetExpr::nex_input(bool, bool, bool) const
 {
       cerr << get_fileline()

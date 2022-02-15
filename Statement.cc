@@ -279,7 +279,7 @@ set<string>& PCondit::get_funcs()
 svector<unsigned>& PCondit::get_linenos()
 {
 	svector<unsigned>* tmp = new svector<unsigned>();
-        tmp = new svector<unsigned>(*tmp, get_lineno());
+    tmp = new svector<unsigned>(*tmp, get_lineno());
 	if(if_)
 		tmp = new svector<unsigned>(*tmp, if_->get_linenos());
 	if(else_)
@@ -908,4 +908,26 @@ PWhile::~PWhile()
 {
       delete cond_;
       delete statement_;
+}
+
+void PProcess::set_synchronous()
+{
+	if(PEventStatement* event = dynamic_cast<PEventStatement*>(statement_)){
+		sync_ = event->is_synchrounous();
+	}
+}
+
+bool PEventStatement::is_synchrounous()
+{
+	if(expr_.count()){
+		for(unsigned i = 0; i < expr_.count(); i++){
+
+			if(expr_[i]->type() == PEEvent::ANYEDGE)
+				return false;
+			else
+				return true;
+				
+		}
+	}
+	return false;
 }

@@ -21,11 +21,6 @@
 # include  "compiler.h"
 # include  "netlist.h"
 # include  "ivl_assert.h"
-<<<<<<< Updated upstream:net_event.cc
-
-using namespace std;
-=======
->>>>>>> Stashed changes:net_event.cpp
 
 /*
  * NOTE: The name_ is perm-allocated by the caller.

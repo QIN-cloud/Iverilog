@@ -45,11 +45,6 @@
 # include  "ivl_assert.h"
 # include  "ivl_alloc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * The "// synthesis translate_on/off" meta-comments cause this flag
  * to be turned off or on. The pform_make_behavior and similar
@@ -346,24 +341,14 @@ bool pform_library_flag = false;
  */
 static unsigned scope_unnamed_block_with_decl = 1;
 
-<<<<<<< Updated upstream
-=======
   /* increment this for generate schemes within a module, and set it
      to zero when a new module starts. */
 static unsigned scope_generate_counter = 1;
 
->>>>>>> Stashed changes
   /* This tracks the current generate scheme being processed. This is
      always within a module. */
 static PGenerate*pform_cur_generate = 0;
 
-<<<<<<< Updated upstream
-  /* This indicates whether a new generate construct can be directly
-     nested in the current generate construct. */
-bool pform_generate_single_item = false;
-
-=======
->>>>>>> Stashed changes
   /* Blocks within the same conditional generate construct may have
      the same name. Here we collect the set of names used in each
      construct, so they can be added to the local scope without
@@ -399,12 +384,6 @@ static unsigned pform_timescale_line;
 bool allow_timeunit_decl = true;
 bool allow_timeprec_decl = true;
 
-<<<<<<< Updated upstream
-// Track whether the current parameter declaration is in a parameter port list
-static bool pform_in_parameter_port_list = false;
-
-=======
->>>>>>> Stashed changes
 static inline void FILE_NAME(LineInfo*obj, const char*file, unsigned lineno)
 {
       obj->set_lineno(lineno);
@@ -499,11 +478,7 @@ static PPackage*find_potential_import(const struct vlltype&loc, LexicalScope*sco
       assert(scope);
 
       PPackage*found_pkg = 0;
-<<<<<<< Updated upstream
-      for (list<PPackage*>::const_iterator cur_pkg = scope->potential_imports.begin();
-=======
       for (set<PPackage*>::const_iterator cur_pkg = scope->potential_imports.begin();
->>>>>>> Stashed changes
 	      cur_pkg != scope->potential_imports.end(); ++cur_pkg) {
 	    PPackage*search_pkg = *cur_pkg;
 	    map<perm_string,PNamedItem*>::const_iterator cur_sym
@@ -850,19 +825,10 @@ static void pform_put_wire_in_scope(perm_string name, PWire*net)
       lexical_scope->wires[name] = net;
 }
 
-<<<<<<< Updated upstream
-void pform_put_enum_type_in_scope(enum_type_t*enum_set)
-{
-      if (std::find(lexical_scope->enum_sets.begin(),
-		    lexical_scope->enum_sets.end(), enum_set) !=
-          lexical_scope->enum_sets.end())
-	    return;
-=======
 static void pform_put_enum_type_in_scope(enum_type_t*enum_set)
 {
       if (lexical_scope->enum_sets.count(enum_set))
             return;
->>>>>>> Stashed changes
 
       set<perm_string> enum_names;
       list<named_pexpr_t>::const_iterator cur;
@@ -878,11 +844,7 @@ static void pform_put_enum_type_in_scope(enum_type_t*enum_set)
 	    }
       }
 
-<<<<<<< Updated upstream
-      lexical_scope->enum_sets.push_back(enum_set);
-=======
       lexical_scope->enum_sets.insert(enum_set);
->>>>>>> Stashed changes
 }
 
 PWire*pform_get_make_wire_in_scope(const struct vlltype&, perm_string name,
@@ -924,12 +886,9 @@ void pform_set_typedef(perm_string name, data_type_t*data_type, std::list<pform_
       ivl_assert(*data_type, ref == 0);
       ref = data_type;
       ref->name = name;
-<<<<<<< Updated upstream
-=======
 
       if (enum_type_t*enum_type = dynamic_cast<enum_type_t*>(data_type))
 	    pform_put_enum_type_in_scope(enum_type);
->>>>>>> Stashed changes
 }
 
 void pform_set_type_referenced(const struct vlltype&loc, const char*name)
@@ -1374,16 +1333,10 @@ void pform_startmodule(const struct vlltype&loc, const char*name,
 	    error_count += 1;
       }
 
-<<<<<<< Updated upstream
-
-      if (lifetime != LexicalScope::INHERITED) {
-	    pform_requires_sv(loc, "Default subroutine lifetime");
-=======
       if (lifetime != LexicalScope::INHERITED && !gn_system_verilog()) {
 	    cerr << loc << ": error: Default subroutine lifetimes "
 		    "require SystemVerilog." << endl;
 	    error_count += 1;
->>>>>>> Stashed changes
       }
 
       if (gn_system_verilog() && ! pform_cur_module.empty()) {
@@ -1416,34 +1369,15 @@ void pform_startmodule(const struct vlltype&loc, const char*name,
       allow_timeunit_decl = true;
       allow_timeprec_decl = true;
 
-<<<<<<< Updated upstream
-      pform_generate_single_item = false;
-
-=======
->>>>>>> Stashed changes
       add_local_symbol(lexical_scope, lex_name, cur_module);
 
       lexical_scope = cur_module;
 
-<<<<<<< Updated upstream
-      pform_bind_attributes(cur_module->attributes, attr);
-}
-
-void pform_start_parameter_port_list()
-{
-      pform_in_parameter_port_list = true;
-}
-
-void pform_end_parameter_port_list()
-{
-      pform_in_parameter_port_list = false;
-=======
 	/* The generate scheme numbering starts with *1*, not
 	   zero. That's just the way it is, thanks to the standard. */
       scope_generate_counter = 1;
 
       pform_bind_attributes(cur_module->attributes, attr);
->>>>>>> Stashed changes
 }
 
 /*
@@ -1460,10 +1394,6 @@ Module::port_t* pform_module_port_reference(perm_string name,
       FILE_NAME(tmp, file, lineno);
       ptmp->name = name;
       ptmp->expr.push_back(tmp);
-<<<<<<< Updated upstream
-      ptmp->default_value = 0;
-=======
->>>>>>> Stashed changes
 
       return ptmp;
 }
@@ -1580,38 +1510,13 @@ void pform_genvars(const struct vlltype&li, list<perm_string>*names)
       delete names;
 }
 
-<<<<<<< Updated upstream
-static unsigned detect_directly_nested_generate()
-{
-      if (pform_cur_generate && pform_generate_single_item)
-	    switch (pform_cur_generate->scheme_type) {
-		case PGenerate::GS_CASE_ITEM:
-		  // fallthrough
-		case PGenerate::GS_CONDIT:
-		  // fallthrough
-		case PGenerate::GS_ELSE:
-		  pform_cur_generate->directly_nested = true;
-		  return pform_cur_generate->id_number;
-		default:
-		  break;
-	    }
-
-      return ++lexical_scope->generate_counter;
-}
-
-=======
->>>>>>> Stashed changes
 void pform_start_generate_for(const struct vlltype&li,
 			      bool local_index,
 			      char*ident1, PExpr*init,
 			      PExpr*test,
 			      char*ident2, PExpr*next)
 {
-<<<<<<< Updated upstream
-      PGenerate*gen = new PGenerate(lexical_scope, ++lexical_scope->generate_counter);
-=======
       PGenerate*gen = new PGenerate(lexical_scope, scope_generate_counter++);
->>>>>>> Stashed changes
       lexical_scope = gen;
 
       FILE_NAME(gen, li);
@@ -1632,13 +1537,7 @@ void pform_start_generate_for(const struct vlltype&li,
 
 void pform_start_generate_if(const struct vlltype&li, PExpr*test)
 {
-<<<<<<< Updated upstream
-      unsigned id_number = detect_directly_nested_generate();
-
-      PGenerate*gen = new PGenerate(lexical_scope, id_number);
-=======
       PGenerate*gen = new PGenerate(lexical_scope, scope_generate_counter++);
->>>>>>> Stashed changes
       lexical_scope = gen;
 
       FILE_NAME(gen, li);
@@ -1662,11 +1561,7 @@ void pform_start_generate_else(const struct vlltype&li)
       PGenerate*cur = pform_cur_generate;
       pform_endgenerate(false);
 
-<<<<<<< Updated upstream
-      PGenerate*gen = new PGenerate(lexical_scope, cur->id_number);
-=======
       PGenerate*gen = new PGenerate(lexical_scope, scope_generate_counter++);
->>>>>>> Stashed changes
       lexical_scope = gen;
 
       FILE_NAME(gen, li);
@@ -1686,13 +1581,7 @@ void pform_start_generate_else(const struct vlltype&li)
  */
 void pform_start_generate_case(const struct vlltype&li, PExpr*expr)
 {
-<<<<<<< Updated upstream
-      unsigned id_number = detect_directly_nested_generate();
-
-      PGenerate*gen = new PGenerate(lexical_scope, id_number);
-=======
       PGenerate*gen = new PGenerate(lexical_scope, scope_generate_counter++);
->>>>>>> Stashed changes
       lexical_scope = gen;
 
       FILE_NAME(gen, li);
@@ -1713,11 +1602,7 @@ void pform_start_generate_case(const struct vlltype&li, PExpr*expr)
  */
 void pform_start_generate_nblock(const struct vlltype&li, char*name)
 {
-<<<<<<< Updated upstream
-      PGenerate*gen = new PGenerate(lexical_scope, ++lexical_scope->generate_counter);
-=======
       PGenerate*gen = new PGenerate(lexical_scope, scope_generate_counter++);
->>>>>>> Stashed changes
       lexical_scope = gen;
 
       FILE_NAME(gen, li);
@@ -1754,11 +1639,6 @@ void pform_generate_case_item(const struct vlltype&li, list<PExpr*>*expr_list)
 
       FILE_NAME(gen, li);
 
-<<<<<<< Updated upstream
-      gen->directly_nested = pform_cur_generate->directly_nested;
-
-=======
->>>>>>> Stashed changes
       pform_cur_generate = gen;
 
       pform_cur_generate->scheme_type = PGenerate::GS_CASE_ITEM;
@@ -2355,12 +2235,8 @@ static void pform_makegate(PGBuiltin::Type type,
 
       perm_string dev_name = lex_strings.make(info.name);
       PGBuiltin*cur = new PGBuiltin(type, dev_name, info.parms, delay);
-<<<<<<< Updated upstream
-      cur->set_ranges(info.ranges);
-=======
       if (info.range.first)
 	    cur->set_range(info.range.first, info.range.second);
->>>>>>> Stashed changes
 
 	// The pform_makegates() that calls me will take care of
 	// deleting the attr pointer, so tell the
@@ -2425,11 +2301,7 @@ static void pform_make_modgate(perm_string type,
 			       perm_string name,
 			       struct parmvalue_t*overrides,
 			       list<PExpr*>*wires,
-<<<<<<< Updated upstream
-			       list<pform_range_t>*ranges,
-=======
 			       PExpr*msb, PExpr*lsb,
->>>>>>> Stashed changes
 			       const char*fn, unsigned ln,
 			       std::list<named_pexpr_t>*attr)
 {
@@ -2440,11 +2312,7 @@ static void pform_make_modgate(perm_string type,
 
       PGModule*cur = new PGModule(type, name, wires);
       FILE_NAME(cur, fn, ln);
-<<<<<<< Updated upstream
-      cur->set_ranges(ranges);
-=======
       cur->set_range(msb,lsb);
->>>>>>> Stashed changes
 
       if (overrides && overrides->by_name) {
 	    unsigned cnt = overrides->by_name->size();
@@ -2476,11 +2344,7 @@ static void pform_make_modgate(perm_string type,
 			       perm_string name,
 			       struct parmvalue_t*overrides,
 			       list<named_pexpr_t>*bind,
-<<<<<<< Updated upstream
-			       list<pform_range_t>*ranges,
-=======
 			       PExpr*msb, PExpr*lsb,
->>>>>>> Stashed changes
 			       const char*fn, unsigned ln,
 			       std::list<named_pexpr_t>*attr)
 {
@@ -2495,11 +2359,7 @@ static void pform_make_modgate(perm_string type,
 
       PGModule*cur = new PGModule(type, name, pins, npins);
       FILE_NAME(cur, fn, ln);
-<<<<<<< Updated upstream
-      cur->set_ranges(ranges);
-=======
       cur->set_range(msb,lsb);
->>>>>>> Stashed changes
 
       if (overrides && overrides->by_name) {
 	    unsigned cnt = overrides->by_name->size();
@@ -2567,12 +2427,8 @@ void pform_make_modgates(const struct vlltype&loc,
 
 	    if (cur.parms_by_name) {
 		  pform_make_modgate(type, cur_name, overrides,
-<<<<<<< Updated upstream
-				     cur.parms_by_name, cur.ranges,
-=======
 				     cur.parms_by_name,
 				     cur.range.first, cur.range.second,
->>>>>>> Stashed changes
 				     cur.file, cur.lineno, attr);
 
 	    } else if (cur.parms) {
@@ -2585,23 +2441,15 @@ void pform_make_modgates(const struct vlltype&loc,
 			cur.parms = new list<PExpr*>;
 		  }
 		  pform_make_modgate(type, cur_name, overrides,
-<<<<<<< Updated upstream
-				     cur.parms, cur.ranges,
-=======
 				     cur.parms,
 				     cur.range.first, cur.range.second,
->>>>>>> Stashed changes
 				     cur.file, cur.lineno, attr);
 
 	    } else {
 		  list<PExpr*>*wires = new list<PExpr*>;
 		  pform_make_modgate(type, cur_name, overrides,
-<<<<<<< Updated upstream
-				     wires, cur.ranges,
-=======
 				     wires,
 				     cur.range.first, cur.range.second,
->>>>>>> Stashed changes
 				     cur.file, cur.lineno, attr);
 	    }
       }
@@ -2722,10 +2570,6 @@ void pform_module_define_port(const struct vlltype&li,
 			      bool keep_attr)
 {
       struct_type_t*struct_type = 0;
-<<<<<<< Updated upstream
-      enum_type_t*enum_type = 0;
-=======
->>>>>>> Stashed changes
       ivl_variable_type_t data_type = IVL_VT_NO_TYPE;
       bool signed_flag = false;
 
@@ -2778,17 +2622,10 @@ void pform_module_define_port(const struct vlltype&li,
 	    signed_flag = false;
 	    prange = 0;
 
-<<<<<<< Updated upstream
-      } else if ((enum_type = dynamic_cast<enum_type_t*>(vtype))) {
-	    data_type = enum_type->base_type;
-	    signed_flag = enum_type->signed_flag;
-	    prange = 0;
-=======
       } else if (enum_type_t*enum_type = dynamic_cast<enum_type_t*>(vtype)) {
 	    data_type = enum_type->base_type;
 	    signed_flag = enum_type->signed_flag;
 	    prange = enum_type->range.get();
->>>>>>> Stashed changes
 
       } else if (vtype) {
 	    VLerror(li, "sorry: Given type %s not supported here (%s:%d).",
@@ -2808,12 +2645,6 @@ void pform_module_define_port(const struct vlltype&li,
       if (struct_type) {
 	    cur->set_data_type(struct_type);
 
-<<<<<<< Updated upstream
-      } else if (enum_type) {
-	    cur->set_data_type(enum_type);
-
-=======
->>>>>>> Stashed changes
       } else if (prange == 0) {
 	    cur->set_range_scalar((type == NetNet::IMPLICIT) ? SR_PORT : SR_BOTH);
 
@@ -2928,15 +2759,11 @@ void pform_makewire(const vlltype&li, perm_string name,
 		    list<named_pexpr_t>*attr)
 {
       PWire*cur = pform_get_or_make_wire(li, name, type, pt, dt);
-<<<<<<< Updated upstream
-      assert(cur);
-=======
 
       if (! cur) {
 	    cur = new PWire(name, type, pt, dt);
 	    FILE_NAME(cur, li.text, li.first_line);
       }
->>>>>>> Stashed changes
 
       bool flag;
       switch (dt) {
@@ -3291,12 +3118,6 @@ PAssign* pform_compressed_assign_from_inc_dec(const struct vlltype&loc, PExpr*ex
 
 PExpr* pform_genvar_inc_dec(const struct vlltype&loc, const char*name, bool inc_flag)
 {
-<<<<<<< Updated upstream
-      pform_requires_sv(loc, "Increment/decrement operator");
-
-      PExpr*lval = new PEIdent(lex_strings.make(name));
-      PExpr*rval = new PENumber(new verinum(1));
-=======
       if (!gn_system_verilog()) {
 	    cerr << loc << ": error: Increment/decrement operators "
 		    "require SystemVerilog." << endl;
@@ -3305,7 +3126,6 @@ PExpr* pform_genvar_inc_dec(const struct vlltype&loc, const char*name, bool inc_
 
       PExpr*lval = new PEIdent(lex_strings.make(name));
       PExpr*rval = new PENumber(new verinum((uint64_t)1, 1));
->>>>>>> Stashed changes
       FILE_NAME(lval, loc);
       FILE_NAME(rval, loc);
 
@@ -3383,45 +3203,11 @@ LexicalScope::range_t* pform_parameter_value_range(bool exclude_flag,
 }
 
 void pform_set_parameter(const struct vlltype&loc,
-<<<<<<< Updated upstream
-			 perm_string name, bool is_local, data_type_t*data_type, PExpr*expr,
-=======
 			 perm_string name, data_type_t*data_type, PExpr*expr,
->>>>>>> Stashed changes
 			 LexicalScope::range_t*value_range)
 {
       LexicalScope*scope = lexical_scope;
       if (is_compilation_unit(scope) && !gn_system_verilog()) {
-<<<<<<< Updated upstream
-	    VLerror(loc, "error: %s declarations must be contained within a module.",
-		         is_local ? "localparam" : "parameter");
-	    return;
-      }
-
-      if (expr == 0) {
-	    if (is_local) {
-		  VLerror(loc, "error: localparam must have a value.");
-	    } else if (!pform_in_parameter_port_list) {
-		  VLerror(loc, "error: parameter declared outside parameter "
-			        "port list must have a default value.");
-	    } else {
-		  pform_requires_sv(loc, "parameter without default value");
-	    }
-      }
-
-      bool overridable = !is_local;
-
-      if (scope == pform_cur_generate && !is_local) {
-	    if (!gn_system_verilog()) {
-		  VLerror(loc, "parameter declarations are not permitted in generate blocks");
-		  return;
-	    }
-	    // SystemVerilog allows `parameter` in generate blocks, but it has
-	    // the same semantics as `localparam` in that scope.
-	    overridable = false;
-      }
-
-=======
 	    VLerror(loc, "error: parameter declarations must be contained within a module.");
 	    return;
       }
@@ -3431,30 +3217,15 @@ void pform_set_parameter(const struct vlltype&loc,
       }
 
       assert(expr);
->>>>>>> Stashed changes
       Module::param_expr_t*parm = new Module::param_expr_t();
       FILE_NAME(parm, loc);
 
       add_local_symbol(scope, name, parm);
-<<<<<<< Updated upstream
-=======
       scope->parameters[name] = parm;
->>>>>>> Stashed changes
 
       parm->expr = expr;
       parm->data_type = data_type;
       parm->range = value_range;
-<<<<<<< Updated upstream
-      parm->local_flag = is_local;
-      parm->overridable = overridable;
-
-      scope->parameters[name] = parm;
-
-      // Only a module keeps the position of the parameter.
-      if (overridable &&
-          (dynamic_cast<Module*>(scope)) && (scope == pform_cur_module.front()))
-	    pform_cur_module.front()->param_names.push_back(name);
-=======
 
 	// Only a Module keeps the position of the parameter.
       if ((dynamic_cast<Module*>(scope)) && (scope == pform_cur_module.front()))
@@ -3480,7 +3251,6 @@ void pform_set_localparam(const struct vlltype&loc,
       parm->expr = expr;
       parm->data_type = data_type;
       parm->range = 0;
->>>>>>> Stashed changes
 }
 
 void pform_set_specparam(const struct vlltype&loc, perm_string name,
@@ -3758,12 +3528,9 @@ static void pform_set_integer_2atom(const struct vlltype&li, uint64_t width, boo
 template <class T> static void pform_set2_data_type(const struct vlltype&li, T*data_type, perm_string name, NetNet::Type net_type, list<named_pexpr_t>*attr)
 {
       ivl_variable_type_t base_type = data_type->figure_packed_base_type();
-<<<<<<< Updated upstream
-=======
       if (base_type == IVL_VT_NO_TYPE) {
 	    VLerror(li, "Compound type is not PACKED in this context.");
       }
->>>>>>> Stashed changes
 
       PWire*net = pform_get_make_wire_in_scope(li, name, net_type, NetNet::NOT_A_PORT, base_type);
       assert(net);
@@ -3787,11 +3554,8 @@ static void pform_set_enum(const struct vlltype&li, enum_type_t*enum_type,
 
       cur->set_signed(enum_type->signed_flag);
 
-<<<<<<< Updated upstream
-=======
       assert(enum_type->range.get() != 0);
       assert(enum_type->range->size() == 1);
->>>>>>> Stashed changes
 	//XXXXcur->set_range(*enum_type->range, SR_NET);
 	// If this is an integer enumeration switch the wire to an integer.
       if (enum_type->integer_flag) {
@@ -3809,8 +3573,6 @@ static void pform_set_enum(const struct vlltype&li, enum_type_t*enum_type,
 	// IVL_VT_BOOL.
       assert(enum_type->base_type==IVL_VT_LOGIC || enum_type->base_type==IVL_VT_BOOL);
 
-<<<<<<< Updated upstream
-=======
       assert(enum_type->range.get() != 0);
       assert(enum_type->range->size() == 1);
 
@@ -3821,7 +3583,6 @@ static void pform_set_enum(const struct vlltype&li, enum_type_t*enum_type,
       if (enum_type->name.nil())
 	    pform_put_enum_type_in_scope(enum_type);
 
->>>>>>> Stashed changes
 	// Now apply the checked enumeration type to the variables
 	// that are being declared with this type.
       for (list<perm_string>::iterator cur = names->begin()
@@ -4002,18 +3763,6 @@ void pform_add_modport_port(const struct vlltype&loc,
       pform_cur_modport->simple_ports[name] = make_pair(port_type, expr);
 }
 
-<<<<<<< Updated upstream
-bool pform_requires_sv(const struct vlltype&loc, const char *feature)
-{
-      if (gn_system_verilog())
-	    return true;
-
-      VLerror(loc, "error: %s requires SystemVerilog.", feature);
-
-      return false;
-}
-=======
->>>>>>> Stashed changes
 
 FILE*vl_input = 0;
 extern void reset_lexor();

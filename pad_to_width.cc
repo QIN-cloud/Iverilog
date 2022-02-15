@@ -19,25 +19,15 @@
 
 # include "config.h"
 
-<<<<<<< Updated upstream
-# include  "netenum.h"
-=======
->>>>>>> Stashed changes
 # include  "netlist.h"
 # include  "netvector.h"
 # include  "netmisc.h"
 
 
 NetExpr*pad_to_width(NetExpr*expr, unsigned wid, bool signed_flag,
-<<<<<<< Updated upstream
-		     const LineInfo&info, ivl_type_t use_type)
-{
-      if (wid <= expr->expr_width() && !use_type) {
-=======
 		     const LineInfo&info)
 {
       if (wid <= expr->expr_width()) {
->>>>>>> Stashed changes
 	    expr->cast_signed(signed_flag);
 	    return expr;
       }
@@ -48,27 +38,13 @@ NetExpr*pad_to_width(NetExpr*expr, unsigned wid, bool signed_flag,
 	    verinum oval = tmp->value();
 	    oval.has_sign(signed_flag);
 	    oval = pad_to_width(oval, wid);
-<<<<<<< Updated upstream
-	    if (const netenum_t *enum_type = dynamic_cast<const netenum_t *>(use_type)) {
-		  // The name of the enum is set to <nil> here, but the name is
-		  // only used in debugging output, so this is ok
-		  tmp = new NetEConstEnum(perm_string(), enum_type, oval);
-	    } else {
-		  tmp = new NetEConst(oval);
-	    }
-=======
 	    tmp = new NetEConst(oval);
->>>>>>> Stashed changes
 	    tmp->set_line(info);
 	    delete expr;
 	    return tmp;
       }
 
-<<<<<<< Updated upstream
-      NetESelect*tmp = new NetESelect(expr, 0, wid, use_type);
-=======
       NetESelect*tmp = new NetESelect(expr, 0, wid);
->>>>>>> Stashed changes
       tmp->cast_signed(signed_flag);
       tmp->set_line(info);
       return tmp;

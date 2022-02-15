@@ -41,11 +41,6 @@
 # include  "util.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 bool type_is_vectorable(ivl_variable_type_t type)
 {
       switch (type) {
@@ -1310,11 +1305,7 @@ unsigned PECallFunction::test_width_method_(Design*, NetScope*,
 
       if (debug_elaborate) {
 	    cerr << get_fileline() << ": PECallFunction::test_width_method_: "
-<<<<<<< Updated upstream
-		 << "search_results.path_head: " << search_results.path_head << endl;
-=======
 		 << "search_results.path_item: " << search_results.path_item << endl;
->>>>>>> Stashed changes
 	    cerr << get_fileline() << ": PECallFunction::test_width_method_: "
 		 << "search_results.path_tail: " << search_results.path_tail << endl;
 	    if (search_results.net)
@@ -1345,11 +1336,7 @@ unsigned PECallFunction::test_width_method_(Design*, NetScope*,
       //    <scope>.x.size();
       // In this example, x is a dynamic array.
       if (search_results.net && search_results.net->data_type()==IVL_VT_DARRAY
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.empty()) {
-=======
 	  && search_results.path_item.index.empty()) {
->>>>>>> Stashed changes
 
 	    NetNet*net = search_results.net;
 	    const netdarray_t*darray = net->darray_type();
@@ -1372,11 +1359,7 @@ unsigned PECallFunction::test_width_method_(Design*, NetScope*,
       //    <scope>.x.size();
       // In this example, x is a queue.
       if (search_results.net && search_results.net->data_type()==IVL_VT_QUEUE
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.empty()) {
-=======
 	  && search_results.path_item.index.empty()) {
->>>>>>> Stashed changes
 
 	    NetNet*net = search_results.net;
 	    const netdarray_t*darray = net->darray_type();
@@ -1409,11 +1392,7 @@ unsigned PECallFunction::test_width_method_(Design*, NetScope*,
       // x[e].len() is the length of the string.
       if (search_results.net
 	  && (search_results.net->data_type()==IVL_VT_QUEUE || search_results.net->data_type()==IVL_VT_DARRAY)
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.size()) {
-=======
 	  && search_results.path_item.index.size()) {
->>>>>>> Stashed changes
 
 	    NetNet*net = search_results.net;
 	    const netdarray_t*darray = net->darray_type();
@@ -1543,11 +1522,7 @@ unsigned PECallFunction::test_width(Design*des, NetScope*scope,
 		  cerr << get_fileline() << ": PECallFunction::test_width: "
 		       << "search_results.net: " << search_results.net->name() << endl;
 	    cerr << get_fileline() << ": PECallFunction::test_width: "
-<<<<<<< Updated upstream
-		 << "search_results.path_head: " << search_results.path_head << endl;
-=======
 		 << "search_results.path_item: " << search_results.path_item << endl;
->>>>>>> Stashed changes
 	    cerr << get_fileline() << ": PECallFunction::test_width: "
 		 << "search_results.path_tail: " << search_results.path_tail << endl;
       }
@@ -1750,31 +1725,9 @@ NetExpr* PECallFunction::elaborate_sfunc_(Design*des, NetScope*scope,
 
 	    uint64_t use_width = 0;
 	    if (PETypename*type_expr = dynamic_cast<PETypename*>(expr)) {
-<<<<<<< Updated upstream
-		  ivl_type_t data_type = type_expr->get_type()->elaborate_type(des, scope);
-		  ivl_assert(*this, data_type);
-		  use_width = 1;
-		  while (const netuarray_t *utype =
-			 dynamic_cast<const netuarray_t*>(data_type)) {
-			const vector<netrange_t> &dims = utype->static_dimensions();
-			for (size_t i = 0; i < dims.size(); i++)
-			      use_width *= dims[i].width();
-			data_type = utype->element_type();
-		  }
-		  if (!data_type->packed()) {
-			use_width = 0;
-			cerr << get_fileline() << ": error: "
-			     << "Invalid data type for $bits()."
-			     << endl;
-			des->errors++;
-		  } else {
-			use_width *= data_type->packed_width();
-		  }
-=======
 		  ivl_type_t tmp_type = type_expr->get_type()->elaborate_type(des, scope);
 		  ivl_assert(*this, tmp_type);
 		  use_width = tmp_type->packed_width();
->>>>>>> Stashed changes
 		  if (debug_elaborate) {
 			cerr << get_fileline() << ": PECallFunction::elaborate_sfunc_: "
 			     << " Packed width of type argument is " << use_width << endl;
@@ -2014,12 +1967,8 @@ static NetExpr* check_for_enum_methods(const LineInfo*li,
 		  des->errors += 1;
 	    }
 	    netenum_t::iterator item = netenum->first_name();
-<<<<<<< Updated upstream
-	    NetEConstEnum*tmp = new NetEConstEnum(item->first, netenum, item->second);
-=======
 	    NetEConstEnum*tmp = new NetEConstEnum(scope, item->first,
 	                                          netenum, item->second);
->>>>>>> Stashed changes
 	    tmp->set_line(*li);
 	    delete expr; // The elaborated enum variable is not needed.
 	    return tmp;
@@ -2036,12 +1985,8 @@ static NetExpr* check_for_enum_methods(const LineInfo*li,
 		  des->errors += 1;
 	    }
 	    netenum_t::iterator item = netenum->last_name();
-<<<<<<< Updated upstream
-	    NetEConstEnum*tmp = new NetEConstEnum(item->first, netenum, item->second);
-=======
 	    NetEConstEnum*tmp = new NetEConstEnum(scope, item->first,
 	                                          netenum, item->second);
->>>>>>> Stashed changes
 	    tmp->set_line(*li);
 	    delete expr; // The elaborated enum variable is not needed.
 	    return tmp;
@@ -2666,11 +2611,7 @@ NetExpr* PECallFunction::elaborate_expr(Design*des, NetScope*scope,
 		  cerr << get_fileline() << ": PECallFunction::elaborate_expr: "
 		       << "search_results.par_val: " << *search_results.par_val << endl;
 	    cerr << get_fileline() << ": PECallFunction::elaborate_expr: "
-<<<<<<< Updated upstream
-		 << "search_results.path_head: " << search_results.path_head << endl;
-=======
 		 << "search_results.path_item: " << search_results.path_item << endl;
->>>>>>> Stashed changes
 	    cerr << get_fileline() << ": PECallFunction::elaborate_expr: "
 		 << "search_results.path_tail: " << search_results.path_tail << endl;
       }
@@ -2699,11 +2640,7 @@ NetExpr* PECallFunction::elaborate_expr(Design*des, NetScope*scope,
 		  } else {
 			cerr << get_fileline() << ": error: "
 			     << "Object " << scope_path(search_results.scope)
-<<<<<<< Updated upstream
-			     << "." << search_results.path_head.back()
-=======
 			     << "." << search_results.path_item
->>>>>>> Stashed changes
 			     << " has no method \"" << search_results.path_tail
 			     << "(...)\"." << endl;
 			des->errors += 1;
@@ -2711,11 +2648,7 @@ NetExpr* PECallFunction::elaborate_expr(Design*des, NetScope*scope,
 		  }
 	    }
 
-<<<<<<< Updated upstream
-	    cerr << get_fileline() << ": error: Object " << search_results.path_head.back()
-=======
 	    cerr << get_fileline() << ": error: Object " << search_results.path_item
->>>>>>> Stashed changes
 		 << " in " << scope_path(search_results.scope)
 		 << " is not a function." << endl;
 	    des->errors += 1;
@@ -2763,13 +2696,8 @@ NetExpr* PECallFunction::elaborate_expr(Design*des, NetScope*scope,
 		 }
 		 symbol_search_results use_search_results;
 		 use_search_results.scope = scope;
-<<<<<<< Updated upstream
-		 use_search_results.path_tail.push_back(search_results.path_head.back());
-		 use_search_results.path_head.push_back(name_component_t(perm_string::literal(THIS_TOKEN)));
-=======
 		 use_search_results.path_tail.push_back(search_results.path_item);
 		 use_search_results.path_item = name_component_t(perm_string::literal(THIS_TOKEN));
->>>>>>> Stashed changes
 		 use_search_results.net = scope->find_signal(perm_string::literal(THIS_TOKEN));
 		 ivl_assert(*this, use_search_results.net);
 
@@ -3003,11 +2931,7 @@ unsigned PECallFunction::elaborate_arguments_(Design*des, NetScope*scope,
  *
  *     <scope>.x.len()
  *
-<<<<<<< Updated upstream
- * Then net refers to object named x, and path_head is "<scope>.x". The method is
-=======
  * Then net refers to object named x, and path_item is "x". The method is
->>>>>>> Stashed changes
  * "len" in path_tail, and if x is a string object, we can handle the case.
  */
 NetExpr* PECallFunction::elaborate_expr_method_(Design*des, NetScope*scope,
@@ -3033,11 +2957,7 @@ NetExpr* PECallFunction::elaborate_expr_method_(Design*des, NetScope*scope,
 	    cerr << get_fileline() << ": PECallFunction::elaborate_expr_method_: "
 		 << "search_results.scope: " << scope_path(search_results.scope) << endl;
 	    cerr << get_fileline() << ": PECallFunction::elaborate_expr_method_: "
-<<<<<<< Updated upstream
-		 << "search_results.path_head: " << search_results.path_head << endl;
-=======
 		 << "search_results.path_item: " << search_results.path_item << endl;
->>>>>>> Stashed changes
 	    cerr << get_fileline() << ": PECallFunction::elaborate_expr_method_: "
 		 << "search_results.path_tail: " << search_results.path_tail << endl;
 	    if (search_results.net)
@@ -3072,19 +2992,11 @@ NetExpr* PECallFunction::elaborate_expr_method_(Design*des, NetScope*scope,
       // If x is a queue of strings, then x[e] is a string. Elaborate the x[e]
       // expression and pass that to the len() method.
       if (search_results.net && search_results.net->data_type()==IVL_VT_QUEUE
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.size()==1) {
-
-	    NetNet*net = search_results.net;
-	    const netdarray_t*darray = net->darray_type();
-	    const index_component_t&use_index = search_results.path_head.back().index.back();
-=======
 	  && search_results.path_item.index.size()==1) {
 
 	    NetNet*net = search_results.net;
 	    const netdarray_t*darray = net->darray_type();
 	    const index_component_t&use_index = search_results.path_item.index.back();
->>>>>>> Stashed changes
 	    ivl_assert(*this, use_index.msb != 0);
 	    ivl_assert(*this, use_index.lsb == 0);
 
@@ -3110,11 +3022,7 @@ NetExpr* PECallFunction::elaborate_expr_method_(Design*des, NetScope*scope,
       // Dynamic array methods. This handles the case that the located signal
       // is a dynamic array, and there is no index.
       if (search_results.net && search_results.net->data_type()==IVL_VT_DARRAY
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.size()==0) {
-=======
 	  && search_results.path_item.index.size()==0) {
->>>>>>> Stashed changes
 
 	    // Get the method name that we are looking for.
 	    perm_string method_name = search_results.path_tail.back().name;
@@ -3139,11 +3047,7 @@ NetExpr* PECallFunction::elaborate_expr_method_(Design*des, NetScope*scope,
       // Queue methods. This handles the case that the located signal is a
       // QUEUE object, and there is a method.
       if (search_results.net && search_results.net->data_type()==IVL_VT_QUEUE
-<<<<<<< Updated upstream
-	  && search_results.path_head.back().index.size()==0) {
-=======
 	  && search_results.path_item.index.size()==0) {
->>>>>>> Stashed changes
 
 	    // Get the method name that we are looking for.
 	    perm_string method_name = search_results.path_tail.back().name;
@@ -3445,45 +3349,25 @@ NetExpr* PECastSize::elaborate_expr(Design*des, NetScope*scope,
 
 unsigned PECastType::test_width(Design*des, NetScope*scope, width_mode_t&)
 {
-<<<<<<< Updated upstream
-      target_type_ = target_->elaborate_type(des, scope);
-=======
       ivl_type_t t = target_->elaborate_type(des, scope);
->>>>>>> Stashed changes
 
       width_mode_t tmp_mode = PExpr::SIZED;
       base_->test_width(des, scope, tmp_mode);
 
-<<<<<<< Updated upstream
-      if (const netdarray_t*use_darray = dynamic_cast<const netdarray_t*>(target_type_)) {
-	    expr_type_  = use_darray->element_base_type();
-	    expr_width_ = use_darray->element_width();
-
-      } else if (const netstring_t*use_string = dynamic_cast<const netstring_t*>(target_type_)) {
-=======
       if (const netdarray_t*use_darray = dynamic_cast<const netdarray_t*>(t)) {
 	    expr_type_  = use_darray->element_base_type();
 	    expr_width_ = use_darray->element_width();
 
       } else if (const netstring_t*use_string = dynamic_cast<const netstring_t*>(t)) {
->>>>>>> Stashed changes
 	    expr_type_  = use_string->base_type();
 	    expr_width_ = 8;
 
       } else {
-<<<<<<< Updated upstream
-	    expr_type_  = target_type_->base_type();
-	    expr_width_ = target_type_->packed_width();
-      }
-      min_width_   = expr_width_;
-      signed_flag_ = target_type_->get_signed();
-=======
 	    expr_type_  = t->base_type();
 	    expr_width_ = t->packed_width();
       }
       min_width_   = expr_width_;
       signed_flag_ = t->get_signed();
->>>>>>> Stashed changes
 
       return expr_width_;
 }
@@ -3541,16 +3425,11 @@ NetExpr* PECastType::elaborate_expr(Design*des, NetScope*scope,
       }
 
       NetExpr*tmp = 0;
-<<<<<<< Updated upstream
-      if (target_type_ && target_type_->packed()) {
-	    switch (target_type_->base_type()) {
-=======
       if (dynamic_cast<const atom2_type_t*>(target_)) {
 	    tmp = cast_to_int2(sub, expr_width_);
       }
       if (const vector_type_t*vec = dynamic_cast<const vector_type_t*>(target_)) {
 	    switch (vec->base_type) {
->>>>>>> Stashed changes
 		case IVL_VT_BOOL:
 		  tmp = cast_to_int2(sub, expr_width_);
 		  break;
@@ -3571,11 +3450,7 @@ NetExpr* PECastType::elaborate_expr(Design*des, NetScope*scope,
                     // the signedness pushed down from the main expression.
 		  tmp = cast_to_width(sub, expr_width_, sub->has_sign(), *this);
 	    }
-<<<<<<< Updated upstream
-	    return pad_to_width(tmp, expr_wid, signed_flag_, *this, target_type_);
-=======
 	    return pad_to_width(tmp, expr_wid, signed_flag_, *this);
->>>>>>> Stashed changes
       }
 
       if (dynamic_cast<const string_type_t*>(target_)) {
@@ -4091,15 +3966,12 @@ unsigned PEIdent::test_width_method_(Design*des, NetScope*scope, width_mode_t&)
 
 unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 {
-<<<<<<< Updated upstream
-=======
       NetNet*       net = 0;
       ivl_type_t    cls_val = 0;
       const NetExpr*par = 0;
       ivl_type_t    par_type = 0;
       NetEvent*     eve = 0;
 
->>>>>>> Stashed changes
       NetScope*use_scope = scope;
       if (package_) {
 	    use_scope = des->find_package(package_->pscope_name());
@@ -4110,13 +3982,8 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 	    return tmp;
       }
 
-<<<<<<< Updated upstream
-      symbol_search_results sr;
-      symbol_search(this, des, use_scope, path_, &sr);
-=======
       NetScope*found_in = symbol_search(this, des, use_scope, path_,
 					net, par, eve, par_type, cls_val);
->>>>>>> Stashed changes
 
 	// If there is a part/bit select expression, then process it
 	// here. This constrains the results no matter what kind the
@@ -4127,11 +3994,7 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
       if (!name_tail.index.empty()) {
 	    const index_component_t&index_tail = name_tail.index.back();
 	      // Skip full array word net selects.
-<<<<<<< Updated upstream
-	    if (!sr.net || (name_tail.index.size() > sr.net->unpacked_dimensions())) {
-=======
 	    if (!net || (name_tail.index.size() > net->unpacked_dimensions())) {
->>>>>>> Stashed changes
 		  use_sel = index_tail.sel;
 	    }
       }
@@ -4166,11 +4029,7 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 		// slice width will be. If not, then assume it will be a
 		// simple bit select. If the net only has a single dimension
 		// then this is still a simple bit select.
-<<<<<<< Updated upstream
-	      if ((sr.net == 0) || (sr.net->packed_dimensions() <= 1))
-=======
 	      if ((net == 0) || (net->packed_dimensions() <= 1))
->>>>>>> Stashed changes
 		    use_width = 1;
 	      break;
 	  case index_component_t::SEL_BIT_LAST:
@@ -4183,26 +4042,13 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 	    ivl_assert(*this, 0);
       }
 
-<<<<<<< Updated upstream
-      if (const netdarray_t*darray = sr.net ? sr.net->darray_type() : 0) {
-=======
       if (const netdarray_t*darray = net ? net->darray_type() : 0) {
->>>>>>> Stashed changes
 	    switch (use_sel) {
 		case index_component_t::SEL_BIT:
 		case index_component_t::SEL_BIT_LAST:
 		  expr_type_   = darray->element_base_type();
 		  expr_width_  = darray->element_width();
 		  min_width_   = expr_width_;
-<<<<<<< Updated upstream
-		  signed_flag_ = sr.net->get_signed();
-		  break;
-		default:
-		  expr_type_   = sr.net->data_type();
-		  expr_width_  = sr.net->vector_width();
-		  min_width_   = expr_width_;
-		  signed_flag_ = sr.net->get_signed();
-=======
 		  signed_flag_ = net->get_signed();
 		  break;
 		default:
@@ -4210,42 +4056,21 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 		  expr_width_  = net->vector_width();
 		  min_width_   = expr_width_;
 		  signed_flag_ = net->get_signed();
->>>>>>> Stashed changes
 		  break;
 	    }
 	    return expr_width_;
       }
 
 	// Look for a class property.
-<<<<<<< Updated upstream
-      if (gn_system_verilog() && sr.cls_val) {
-	    expr_type_   = sr.cls_val->base_type();
-	    expr_width_  = sr.cls_val->packed_width();
-	    min_width_   = expr_width_;
-	    signed_flag_ = sr.cls_val->get_signed();
-=======
       if (gn_system_verilog() && cls_val) {
 	    expr_type_   = cls_val->base_type();
 	    expr_width_  = cls_val->packed_width();
 	    min_width_   = expr_width_;
 	    signed_flag_ = cls_val->get_signed();
->>>>>>> Stashed changes
 	    return expr_width_;
       }
 
       if (use_width != UINT_MAX) {
-<<<<<<< Updated upstream
-	      // We have a bit/part select. Account for any remaining dimensions
-	      // beyond the indexed dimension.
-	    size_t use_depth = name_tail.index.size();
-	    if (sr.net) {
-		  if (use_depth >= sr.net->unpacked_dimensions())
-			use_depth -= sr.net->unpacked_dimensions();
-		  use_width *= sr.net->slice_width(use_depth);
-	    }
-
-=======
->>>>>>> Stashed changes
 	    expr_type_   = IVL_VT_LOGIC; // Assume bit/parts selects are logic
 	    expr_width_  = use_width;
 	    min_width_   = use_width;
@@ -4255,65 +4080,14 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
       }
 
 	// The width of a signal expression is the width of the signal.
-<<<<<<< Updated upstream
-      if (sr.net != 0) {
-	      // If this net is a struct, the path tail may be
-	      // a struct member. If it is, then we know the
-	      // width of this identifier by knowing the width
-	      // of the member. We don't even need to know
-	      // anything about positions in containing arrays.
-	    if (sr.net->struct_type() != 0 && !sr.path_tail.empty()) {
-
-		  if (debug_elaborate) {
-			cerr << get_fileline() << ": debug: PEIdent::test_width: "
-			     << "Net " << sr.path_head << " is a struct, "
-			     << "checking width of member " << sr.path_tail << endl;
-		  }
-
-		  const netstruct_t::member_t*mem;
-		  unsigned long unused;
-		  mem = get_struct_member(this, des, scope, sr.net,
-					  peek_tail_name(sr.path_tail), unused);
-		  if (mem) {
-			expr_type_   = mem->data_type();
-			expr_width_  = mem->net_type->packed_width();
-			min_width_   = expr_width_;
-			signed_flag_ = mem->get_signed();
-			return expr_width_;
-		  }
-	    }
-
-	      // Similarly, if this net is an object, the path tail may
-	      // be a class property.
-	    if (sr.net->class_type() != 0 && !sr.path_tail.empty()) {
-		  const netclass_t*class_type = sr.net->class_type();
-		  perm_string pname = peek_tail_name(sr.path_tail);
-		  int pidx = class_type->property_idx_from_name(pname);
-		  if (pidx >= 0) {
-			ivl_type_t ptype = class_type->get_prop_type(pidx);
-			expr_type_   = ptype->base_type();
-			expr_width_  = ptype->packed_width();
-			min_width_   = expr_width_;
-			signed_flag_ = ptype->get_signed();
-			return expr_width_;
-		  }
-	    }
-
-=======
       if (net != 0) {
->>>>>>> Stashed changes
 	    size_t use_depth = name_tail.index.size();
 	      // Account for unpacked dimensions by assuming that the
 	      // unpacked dimensions are consumed first, so subtract
 	      // the unpacked dimensions from the dimension depth
 	      // useable for making the slice.
-<<<<<<< Updated upstream
-	    if (use_depth >= sr.net->unpacked_dimensions()) {
-		  use_depth -= sr.net->unpacked_dimensions();
-=======
 	    if (use_depth >= net->unpacked_dimensions()) {
 		  use_depth -= net->unpacked_dimensions();
->>>>>>> Stashed changes
 
 	    } else {
 		    // In this case, we have a slice of an unpacked
@@ -4322,15 +4096,6 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 		  use_depth = 0;
 	    }
 
-<<<<<<< Updated upstream
-	    expr_type_   = sr.net->data_type();
-	    expr_width_  = sr.net->slice_width(use_depth);
-	    min_width_   = expr_width_;
-	    signed_flag_ = sr.net->get_signed();
-	    if (debug_elaborate) {
-		  cerr << get_fileline() << ": PEIdent::test_width: "
-		       << sr.net->name() << " is a net, "
-=======
 	    expr_type_   = net->data_type();
 	    expr_width_  = net->slice_width(use_depth);
 	    min_width_   = expr_width_;
@@ -4338,18 +4103,12 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 	    if (debug_elaborate) {
 		  cerr << get_fileline() << ": PEIdent::test_width: "
 		       << net->name() << " is a net, "
->>>>>>> Stashed changes
 		       << "type=" << expr_type_
 		       << ", width=" << expr_width_
 		       << ", signed_=" << (signed_flag_ ? "true" : "false")
 		       << ", use_depth=" << use_depth
-<<<<<<< Updated upstream
-		       << ", packed_dimensions=" << sr.net->packed_dimensions()
-		       << ", unpacked_dimensions=" << sr.net->unpacked_dimensions()
-=======
 		       << ", packed_dimensions=" << net->packed_dimensions()
 		       << ", unpacked_dimensions=" << net->unpacked_dimensions()
->>>>>>> Stashed changes
 		       << endl;
 	    }
 	    return expr_width_;
@@ -4357,11 +4116,7 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 
 	// The width of an enumeration literal is the width of the
 	// enumeration base.
-<<<<<<< Updated upstream
-      if (const NetEConstEnum*par_enum = dynamic_cast<const NetEConstEnum*> (sr.par_val)) {
-=======
       if (const NetEConstEnum*par_enum = dynamic_cast<const NetEConstEnum*> (par)) {
->>>>>>> Stashed changes
 	    const netenum_t*use_enum = par_enum->enumeration();
 	    ivl_assert(*this, use_enum != 0);
 
@@ -4375,15 +4130,6 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 
 	// The width of a parameter is the width of the parameter value
         // (as evaluated earlier).
-<<<<<<< Updated upstream
-      if (sr.par_val != 0) {
-	    expr_type_   = sr.par_val->expr_type();
-	    expr_width_  = sr.par_val->expr_width();
-            min_width_   = expr_width_;
-            signed_flag_ = sr.par_val->has_sign();
-
-            if (!sr.par_val->has_width() && (mode < LOSSLESS))
-=======
       if (par != 0) {
 	    expr_type_   = par->expr_type();
 	    expr_width_  = par->expr_width();
@@ -4391,7 +4137,6 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
             signed_flag_ = par->has_sign();
 
             if (!par->has_width() && (mode < LOSSLESS))
->>>>>>> Stashed changes
                   mode = LOSSLESS;
 
 	    return expr_width_;
@@ -4416,8 +4161,6 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
             return expr_width_;
       }
 
-<<<<<<< Updated upstream
-=======
 	// If this is SystemVerilog then maybe this is a structure element.
       if (gn_system_verilog() && found_in==0 && path_.size() >= 2) {
 	    pform_name_t use_path = path_;
@@ -4469,7 +4212,6 @@ unsigned PEIdent::test_width(Design*des, NetScope*scope, width_mode_t&mode)
 	    }
       }
 
->>>>>>> Stashed changes
 	// Not a net, and not a parameter? Give up on the type, but
 	// set the width to 0.
       expr_type_   = IVL_VT_NO_TYPE;
@@ -4765,9 +4507,6 @@ NetExpr* PEIdent::elaborate_expr_class_member_(Design*des, NetScope*scope,
 NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 				 unsigned expr_wid, unsigned flags) const
 {
-<<<<<<< Updated upstream
-      ivl_assert(*this, scope);
-=======
       assert(scope);
 
       NetNet*       net = 0;
@@ -4775,7 +4514,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
       const NetExpr*par = 0;
       ivl_type_t    par_type = 0;
       NetEvent*     eve = 0;
->>>>>>> Stashed changes
 
       if (debug_elaborate) {
 	    cerr << get_fileline() << ": PEIdent::elaborate_expr: "
@@ -4820,33 +4558,11 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	    ivl_assert(*this, use_scope);
       }
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
 	// Find the net/parameter/event object that this name refers
 	// to. The path_ may be a scoped path, and may include method
 	// or member name parts. For example, main.a.b.c may refer to
 	// a net called "b" in the scope "main.a" and with a member
-<<<<<<< Updated upstream
-	// named "c". symbol_search() handles this for us.
-      symbol_search_results sr;
-      symbol_search(this, des, use_scope, path_, &sr);
-
-	// If the identifier name is a parameter name, then return
-	// the parameter value.
-      if (sr.par_val != 0) {
-
-	    if (!sr.path_tail.empty()) {
-		  cerr << get_fileline() << ": error: Parameter name "
-		       << sr.path_head << " can't have member names ("
-		       << sr.path_tail << ")." << endl;
-		  des->errors += 1;
-	    }
-
-	    NetExpr*tmp = elaborate_expr_param_(des, scope, sr.par_val, sr.scope,
-                                                sr.par_type, expr_wid, flags);
-=======
 	// named "c". This loop tries to figure that out and the
 	// result is the complete path_ split into a base_path (that
 	// locates the object) and the member_path that selects parts
@@ -4889,7 +4605,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 	    NetExpr*tmp = elaborate_expr_param_(des, scope, par, found_in,
                                                 par_type, expr_wid, flags);
->>>>>>> Stashed changes
 
             if (!tmp) return 0;
 
@@ -4898,11 +4613,7 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 	// If the identifier names a signal (a variable or a net)
 	// then create a NetESignal node to handle it.
-<<<<<<< Updated upstream
-      if (sr.net != 0) {
-=======
       if (net != 0) {
->>>>>>> Stashed changes
             if (NEED_CONST & flags) {
                   cerr << get_fileline() << ": error: A reference to a wire "
                           "or reg (`" << path_ << "') is not allowed in "
@@ -4910,11 +4621,7 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	          des->errors += 1;
                   return 0;
             }
-<<<<<<< Updated upstream
-            if (sr.net->scope()->type() == NetScope::MODULE) {
-=======
             if (net->scope()->type() == NetScope::MODULE) {
->>>>>>> Stashed changes
                   if (scope->need_const_func()) {
                         cerr << get_fileline() << ": error: A reference to a "
                                 "non-local wire or reg (`" << path_ << "') is "
@@ -4928,48 +4635,22 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	      // If this is a struct, and there are members in the
 	      // member_path, then generate an expression that
 	      // reflects the member selection.
-<<<<<<< Updated upstream
-	    if (sr.net->struct_type() && !sr.path_tail.empty()) {
-		  if (debug_elaborate) {
-			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-			        "Ident " << sr.path_head
-			     << " look for struct member " << sr.path_tail
-=======
 	    if (net->struct_type() && !member_path.empty()) {
 		  if (debug_elaborate) {
 			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
 			        "Ident " << base_path
 			     << " look for struct member " << member_path
->>>>>>> Stashed changes
 			     << endl;
 		  }
 
 		  NetExpr*tmp = check_for_struct_members(this, des, use_scope,
-<<<<<<< Updated upstream
-							 sr.net, sr.path_head.back().index,
-							 sr.path_tail);
-=======
 							 net, base_path.back().index,
 							 member_path);
->>>>>>> Stashed changes
 		  if (!tmp) return 0;
 		  else return pad_to_width(tmp, expr_wid, signed_flag_, *this);
 	    }
 
 	      // If this is an array object, and there are members in
-<<<<<<< Updated upstream
-	      // the sr.path_tail, check for array properties.
-	    if (sr.net->darray_type() && !sr.path_tail.empty()) {
-                  if (debug_elaborate) {
-			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-			        "Ident " << sr.path_head
-			     << " looking for array property " << sr.path_tail
-			     << endl;
-                  }
-
-		  ivl_assert(*this, sr.path_tail.size() == 1);
-		  const name_component_t member_comp = sr.path_tail.front();
-=======
 	      // the member_path, check for array properties.
 	    if (net->darray_type() && !member_path.empty()) {
                   if (debug_elaborate) {
@@ -4981,18 +4662,12 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 		  ivl_assert(*this, member_path.size() == 1);
 		  const name_component_t member_comp = member_path.front();
->>>>>>> Stashed changes
 		  if (member_comp.name == "size") {
 			NetESFunc*fun = new NetESFunc("$size", IVL_VT_BOOL, 32, 1);
 			fun->set_line(*this);
 
-<<<<<<< Updated upstream
-			NetESignal*arg = new NetESignal(sr.net);
-			arg->set_line(*sr.net);
-=======
 			NetESignal*arg = new NetESignal(net);
 			arg->set_line(*net);
->>>>>>> Stashed changes
 
 			fun->parm(0, arg);
 			return fun;
@@ -5092,20 +4767,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	    }
 
 	      // If this is a queue object, and there are members in
-<<<<<<< Updated upstream
-	      // the sr.path_tail, check for array properties.
-	    if (sr.net->queue_type() && !sr.path_tail.empty()) {
-                  if (debug_elaborate) {
-                        cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-                             << "Ident " << sr.path_head
-                             << " looking for queue property " << sr.path_tail
-                             << endl;
-                  }
-
-		  ivl_assert(*this, sr.path_tail.size() == 1);
-		  const name_component_t member_comp = sr.path_tail.front();
-		  const netqueue_t*queue = sr.net->queue_type();
-=======
 	      // the member_path, check for array properties.
 	    if (net->queue_type() && !member_path.empty()) {
                   if (debug_elaborate) {
@@ -5118,7 +4779,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 		  ivl_assert(*this, member_path.size() == 1);
 		  const name_component_t member_comp = member_path.front();
 		  const netqueue_t*queue = net->queue_type();
->>>>>>> Stashed changes
 		  ivl_variable_type_t qelem_type = queue->element_base_type();
 		  unsigned qelem_width = queue->element_width();
 		  if (member_comp.name == "pop_back") {
@@ -5126,13 +4786,8 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 			                              qelem_type, qelem_width, 1);
 			fun->set_line(*this);
 
-<<<<<<< Updated upstream
-			NetESignal*arg = new NetESignal(sr.net);
-			arg->set_line(*sr.net);
-=======
 			NetESignal*arg = new NetESignal(net);
 			arg->set_line(*net);
->>>>>>> Stashed changes
 
 			fun->parm(0, arg);
 			return fun;
@@ -5143,31 +4798,14 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 			                              qelem_type, qelem_width, 1);
 			fun->set_line(*this);
 
-<<<<<<< Updated upstream
-			NetESignal*arg = new NetESignal(sr.net);
-			arg->set_line(*sr.net);
-=======
 			NetESignal*arg = new NetESignal(net);
 			arg->set_line(*net);
->>>>>>> Stashed changes
 
 			fun->parm(0, arg);
 			return fun;
 		  }
 	    }
 
-<<<<<<< Updated upstream
-	    if ((sr.net->data_type() == IVL_VT_STRING) && !sr.path_tail.empty()) {
-		  if (debug_elaborate) {
-			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-			        "Ident " << sr.path_head
-			     << " looking for string property " << sr.path_tail
-			     << endl;
-		  }
-
-		  ivl_assert(*this, sr.path_tail.size() == 1);
-		  const name_component_t member_comp = sr.path_tail.front();
-=======
 	    if ((net->data_type() == IVL_VT_STRING) && !member_path.empty()) {
 		  if (debug_elaborate) {
 			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
@@ -5178,7 +4816,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 		  ivl_assert(*this, member_path.size() == 1);
 		  const name_component_t member_comp = member_path.front();
->>>>>>> Stashed changes
 		  cerr << get_fileline() << ": sorry: String method '"
 		       << member_comp.name << "' currently requires ()."
 		       << endl;
@@ -5186,44 +4823,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 		  return 0;
 	    }
 
-<<<<<<< Updated upstream
-	    if (sr.net->class_type() && !sr.path_tail.empty()) {
-		  if (debug_elaborate) {
-			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-			        "Ident " << sr.path_head
-			     << " look for class property " << sr.path_tail
-			     << endl;
-		  }
-
-		  ivl_assert(*this, sr.path_tail.size() == 1);
-		  const name_component_t member_comp = sr.path_tail.front();
-		  return check_for_class_property(this, des, use_scope,
-							sr.net, member_comp);
-	    }
-
-	    if (sr.net->enumeration() && !sr.path_tail.empty()) {
-		  const netenum_t*netenum = sr.net->enumeration();
-		  if (debug_elaborate) {
-			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
-			        "Ident " << sr.path_head
-			     << " look for enumeration method " << sr.path_tail
-			     << endl;
-		  }
-
-		  NetESignal*expr = new NetESignal(sr.net);
-		  expr->set_line(*this);
-		  ivl_assert(*this, sr.path_tail.size() == 1);
-		  const name_component_t member_comp = sr.path_tail.front();
-		  ivl_assert(*this, member_comp.index.empty());
-		  return check_for_enum_methods(this, des, use_scope,
-						netenum, sr.path_head,
-						member_comp.name,
-						expr, expr_wid, NULL, 0);
-	    }
-
-	    ivl_assert(*this, sr.path_tail.empty());
-	    NetExpr*tmp = elaborate_expr_net(des, scope, sr.net, sr.scope,
-=======
 	    if (net->class_type() && !member_path.empty()) {
 		  if (debug_elaborate) {
 			cerr << get_fileline() << ": PEIdent::elaborate_expr: "
@@ -5259,7 +4858,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 	    ivl_assert(*this, member_path.empty());
 	    NetExpr*tmp = elaborate_expr_net(des, scope, net, found_in,
->>>>>>> Stashed changes
                                              expr_wid, flags);
 
             if (!tmp) return 0;
@@ -5276,11 +4874,7 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 
 	// If the identifier is a named event
         // then create a NetEEvent node to handle it.
-<<<<<<< Updated upstream
-      if (sr.eve != 0) {
-=======
       if (eve != 0) {
->>>>>>> Stashed changes
             if (NEED_CONST & flags) {
                   cerr << get_fileline() << ": error: A reference to a named "
                           "event (`" << path_ << "') is not allowed in a "
@@ -5288,11 +4882,7 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	          des->errors += 1;
                   return 0;
             }
-<<<<<<< Updated upstream
-            if (sr.eve->scope() != scope) {
-=======
             if (eve->scope() != scope) {
->>>>>>> Stashed changes
                   if (scope->need_const_func()) {
                         cerr << get_fileline() << ": error: A reference to a "
                                 "non-local named event (`" << path_ << "') is "
@@ -5303,16 +4893,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
                   scope->is_const_func(false);
             }
 
-<<<<<<< Updated upstream
-	    if (!sr.path_tail.empty()) {
-		  cerr << get_fileline() << ": error: Event name "
-		       << sr.path_head << " can't have member names ("
-		       << sr.path_tail << ")" << endl;
-		  des->errors += 1;
-	    }
-
-	    NetEEvent*tmp = new NetEEvent(sr.eve);
-=======
 	    if (!member_path.empty()) {
 		  cerr << get_fileline() << ": error: Event name " << base_path
 		       << " can't have member names (member_path=" << member_path << ")"
@@ -5321,7 +4901,6 @@ NetExpr* PEIdent::elaborate_expr(Design*des, NetScope*scope,
 	    }
 
 	    NetEEvent*tmp = new NetEEvent(eve);
->>>>>>> Stashed changes
 	    tmp->set_line(*this);
 	    return tmp;
       }
@@ -6137,27 +5716,11 @@ NetExpr* PEIdent::elaborate_expr_net_part_(Design*des, NetScope*scope,
 	      // range.
 	    long loff, moff;
 	    unsigned long lwid, mwid;
-<<<<<<< Updated upstream
-	    bool lrc, mrc;
-	    lrc = net->sig()->sb_to_slice(prefix_indices, lsv, loff, lwid);
-	    mrc = net->sig()->sb_to_slice(prefix_indices, msv, moff, mwid);
-	    if (!mrc || !lrc) {
-		  cerr << get_fileline() << ": error: ";
-		  cerr << "Part-select [" << msv << ":" << lsv;
-		  cerr << "] exceeds the declared bounds for ";
-		  cerr << net->sig()->name();
-		  if (net->sig()->unpacked_dimensions() > 0) cerr << "[]";
-		  cerr << "." << endl;
-		  des->errors += 1;
-		  return 0;
-	    }
-=======
 	    bool lrc;
 	    lrc = net->sig()->sb_to_slice(prefix_indices, lsv, loff, lwid);
 	    ivl_assert(*this, lrc);
 	    lrc = net->sig()->sb_to_slice(prefix_indices, msv, moff, mwid);
 	    ivl_assert(*this, lrc);
->>>>>>> Stashed changes
 	    ivl_assert(*this, lwid == mwid);
 
 	    if (moff > loff) {
@@ -6263,50 +5826,6 @@ NetExpr* PEIdent::elaborate_expr_net_idx_up_(Design*des, NetScope*scope,
 	    NetExpr*ex;
 	    if (base_c->value().is_defined()) {
 		  long lsv = base_c->value().as_long();
-<<<<<<< Updated upstream
-		  long rel_base = 0;
-		    // Get the signal range.
-		  const vector<netrange_t>&packed = net->sig()->packed_dims();
-		  if (prefix_indices.size()+1 < net->sig()->packed_dims().size()) {
-			  // Here we are selecting one or more sub-arrays.
-			  // Make this work by finding the indexed sub-arrays and
-			  // creating a generated slice that spans the whole range.
-			unsigned long swid = net->sig()->slice_width(prefix_indices.size()+1);
-			ivl_assert(*this, swid > 0);
-			long loff, moff;
-			unsigned long lwid, mwid;
-			bool lrc, mrc;
-			mrc = net->sig()->sb_to_slice(prefix_indices, lsv, moff, mwid);
-			lrc = net->sig()->sb_to_slice(prefix_indices, lsv+(wid/swid)-1, loff, lwid);
-			if (!mrc || !lrc) {
-			      cerr << get_fileline() << ": error: ";
-			      cerr << "Part-select [" << lsv << "+:" << (wid/swid);
-			      cerr << "] exceeds the declared bounds for ";
-			      cerr << net->sig()->name();
-			      if (net->sig()->unpacked_dimensions() > 0) cerr << "[]";
-			      cerr << "." << endl;
-			      des->errors += 1;
-			      return 0;
-			}
-			ivl_assert(*this, mwid == swid);
-			ivl_assert(*this, lwid == swid);
-
-			if (moff > loff) {
-			      rel_base = loff;
-			} else {
-			      rel_base = moff;
-			}
-		  } else {
-		        long offset = 0;
-		          // We want the last range, which is where we work.
-		        const netrange_t&rng = packed.back();
-		        if (rng.get_msb() < rng.get_lsb()) {
-			      offset = -wid + 1;
-		        }
-		        rel_base = net->sig()->sb_to_idx(prefix_indices, lsv) + offset;
-		  }
-
-=======
 		  long offset = 0;
 		    // Get the signal range.
 		  const vector<netrange_t>&packed = net->sig()->packed_dims();
@@ -6321,7 +5840,6 @@ NetExpr* PEIdent::elaborate_expr_net_idx_up_(Design*des, NetScope*scope,
 		  long rel_base = net->sig()->sb_to_idx(prefix_indices, lsv);
 		  rel_base += offset;
 
->>>>>>> Stashed changes
 		    // If the part select covers exactly the entire
 		    // vector, then do not bother with it. Return the
 		    // signal itself.
@@ -6412,49 +5930,6 @@ NetExpr* PEIdent::elaborate_expr_net_idx_do_(Design*des, NetScope*scope,
 	    NetExpr*ex;
 	    if (base_c->value().is_defined()) {
 		  long lsv = base_c->value().as_long();
-<<<<<<< Updated upstream
-		  long rel_base = 0;
-		    // Get the signal range.
-		  const vector<netrange_t>&packed = net->sig()->packed_dims();
-		  if (prefix_indices.size()+1 < net->sig()->packed_dims().size()) {
-			  // Here we are selecting one or more sub-arrays.
-			  // Make this work by finding the indexed sub-arrays and
-			  // creating a generated slice that spans the whole range.
-			unsigned long swid = net->sig()->slice_width(prefix_indices.size()+1);
-			ivl_assert(*this, swid > 0);
-			long loff, moff;
-			unsigned long lwid, mwid;
-			bool lrc, mrc;
-			mrc = net->sig()->sb_to_slice(prefix_indices, lsv, moff, mwid);
-			lrc = net->sig()->sb_to_slice(prefix_indices, lsv-(wid/swid)+1, loff, lwid);
-			if (!mrc || !lrc) {
-			      cerr << get_fileline() << ": error: ";
-			      cerr << "Part-select [" << lsv << "-:" << (wid/swid);
-			      cerr << "] exceeds the declared bounds for ";
-			      cerr << net->sig()->name();
-			      if (net->sig()->unpacked_dimensions() > 0) cerr << "[]";
-			      cerr << "." << endl;
-			      des->errors += 1;
-			      return 0;
-			}
-			ivl_assert(*this, mwid == swid);
-			ivl_assert(*this, lwid == swid);
-
-			if (moff > loff) {
-			      rel_base = loff;
-			} else {
-			      rel_base = moff;
-			}
-		  } else {
-		        long offset = 0;
-		          // We want the last range, which is where we work.
-		        const netrange_t&rng = packed.back();
-		        if (rng.get_msb() > rng.get_lsb()) {
-			      offset = -wid + 1;
-		        }
-		        rel_base = net->sig()->sb_to_idx(prefix_indices, lsv) + offset;
-                  }
-=======
 		  long offset = 0;
 		    // Get the signal range.
 		  const vector<netrange_t>&packed = net->sig()->packed_dims();
@@ -6468,7 +5943,6 @@ NetExpr* PEIdent::elaborate_expr_net_idx_do_(Design*des, NetScope*scope,
 
 		  long rel_base = net->sig()->sb_to_idx(prefix_indices, lsv);
 		  rel_base += offset;
->>>>>>> Stashed changes
 
 		    // If the part select covers exactly the entire
 		    // vector, then do not bother with it. Return the

@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2011-2013 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  * Copyright CERN 2013 / Stephen Williams (steve@icarus.com)
  *
  *    This source code is free software; you can redistribute it
@@ -31,11 +27,6 @@
 # include  <list>
 # include  <iterator>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 Package::Package(perm_string n, const ActiveScope&ref)
 : Scope(ref), name_(n)
 {

@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2011-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,11 +21,6 @@
 # include  "parse_misc.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 ivl_variable_type_t struct_type_t::figure_packed_base_type(void) const
 {
       if (! packed_flag)

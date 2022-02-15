@@ -27,11 +27,6 @@
 # include  <cstdio> // Needed to get snprintf for as_string().
 # include  <algorithm>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 #if !defined(HAVE_LROUND)
 /*
  * If the system doesn't provide the lround function, then we provide
@@ -62,6 +57,21 @@ verinum::verinum(const V*bits, unsigned nbits, bool has_len__)
       for (unsigned idx = 0 ;  idx < nbits ;  idx += 1) {
 	    bits_[idx] = bits[idx];
       }
+}
+
+void verinum::dump(ostream& o) const
+{
+	for(int i = nbits_-1; i >= 0; i--)
+	{
+		switch(bits_[i])
+		{
+			case V::V0: o << "0"; break;
+			case V::V1: o << "1"; break;
+			case V::Vx: o << "x"; break;
+			case V::Vz: o << "z"; break;
+			default:	o << "?"; break;
+		}
+	}
 }
 
 static string process_verilog_string_quotes(const string&str)
@@ -1082,7 +1092,6 @@ verinum operator + (const verinum&left, const verinum&right)
       result.has_sign(signed_flag);
 
       delete[]val_bits;
-
       return result;
 }
 
@@ -1638,4 +1647,260 @@ verinum::V operator ^ (verinum::V l, verinum::V r)
 	    return verinum::V0;
 
       return verinum::Vx;
+}
+
+verinum v_not(const verinum&left)
+{
+      verinum val = left;
+      for (unsigned idx = 0 ;  idx < val.len() ;  idx += 1)
+	    switch (val[idx]) {
+		case verinum::V0:
+		  val.set(idx, verinum::V1);
+		  break;
+		case verinum::V1:
+		  val.set(idx, verinum::V0);
+		  break;
+		default:
+		  val.set(idx, verinum::Vx);
+		  break;
+	    }
+
+      return val;
+}
+
+verinum::V bit_not_(verinum::V l)
+{
+	if(l == verinum::Vx)
+		return verinum::Vx;
+	if(l == verinum::Vz)
+		return verinum::Vz;
+	if(l == verinum::V0)
+		return verinum::V1;
+	if(l == verinum::V1)
+		return verinum::V0;
+}
+
+verinum::V bit_nor(verinum::V l, verinum::V r)
+{
+	return bit_not_(l | r);
+}
+
+verinum::V bit_nand(verinum::V l, verinum::V r)
+{
+	return bit_not_(l & r);
+}
+
+verinum::V bit_xnor(verinum::V l, verinum::V r)
+{
+	return bit_not_(l ^ r);
+}
+
+verinum bitwise_and(const verinum&left, const verinum&right)
+{
+	unsigned idx;
+	unsigned len = left.len() >= right.len() ? left.len() : right.len();
+	verinum val(verinum::Vx,len);
+
+	for (idx = left.len() ; idx > right.len() ;  idx -= 1) {
+		val.set(idx - 1, left[idx-1] & verinum::V0);
+	}
+	
+	for (idx = right.len() ; idx > left.len() ;  idx -= 1) {
+		val.set(idx - 1, right[idx-1] & verinum::V0);
+	}
+	
+	while (idx > 0) {
+		val.set(idx - 1, left[idx-1] & right[idx-1]);
+		idx -= 1;
+	}
+	
+	return val;
+}
+
+verinum bitwise_or(const verinum&left, const verinum&right)
+{
+	unsigned idx;
+	unsigned len = left.len() >= right.len() ? left.len() : right.len();
+	verinum val(verinum::Vx,len);
+
+	for (idx = left.len() ; idx > right.len() ;  idx -= 1) {
+		val.set(idx - 1, left[idx-1] | verinum::V0);
+	}
+	
+	for (idx = right.len() ; idx > left.len() ;  idx -= 1) {
+		val.set(idx - 1, right[idx-1] | verinum::V0);
+	}
+	
+	while (idx > 0) {
+		val.set(idx - 1, left[idx-1] | right[idx-1]);
+		idx -= 1;
+	}
+	
+	return val;
+}
+
+verinum bitwise_xor(const verinum&left, const verinum&right)
+{
+	unsigned idx;
+	unsigned len = left.len() >= right.len() ? left.len() : right.len();
+	verinum val(verinum::Vx,len);
+
+	for (idx = left.len() ; idx > right.len() ;  idx -= 1) {
+		val.set(idx - 1, left[idx-1] ^ verinum::V0);
+	}
+	
+	for (idx = right.len() ; idx > left.len() ;  idx -= 1) {
+		val.set(idx - 1, right[idx-1] ^ verinum::V0);
+	}
+	
+	while (idx > 0) {
+		val.set(idx - 1, left[idx-1] ^ right[idx-1]);
+		idx -= 1;
+	}
+	
+	return val;
+}
+
+verinum bitwise_xnor(const verinum&left, const verinum&right)
+{
+	unsigned idx;
+	unsigned len = left.len() >= right.len() ? left.len() : right.len();
+	verinum val(verinum::Vx,len);
+
+	for (idx = left.len() ; idx > right.len() ;  idx -= 1) {
+		val.set(idx - 1, bit_xnor(left[idx-1],verinum::V0));
+	}
+	
+	for (idx = right.len() ; idx > left.len() ;  idx -= 1) {
+		val.set(idx - 1, bit_xnor(right[idx-1],verinum::V0));
+	}
+	
+	while (idx > 0) {
+		val.set(idx - 1, bit_xnor(left[idx-1],right[idx-1]));
+		idx -= 1;
+	}
+	
+	return val;
+}
+
+verinum::V unary_and(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = val & l[idx];
+	return val;
+}
+
+verinum::V unary_nand(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = bit_nand(val, l[idx]);
+	return val;
+}
+
+verinum::V unary_or(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = val | l[idx];
+	return val;
+}
+
+verinum::V unary_nor(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = bit_nor(val, l[idx]);
+	return val;
+}
+
+verinum::V unary_xor(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = val ^ l[idx];
+	return val;
+}
+
+verinum::V unary_xnor(const verinum&l)
+{
+	verinum::V val = l[0];
+	for(unsigned idx = 1; idx < l.len(); ++idx)
+		val = bit_xnor(val, l[idx]);
+	return val;
+}
+
+verinum::V land(const verinum&left, const verinum&right)//&&
+{
+	verinum::V l = unary_or(left);
+	verinum::V r = unary_or(right);
+
+	verinum::V val = l & r;
+	
+	return val;
+}
+
+verinum::V lor(const verinum&left, const verinum&right)//||
+{
+	verinum::V l = unary_or(left);
+	verinum::V r = unary_or(right);
+
+	verinum::V val = l | r;
+
+	return val;
+}
+
+verinum::V lnot(const verinum&left)
+{
+	verinum::V l = unary_or(left);
+	verinum::V val = bit_not_(l);
+	return val;
+}
+
+verinum::V ceq(const verinum&left, const verinum&right)//===
+{
+	if (left.len() != right.len())
+	    return verinum::V0;
+
+      for (unsigned idx = 0 ;  idx < left.len() ;  idx += 1)
+	  {
+	    if ((left[idx] < 2) && (right[idx] < 2) && (left[idx] != right[idx]))
+		  return verinum::V0;
+	  }
+	  return verinum::V1;
+}
+
+verinum::V cneq(const verinum&left, const verinum&right)//!==
+{
+	verinum::V result = ceq(left, right);
+	return bit_not_(result);
+}
+
+verinum lshift(const verinum& l, const verinum& r)
+{
+	assert(r.is_defined());
+	unsigned long rv = r.as_ulong();
+	verinum res(verinum::V0, l.len());
+	if (rv < res.len()) {
+		unsigned cnt = res.len() - rv;
+		for (unsigned idx = 0 ;  idx < cnt ;  idx += 1)
+			res.set(idx+rv, l.get(idx));
+	}
+
+	return res;
+}
+
+verinum rshift(const verinum& l, const verinum& r)
+{
+	assert(r.is_defined());
+	unsigned long rv = r.as_ulong();
+	verinum res(verinum::V0, l.len());
+	if (rv < res.len()) {
+		unsigned cnt = res.len() - rv;
+		for (unsigned idx = 0 ;  idx < cnt ;  idx += 1)
+			res.set(idx, l.get(idx+rv));
+	}
+
+	return res;
 }

@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 1999-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,9 +21,6 @@
 # include  "PTask.h"
 # include  <cassert>
 
-<<<<<<< Updated upstream
-using namespace std;
-=======
 svector<unsigned>& PTask::get_linenos()
 {
 	svector<unsigned>*tmp = new svector<unsigned>();
@@ -59,7 +52,6 @@ svector<unsigned>& PFunction::get_linenos()
 	}
 	return *tmp;
 }
->>>>>>> Stashed changes
 
 PTaskFunc::PTaskFunc(perm_string n, LexicalScope*p)
 : PScope(n,p), this_type_(0), ports_(0)
@@ -81,8 +73,6 @@ void PTaskFunc::set_ports(vector<pform_tf_port_t>*p)
       ports_ = p;
 }
 
-<<<<<<< Updated upstream
-=======
 unsigned PTaskFunc::port_count() //2021.2.4
 {
       if(ports_)
@@ -121,7 +111,6 @@ set<string>& PFunction::get_funcs()
 	return *tmp;
 }
 
->>>>>>> Stashed changes
 void PTaskFunc::set_this(class_type_t*type, PWire*this_wire)
 {
       assert(this_type_ == 0);

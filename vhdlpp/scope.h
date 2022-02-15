@@ -1,11 +1,7 @@
 #ifndef IVL_scope_H
 #define IVL_scope_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2011-2016 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  * Copyright CERN 2013 / Stephen Williams (steve@icarus.com)
  *
  *    This source code is free software; you can redistribute it
@@ -40,11 +36,7 @@ class SubprogramHeader;
 class VType;
 class SequentialStmt;
 
-<<<<<<< Updated upstream
-typedef std::list<SubprogramHeader*> SubHeaderList;
-=======
 typedef list<SubprogramHeader*> SubHeaderList;
->>>>>>> Stashed changes
 
 template<typename T>
 struct delete_object{
@@ -53,11 +45,7 @@ struct delete_object{
 
 template<typename T>
 struct delete_pair_second{
-<<<<<<< Updated upstream
-    void operator()(std::pair<perm_string, T*> item){ delete item.second; }
-=======
     void operator()(pair<perm_string, T*> item){ delete item.second; }
->>>>>>> Stashed changes
 };
 
 class ScopeBase {
@@ -87,11 +75,7 @@ class ScopeBase {
       void transfer_from(ScopeBase&ref, transfer_type_t what = ALL);
 
       inline void bind_subprogram(perm_string name, SubprogramHeader*obj)
-<<<<<<< Updated upstream
-      { std::map<perm_string, SubHeaderList>::iterator it;
-=======
       { map<perm_string, SubHeaderList>::iterator it;
->>>>>>> Stashed changes
         if((it = use_subprograms_.find(name)) != use_subprograms_.end() )
             it->second.remove(obj);
         cur_subprograms_[name].push_back(obj);
@@ -111,19 +95,11 @@ class ScopeBase {
         finalizers_.push_back(s);
       }
 
-<<<<<<< Updated upstream
-      void dump_scope(std::ostream&out) const;
-
-	// Looks for a subprogram with specified name and parameter types.
-      SubprogramHeader*match_subprogram(perm_string name,
-                                        const std::list<const VType*>*params) const;
-=======
       void dump_scope(ostream&out) const;
 
 	// Looks for a subprogram with specified name and parameter types.
       SubprogramHeader*match_subprogram(perm_string name,
                                         const list<const VType*>*params) const;
->>>>>>> Stashed changes
 
       perm_string peek_name() const { return name_; }
 
@@ -136,19 +112,11 @@ class ScopeBase {
       void cleanup();
 
       //containers' cleaning helper functions
-<<<<<<< Updated upstream
-      template<typename T> void delete_all(std::list<T*>& c)
-      {
-          for_each(c.begin(), c.end(), ::delete_object<T>());
-      }
-      template<typename T> void delete_all(std::map<perm_string, T*>& c)
-=======
       template<typename T> void delete_all(list<T*>& c)
       {
           for_each(c.begin(), c.end(), ::delete_object<T>());
       }
       template<typename T> void delete_all(map<perm_string, T*>& c)
->>>>>>> Stashed changes
       {
           for_each(c.begin(), c.end(), ::delete_pair_second<T>());
       }
@@ -218,13 +186,8 @@ class Scope : public ScopeBase {
 
     protected:
 	// Helper method for emitting signals in the scope.
-<<<<<<< Updated upstream
-      int emit_signals(std::ostream&out, Entity*ent, ScopeBase*scope);
-      int emit_variables(std::ostream&out, Entity*ent, ScopeBase*scope);
-=======
       int emit_signals(ostream&out, Entity*ent, ScopeBase*scope);
       int emit_variables(ostream&out, Entity*ent, ScopeBase*scope);
->>>>>>> Stashed changes
 };
 
 /*
@@ -263,44 +226,28 @@ class ActiveScope : public ScopeBase {
        * done in ScopeBase::cleanup() function .*/
 
       void bind_name(perm_string name, Signal*obj)
-<<<<<<< Updated upstream
-      { std::map<perm_string, Signal*>::iterator it;
-=======
       { map<perm_string, Signal*>::iterator it;
->>>>>>> Stashed changes
         if((it = old_signals_.find(name)) != old_signals_.end() )
             old_signals_.erase(it);
         new_signals_[name] = obj;
       }
 
       void bind_name(perm_string name, Variable*obj)
-<<<<<<< Updated upstream
-      { std::map<perm_string, Variable*>::iterator it;
-=======
       { map<perm_string, Variable*>::iterator it;
->>>>>>> Stashed changes
         if((it = old_variables_.find(name)) != old_variables_.end() )
             old_variables_.erase(it);
         new_variables_[name] = obj;
       }
 
       void bind_name(perm_string name, ComponentBase*obj)
-<<<<<<< Updated upstream
-      { std::map<perm_string, ComponentBase*>::iterator it;
-=======
       { map<perm_string, ComponentBase*>::iterator it;
->>>>>>> Stashed changes
         if((it = old_components_.find(name)) != old_components_.end() )
             old_components_.erase(it);
         new_components_[name] = obj;
       }
 
       void bind_name(perm_string name, const VType* t)
-<<<<<<< Updated upstream
-      { std::map<perm_string, const VType*>::iterator it;
-=======
       { map<perm_string, const VType*>::iterator it;
->>>>>>> Stashed changes
         if((it = use_types_.find(name)) != use_types_.end() )
             use_types_.erase(it);
         cur_types_[name] = t;
@@ -319,11 +266,7 @@ class ActiveScope : public ScopeBase {
       { use_types_[name] = t; }
 
       void bind_name(perm_string name, const VType*obj, Expression*val)
-<<<<<<< Updated upstream
-      { std::map<perm_string, const_t*>::iterator it;
-=======
       { map<perm_string, const_t*>::iterator it;
->>>>>>> Stashed changes
         if((it = use_constants_.find(name)) != use_constants_.end() )
             use_constants_.erase(it);
         cur_constants_[name] = new const_t(obj, val);

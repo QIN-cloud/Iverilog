@@ -1,11 +1,7 @@
 #ifndef IVL_verireal_H
 #define IVL_verireal_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 1999-2014 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -22,15 +18,6 @@
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-<<<<<<< Updated upstream
-
-# include  "config.h"
-#ifdef HAVE_IOSFWD
-# include  <iosfwd>
-#else
-# include  <iostream>
-#endif
-=======
 
 # include  "config.h"
 #ifdef HAVE_IOSFWD
@@ -40,7 +27,6 @@ class ostream;
 #endif
 
 using namespace std;
->>>>>>> Stashed changes
 
 class verinum;
 
@@ -53,21 +39,15 @@ class verinum;
 
 class verireal {
 
-<<<<<<< Updated upstream
-      friend std::ostream& operator<< (std::ostream&, const verireal&);
-=======
       friend ostream& operator<< (ostream&, const verireal&);
->>>>>>> Stashed changes
       friend verireal operator+ (const verireal&, const verireal&);
       friend verireal operator- (const verireal&, const verireal&);
       friend verireal operator* (const verireal&, const verireal&);
       friend verireal operator/ (const verireal&, const verireal&);
+      friend verireal operator/ (const verireal&, const verinum&);
       friend verireal operator% (const verireal&, const verireal&);
-<<<<<<< Updated upstream
-=======
       friend verireal operator% (const verireal&, const verinum&);
       friend verireal pow(const verireal&, const verireal&);
->>>>>>> Stashed changes
 
 	// Unary minus.
       friend verireal operator- (const verireal&);
@@ -79,21 +59,12 @@ class verireal {
       explicit verireal(double val);
       ~verireal();
 
-<<<<<<< Updated upstream
-      // Return the value of the floating point number as an
-      // integer, rounded as needed. The shift is the power of 10 to
-      // multiply the value before calculating the result. So for
-      // example if the value is 2.5 and shift == 1, the result
-      // is 25.
-      long as_long() const;
-=======
 	/* Return the value of the floating point number as an
 	   integer, rounded as needed. The shift is the power of 10 to
 	   multiply the value before calculating the result. So for
 	   example if the value is 2.5 and shift == 1, the result
 	   is 25. */
       long as_long(int shift =0) const;
->>>>>>> Stashed changes
       int64_t as_long64(int shift =0) const;
 
       double as_double() const;
@@ -105,12 +76,10 @@ class verireal {
 extern ostream& operator<< (ostream&, const verireal&);
 extern verireal operator* (const verireal&, const verireal&);
 extern verireal operator/ (const verireal&, const verireal&);
+extern verireal operator/ (const verireal&, const verinum&);
 extern verireal operator% (const verireal&, const verireal&);
-<<<<<<< Updated upstream
-=======
 extern verireal operator% (const verireal&, const verinum&);
 extern verireal pow(const verireal&, const verireal&);
->>>>>>> Stashed changes
 extern verireal operator- (const verireal&);
 
 #endif /* IVL_verireal_H */

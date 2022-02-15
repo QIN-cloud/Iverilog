@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 1999-2017 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -30,11 +26,6 @@
 # include  "verinum.h"
 # include  "netmisc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 PDelays::PDelays()
 {
       delete_flag_ = true;
@@ -190,3 +181,14 @@ void PDelays::eval_delays(Design*des, NetScope*scope,
 	    decay_time = 0;
       }
 }
+
+svector<string>& PDelays::get_vars()
+{
+	svector<string>* tmp = new svector<string>(0);
+	for(unsigned idx = 0; idx < 3; ++idx)
+	{
+		if(delay_[idx] !=0)
+		tmp = new svector<string>(*tmp, delay_[idx]->get_vars());
+	}
+	return *tmp;
+};

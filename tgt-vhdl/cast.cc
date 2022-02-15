@@ -1,11 +1,7 @@
 /*
  *  Generate code to convert between VHDL types.
  *
-<<<<<<< Updated upstream
- *  Copyright (C) 2008-2021  Nick Gasson (nick@nickg.me.uk)
-=======
  *  Copyright (C) 2008-2012  Nick Gasson (nick@nickg.me.uk)
->>>>>>> Stashed changes
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,11 +26,6 @@
 #include <cassert>
 #include <iostream>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 vhdl_expr *vhdl_expr::cast(const vhdl_type *to)
 {
 #if 0

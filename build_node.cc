@@ -9,6 +9,8 @@
 #include "PGate.h"
 #include "PUdp.h"
 #include "PGenerate.h"
+#include <fstream>
+
 CfgNode* Statement::build_node(PDesign& de)
 {
 	return 0;
@@ -16,7 +18,7 @@ CfgNode* Statement::build_node(PDesign& de)
 
 CfgNode* PAssign::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	unsigned idx;
 	//cout << "heh" << rval()->vars_count() << endl;
@@ -40,7 +42,7 @@ CfgNode* PAssign::build_node(PDesign& de)
 
 CfgNode* PAssignNB::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	unsigned idx;
 	for(idx = 0; idx < rval()->vars_count(); ++idx)
@@ -59,6 +61,7 @@ CfgNode* PAssignNB::build_node(PDesign& de)
 
 CfgNode* PBlock::build_node(PDesign& de)
 {
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	BlockNode* bn = new BlockNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	for(unsigned idx = 0; idx < list_.size(); ++idx)
@@ -76,10 +79,12 @@ CfgNode* PBlock::build_node(PDesign& de)
 
 CfgNode* PCallTask::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	if(peek_head_name(path_).str()[0] == '$'){
-	    cerr<<"System call, Not supported yet!"<<endl;
-	    exit(0);
+		/*cerr<<"Line number : " << get_lineno();
+	    cerr<<" System call, Not supported yet!"<<endl;
+	    exit(0);*/
+		return new CfgNode(get_lineno());
 	}
 	map<perm_string, Module*> modules = de.get_modules();
 	map<perm_string, Module*>::iterator pos;
@@ -91,11 +96,11 @@ CfgNode* PCallTask::build_node(PDesign& de)
 	    task = pos->second->get_task(tmps);
 	    if(task != 0)
 	    {
-		if(task->port_count() != parms_.size())
+		/*if(task->port_count() != parms_.size())
 		{
 		    cerr<<get_fileline()<<" : Task Call with incorrect number of parameters, I will give up!"<<endl;
 		    exit (0);
-		}
+		}*/
 		CfgNode* node = new CfgNode(get_lineno());
 		for(unsigned idx = 0; idx < task->port_count(); ++idx)
 		{
@@ -122,7 +127,7 @@ CfgNode* PCallTask::build_node(PDesign& de)
 
 CfgNode* PCase::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
     CaseNode* cn = new CaseNode(get_lineno());
     svector<CfgNode*> nodes;
     CfgNode* rootnode;
@@ -158,7 +163,7 @@ CfgNode* PCase::build_node(PDesign& de)
 
 CfgNode* PCAssign::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_refs(expr_->get_vars());
 	node->add_defs(lval_->get_vars());
@@ -171,13 +176,12 @@ CfgNode* PCAssign::build_node(PDesign& de)
 
 CfgNode* PCondit::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CondNode* cn = new CondNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	root->add_refs(expr_->get_vars());
 	root->add_funcs(expr_->get_funcname());
 	root->set_expr(expr_);
-
 	if(if_)
 	{
 		root->add_infl(if_->get_linenos());
@@ -209,7 +213,7 @@ CfgNode* PCondit::build_node(PDesign& de)
 
 CfgNode* PDeassign::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_defs(lval_->get_vars());
 	node->add_funcs(lval_->get_funcname());
@@ -221,22 +225,25 @@ CfgNode* PDeassign::build_node(PDesign& de)
 
 CfgNode* PDelayStatement::build_node(PDesign& de)
 {
-	EventNode* en = new EventNode(get_lineno());
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
+	DelayNode* en = new DelayNode(get_lineno());
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_refs(delay_->get_vars());
 	node->add_funcs(delay_->get_funcname());
-
-	en->add_node(node, 0);
+	node->set_expr(delay_);
 	if(statement_){
 		CfgNode* tmp = statement_->build_node(de);
 		en->add_node(tmp, 1);
+		node->add_dsucc(statement_->get_lineno());
+		node->add_infl(statement_->get_linenos());
 	}
+	en->add_node(node, 0);
 	return en;
 }
 
 CfgNode* PEventStatement::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	EventNode* en = new EventNode(get_lineno());
 	CfgNode* node = new CfgNode(get_lineno());
 	for(unsigned idx = 0; idx < expr_.count(); ++idx)
@@ -244,6 +251,7 @@ CfgNode* PEventStatement::build_node(PDesign& de)
 		//cout<<"get_vars: "<<expr_[idx]->get_vars().count()<<endl;
 		node->add_refs(expr_[idx]->get_vars());
 		node->add_funcs(expr_[idx]->get_funcname());
+		node->set_expr(expr_[idx]);
 	}
 	if(statement_){
 		CfgNode* tmp = statement_->build_node(de);
@@ -263,7 +271,7 @@ CfgNode* PEventStatement::build_node(PDesign& de)
 
 CfgNode* PForce::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_refs(expr_->get_vars());
 	node->add_defs(lval_->get_vars());
@@ -276,7 +284,7 @@ CfgNode* PForce::build_node(PDesign& de)
 
 CfgNode* PForStatement::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	LoopNode* fn = new LoopNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	root->add_refs(name1_->get_vars());
@@ -311,7 +319,7 @@ CfgNode* PForStatement::build_node(PDesign& de)
 
 CfgNode* PRepeat::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	LoopNode* fn = new LoopNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	root->add_refs(expr_->get_vars());
@@ -334,7 +342,7 @@ CfgNode* PRepeat::build_node(PDesign& de)
 
 CfgNode* PRelease::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_defs(lval_->get_vars());
 	node->add_funcs(lval_->get_funcname());
@@ -346,7 +354,7 @@ CfgNode* PRelease::build_node(PDesign& de)
 
 CfgNode* PTrigger::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	string tmps(peek_tail_name(event_));
 	node->add_def(tmps);
@@ -356,7 +364,7 @@ CfgNode* PTrigger::build_node(PDesign& de)
 
 CfgNode* PWhile::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	LoopNode* fn = new LoopNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	root->add_refs(cond_->get_vars());
@@ -379,11 +387,12 @@ CfgNode* PWhile::build_node(PDesign& de)
 
 ProcessNode* PProcess::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
+	set_synchronous();
 	ProcessNode* pn = new ProcessNode(get_lineno());
 	pn->set_id(id_);
 	pn->set_sync(is_synchronous());
-	CfgNode* root = new CfgNode(get_lineno());	
+	CfgNode* root = new CfgNode(get_lineno());
 	//root->add_infl(statement_->get_linenos());
 	if(statement_){
 		CfgNode* node = statement_->build_node(de);
@@ -392,12 +401,14 @@ ProcessNode* PProcess::build_node(PDesign& de)
 	//root->add_refs(node->get_refs());
 	//root->add_defs(node->get_defs());
 	pn->add_node(root, 0);
+	
 	//pn->dump(cerr);
 	return pn;
 }
 
 CfgNode* PGAssign::build_node(PDesign& de)
 {
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	node->add_defs(pin(0)->get_vars());
 	node->add_refs(pin(1)->get_vars());
@@ -409,7 +420,7 @@ CfgNode* PGAssign::build_node(PDesign& de)
 
 CfgNode* PGBuiltin::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	CfgNode* node = new CfgNode(get_lineno());
 	if (pin_count()) {
 	    if (pin(0)) node->add_defs(pin(0)->get_vars());
@@ -427,7 +438,7 @@ CfgNode* PGBuiltin::build_node(PDesign& de)
 
 CfgNode* PGModule::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	assert(get_name() != "");
 	
 	if (msb_) {
@@ -445,6 +456,7 @@ CfgNode* PGModule::build_node(PDesign& de)
 			{
 			  if(npins_ != mpos->second->port_count())
 			  {
+				cout << npins_ << " " << mpos->second->port_count() << endl;
 			    cerr<<get_fileline()<<" : Module instance with incorrect port number!"<<endl;
 			    exit(0);
 			  }
@@ -553,7 +565,7 @@ CfgNode* PGModule::build_node(PDesign& de)
 
 ProcessNode* PTask::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	ProcessNode* tn = new ProcessNode(get_lineno());
 	if(statement_){
 		CfgNode* node = statement_->build_node(de);
@@ -566,7 +578,7 @@ ProcessNode* PTask::build_node(PDesign& de)
 
 ProcessNode* PFunction::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	ProcessNode* fn = new ProcessNode(get_lineno());
 	if(statement_){
 		CfgNode* node = statement_->build_node(de);
@@ -579,7 +591,7 @@ ProcessNode* PFunction::build_node(PDesign& de)
 
 ModuleNode* Module::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	ModuleNode* md = new ModuleNode(get_lineno());
 	//unsigned idx;
 	list<PGate*>::iterator pos;
@@ -589,8 +601,10 @@ ModuleNode* Module::build_node(PDesign& de)
 		md->add_node(node);
 	}
 	list<PProcess*>::iterator ppos;
+	int id_ = 0;
 	for(ppos = behaviors.begin(); ppos != behaviors.end(); ++ppos)
 	{
+		(*ppos)->set_id(id_++);
 		ProcessNode* node = (*ppos)->build_node(de);
 		md->add_node(node, 0);
 	}
@@ -613,7 +627,7 @@ ModuleNode* Module::build_node(PDesign& de)
 		GenerateNode* node = (*gpos)->build_node(de);
 		md->add_node(node);
 	}
-	md->dump(cerr);
+	//md->dump(cerr);
 	/*
 	string filename = get_file().str();
 	string ncfg_path = "/home/smc/Documents/testfile/ncfg_out/" + filename + "_foward";
@@ -627,7 +641,7 @@ ModuleNode* Module::build_node(PDesign& de)
 
 GenerateNode* PGenerate::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	GenerateNode* gn = new GenerateNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
     PGenerate* parent = dynamic_cast<PGenerate*>(parent_scope());
@@ -961,6 +975,7 @@ svector<ModuleNode*>* PDesign::build_nodes(PDesign& de)
 
 void PDesign::build_nodes()
 {
+	cout << "Build pform nodes and construct into cfgs..." << endl;
 	map<perm_string, Module*>::iterator pos;
 	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
 	{
@@ -971,7 +986,7 @@ void PDesign::build_nodes()
 
 CfgNode* PForever::build_node(PDesign& de)
 {
-	//cerr<<"Build node for:"<<get_line()<<endl;
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	LoopNode* ln = new LoopNode(get_lineno());
 	CfgNode* root = new CfgNode(get_lineno());
 	if(statement_){
@@ -985,3 +1000,4 @@ CfgNode* PForever::build_node(PDesign& de)
 	//ln->dump(cerr);
 	return ln;
 }
+

@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2012-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2012-2016 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,11 +21,6 @@
 # include  "PClass.h"
 # include  "parse_misc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * The functions here help the parser put together class type declarations.
  */
@@ -76,13 +67,10 @@ void pform_class_property(const struct vlltype&loc,
 {
       assert(pform_cur_class);
 
-<<<<<<< Updated upstream
-=======
       if (enum_type_t*enum_set = dynamic_cast<enum_type_t*>(data_type)) {
 	    pform_cur_class->enum_sets .insert(enum_set);
       }
 
->>>>>>> Stashed changes
 	// Add the non-static properties to the class type
 	// object. Unwind the list of names to make a map of name to
 	// type.

@@ -1,11 +1,7 @@
 #ifndef IVL_AStatement_H
 #define IVL_AStatement_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2008-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2008-2014 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -46,11 +42,7 @@ class AContrib : public Statement {
       AContrib(PExpr*lval, PExpr*rval);
       ~AContrib();
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&out, unsigned ind) const;
-=======
       virtual void dump(ostream&out, unsigned ind) const;
->>>>>>> Stashed changes
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
 
     private:
@@ -76,17 +68,10 @@ class AProcess : public LineInfo {
       ivl_process_type_t type() const { return type_; }
       Statement*statement() { return statement_; }
 
-<<<<<<< Updated upstream
-      std::map<perm_string,PExpr*> attributes;
-
-	// Dump the analog process
-      void dump(std::ostream&out, unsigned ind) const;
-=======
       map<perm_string,PExpr*> attributes;
 
 	// Dump the analog process
       void dump(ostream&out, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       ivl_process_type_t type_;

@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2002-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2002-2010 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -27,11 +23,6 @@
 # include  "PExpr.h"
 # include  <iostream>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * To make a NetUserFunc device, make as many pins as there are ports
  * in the function. Get the port count from the function definition,

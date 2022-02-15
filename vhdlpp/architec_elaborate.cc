@@ -25,11 +25,6 @@
 # include  <typeinfo>
 # include  <cassert>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 int Architecture::elaborate(Entity*entity)
 {
       int errors = 0;

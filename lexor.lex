@@ -37,11 +37,6 @@
 # include  "discipline.h"
 # include  <list>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 # define YY_USER_INIT reset_lexor();
 # define yylval VLlval
 
@@ -166,21 +161,12 @@ TU [munpf]
   /* C++ style comments start with / / and run to the end of the
      current line. These are very easy to handle. The meta-comments
      format is a little more tricky to handle, but do what we can. */
-<<<<<<< Updated upstream
 
   /* The lexor detects "// synthesis translate_on/off" meta-comments,
      we handle them here by turning on/off a flag. The pform uses
      that flag to attach implicit attributes to "initial" and
      "always" statements. */
 
-=======
-
-  /* The lexor detects "// synthesis translate_on/off" meta-comments,
-     we handle them here by turning on/off a flag. The pform uses
-     that flag to attach implicit attributes to "initial" and
-     "always" statements. */
-
->>>>>>> Stashed changes
 "// Icarus preprocessor had ("[0-9]+") errors."\n { pre_process_failed(yytext); }
 "//"{W}*"synthesis"{W}+"translate_on"{W}*\n { pform_mc_translate_on(true); }
 "//"{W}*"synthesis"{W}+"translate_off"{W}*\n { pform_mc_translate_on(false); }
@@ -260,18 +246,6 @@ TU [munpf]
 "--" {return K_DECR; }
 "'{" { return K_LP; }
 "::" { return K_SCOPE_RES; }
-<<<<<<< Updated upstream
-
-  /* This is horrible. The Verilog systax uses "->" in a lot of places.
-     The trickiest is in constraints, where it is not an operator at all
-     but a constraint implication. This only turns up as a problem when
-     the "->" is followed by a constraint_expression_list. If that shows
-     up, then there will be a "{" to the right of the "->". In that case,
-     turn the "->" into a K_CONSTRAINT_IMPL so that the parser can be
-     written without the shift/reduce conflict. Ugh! */
-"->"/{W}*"{" { return gn_system_verilog()? K_CONSTRAINT_IMPL :  K_TRIGGER; }
-=======
->>>>>>> Stashed changes
 
   /* Watch out for the tricky case of (*). Cannot parse this as "(*"
      and ")", but since I know that this is really ( * ), replace it
@@ -1434,7 +1408,6 @@ static void process_ucdrive(const char*txt)
 	                    "garbage after precision).");
 	    return;
       }
-<<<<<<< Updated upstream
 
       uc_drive = ucd;
 }
@@ -1456,29 +1429,6 @@ static void process_timescale(const char*txt)
       int unit = 0;
       int prec = 0;
 
-=======
-
-      uc_drive = ucd;
-}
-
-/*
- * The timescale parameter has the form:
- *      " <num> xs / <num> xs"
- */
-static void process_timescale(const char*txt)
-{
-      const char*cp = txt + strspn(txt, " \t");
-
-	/* Skip the space after the `timescale directive. */
-      if (cp == txt) {
-	    VLerror(yylloc, "Space required after `timescale directive.");
-	    return;
-      }
-
-      int unit = 0;
-      int prec = 0;
-
->>>>>>> Stashed changes
 	/* Get the time units. */
       if (get_timescale_const(cp, unit, true)) return;
 

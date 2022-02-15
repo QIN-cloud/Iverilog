@@ -21,21 +21,11 @@
 # include  "PWire.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-PGenerate::PGenerate(LexicalScope*parent, unsigned id)
-: LexicalScope(parent), id_number(id)
-{
-      scheme_type = GS_NONE;
-      directly_nested = false;
-=======
 PGenerate::PGenerate(LexicalScope*parent, unsigned id)
 : LexicalScope(parent), id_number(id)
 {
       direct_nested_ = false;
       scheme_type = GS_NONE;
->>>>>>> Stashed changes
       local_index = false;
       loop_init = 0;
       loop_test = 0;
@@ -51,8 +41,6 @@ void PGenerate::add_gate(PGate*gate)
       gates.push_back(gate);
 }
 
-<<<<<<< Updated upstream
-=======
 void PGenerate::probe_for_direct_nesting_(void)
 {
       direct_nested_ = false;
@@ -99,7 +87,6 @@ void PGenerate::probe_for_direct_nesting_(void)
       }
 }
 
->>>>>>> Stashed changes
 ostream& operator << (ostream&out, PGenerate::scheme_t type)
 {
       switch (type) {

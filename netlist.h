@@ -45,15 +45,12 @@
 # include  "LineInfo.h"
 # include  "Attrib.h"
 # include  "PUdp.h"
+# include  "testpath.h"
 
 #ifdef HAVE_IOSFWD
 # include  <iosfwd>
 #else
-<<<<<<< Updated upstream
-# include  <iostream>
-=======
 class ostream;
->>>>>>> Stashed changes
 #endif
 
 class Design;
@@ -94,6 +91,11 @@ class netenum_t;
 class netstruct_t;
 class netvector_t;
 
+class RefVar;
+class smt_var;
+class Var;
+class PProcess;
+
 struct target;
 struct functor_t;
 
@@ -103,11 +105,7 @@ struct functor_t;
 # define ENUM_UNSIGNED_INT
 #endif
 
-<<<<<<< Updated upstream
-std::ostream& operator << (std::ostream&o, ivl_variable_type_t val);
-=======
 ostream& operator << (ostream&o, ivl_variable_type_t val);
->>>>>>> Stashed changes
 
 extern void join_island(NetPins*obj);
 
@@ -180,11 +178,7 @@ class Link {
       NetPins*get_obj();
       unsigned get_pin() const;
 
-<<<<<<< Updated upstream
-      void dump_link(std::ostream&fd, unsigned ind) const;
-=======
       void dump_link(ostream&fd, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
 	// The NetNode manages these. They point back to the
@@ -226,11 +220,7 @@ class NetPins : public LineInfo {
       Link&pin(unsigned idx);
       const Link&pin(unsigned idx) const;
 
-<<<<<<< Updated upstream
-      void dump_node_pins(std::ostream&, unsigned, const char**pin_names =0) const;
-=======
       void dump_node_pins(ostream&, unsigned, const char**pin_names =0) const;
->>>>>>> Stashed changes
       void set_default_dir(Link::DIR d);
 
       bool is_linked() const;
@@ -289,11 +279,7 @@ class NetObj  : public NetPins, public Attrib {
       void fall_time(const NetExpr* d) { delay2_ = d; }
       void decay_time(const NetExpr* d) { delay3_ = d; }
 
-<<<<<<< Updated upstream
-      void dump_obj_attr(std::ostream&, unsigned) const;
-=======
       void dump_obj_attr(ostream&, unsigned) const;
->>>>>>> Stashed changes
 
       virtual void show_type(std::ostream&fd) const;
 
@@ -344,11 +330,7 @@ class NetBranch  : public NetPins, public IslandBranch {
 
       ivl_branch_s* target_obj() const { return &target_obj_; }
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned) const;
-=======
       void dump(ostream&, unsigned) const;
->>>>>>> Stashed changes
 
     private:
       perm_string name_;
@@ -387,17 +369,6 @@ class Nexus {
 	// Only Link objects can create (or delete) Nexus objects
       explicit Nexus(Link&r);
       ~Nexus();
-<<<<<<< Updated upstream
-
-    public:
-
-      void connect(Link&r);
-
-      const char* name() const;
-
-      void drivers_delays(NetExpr*rise, NetExpr*fall, NetExpr*decay);
-      void drivers_drive(ivl_drive_t d0, ivl_drive_t d1);
-=======
 
     public:
 
@@ -1219,6 +1190,9 @@ class NetScope : public Definitions, public Attrib {
 	   pulldown nodes for this scope. */
       void add_tie_hi(Design*des);
       void add_tie_lo(Design*des);
+
+      Var* build_var(perm_string& s, int index);
+
       Link&tie_hi() const { return tie_hi_->pin(0); };
       Link&tie_lo() const { return tie_lo_->pin(0); };
 
@@ -1267,64 +1241,11 @@ class NetScope : public Definitions, public Attrib {
 	    ivl_type_t ivl_type;
       };
       map<perm_string,param_expr_t>parameters;
->>>>>>> Stashed changes
 
       typedef map<perm_string,param_expr_t>::iterator param_ref_t;
 
-<<<<<<< Updated upstream
-	/* Get the width of the Nexus, or 0 if there are no vectors
-	   (in the form of NetNet objects) linked. */
-      unsigned vector_width() const;
-
-      NetNet* pick_any_net();
-
-      NetNode* pick_any_node();
-
-      /* This method counts the number of input and output links for
-         this nexus, and assigns the results to the output arguments. */
-      void count_io(unsigned&inp, unsigned&out) const;
-
-	/* This method returns true if there are any assignments that
-	   use this nexus as an l-value. This can be true if the nexus
-	   is a variable, but also if this is a net with a force. */
-      bool assign_lval() const;
-
-	/* This method returns true if there are any inputs
-	   attached to this nexus but no drivers. */
-      bool has_floating_input() const;
-
-	/* This method returns true if there are any drivers
-	   (including variables) attached to this nexus. */
-      bool drivers_present() const;
-
-	/* This method returns true if all the possible drivers of
-	   this nexus are constant. It will also return true if there
-	   are no drivers at all. */
-      bool drivers_constant() const;
-
-	/* Given the nexus has constant drivers, this method returns
-	   the value that has been driven. */
-      verinum::V driven_value() const;
-      verinum driven_vector() const;
-
-	/* Return a mask of the bits of this vector that are
-	   driven. This is usually all false or all true, but in
-	   special cases it may be a blend. */
-      std::vector<bool> driven_mask(void)const;
-
-	/* The code generator sets an ivl_nexus_t to attach code
-	   generation details to the nexus. */
-      ivl_nexus_t t_cookie() const { return t_cookie_; }
-      void t_cookie(ivl_nexus_t) const;
-
-    private:
-      Link*list_;
-      void unlink(Link*);
-
-      mutable char* name_; /* Cache the calculated name for the Nexus. */
-      mutable ivl_nexus_t t_cookie_;
-=======
       param_ref_t find_parameter(perm_string name);
+      bool find_parameter(perm_string name, param_ref_t& expr);
 
 	/* Module instance arrays are collected here for access during
 	   the multiple elaboration passes. */
@@ -1348,7 +1269,6 @@ class NetScope : public Definitions, public Attrib {
     private:
       TYPE type_;
       hname_t name_;
->>>>>>> Stashed changes
 
 	// True if the scope is a nested module/program block
       bool nested_module_;
@@ -1364,58 +1284,6 @@ class NetScope : public Definitions, public Attrib {
       unsigned lineno_;
       unsigned def_lineno_;
 
-<<<<<<< Updated upstream
-inline void connect(Nexus*l, Link&r) { l->connect(r); }
-
-class NexusSet {
-
-    public:
-      struct elem_t {
-	    inline elem_t(Nexus*n, unsigned b, unsigned w)
-	    : base(b), wid(w)
-	    {
-		  lnk.set_dir(Link::PASSIVE);
-		  n->connect(lnk);
-	    }
-	    inline elem_t() : base(0), wid(0)
-	    {
-	    }
-	    inline bool operator == (const struct elem_t&that) const
-	    { return lnk.is_linked(that.lnk) && base==that.base && wid==that.wid; }
-
-	    bool contains(const struct elem_t&that) const;
-
-	    Link lnk;
-	    unsigned base;
-	    unsigned wid;
-	  private:
-	    elem_t(const elem_t&);
-	    elem_t& operator= (elem_t&);
-      };
-
-    public:
-      ~NexusSet();
-      NexusSet();
-
-      size_t size() const;
-
-	// Add the nexus/part to the set, if it is not already present.
-      void add(Nexus*that, unsigned base, unsigned wid);
-      void add(NexusSet&that);
-
-	// Remove the nexus from the set, if it is present.
-      void rem(const NexusSet&that);
-
-      unsigned find_nexus(const elem_t&that) const;
-
-      elem_t& at(unsigned idx);
-      inline elem_t& operator[] (unsigned idx) { return at(idx); }
-
-	// Return true if this set contains every nexus/part in that
-	// set. That means that every bit of that set is accounted for
-	// this set.
-      bool contains(const NexusSet&that) const;
-=======
       signed char time_unit_, time_prec_;
       bool time_from_timescale_;
 
@@ -1433,19 +1301,9 @@ class NexusSet {
       vector<NetNet*> port_nets;
 
       vector<PortInfo> ports_;
->>>>>>> Stashed changes
 
       const NetProc*var_init_;
 
-<<<<<<< Updated upstream
-    private:
-	// NexSet items are canonical part selects of vectors.
-      std::vector<struct elem_t*> items_;
-
-      size_t bsearch_(const struct elem_t&that) const;
-      void rem_(const struct elem_t*that);
-      bool contains_(const elem_t&that) const;
-=======
       union {
 	    NetTaskDef*task_;
 	    NetFuncDef*func_;
@@ -1457,7 +1315,6 @@ class NexusSet {
       NetScope*unit_;
       NetScope*up_;
       map<hname_t,NetScope*> children_;
->>>>>>> Stashed changes
 
       unsigned lcounter_;
       bool need_const_func_, is_const_func_, is_auto_, is_cell_, calls_stask_;
@@ -1471,203 +1328,23 @@ class NexusSet {
 };
 
 /*
-<<<<<<< Updated upstream
- * A NetBus is a transparent device that is merely a bunch of pins
- * used to tie some pins to. It is a convenient way to collect a
- * bundle of pins and pass that bundle around.
- */
-class NetBus  : public NetObj {
-
-    public:
-      NetBus(NetScope*scope, unsigned pin_count);
-      ~NetBus();
-
-      unsigned find_link(const Link&that) const;
-
-    private: // not implemented
-      NetBus(const NetBus&);
-      NetBus& operator= (const NetBus&);
-};
-
-/*
- * A NetNode is a device of some sort, where each pin has a different
- * meaning. (i.e., pin(0) is the output to an and gate.) NetNode
- * objects are listed in the nodes_ of the Design object.
-=======
  * This class implements the LPM_ABS component. The node has a single
  * input, a signed expression, that it converts to the absolute
  * value. The gate is simple: pin(0) is the output and pin(1) is the input.
->>>>>>> Stashed changes
  */
 class NetAbs  : public NetNode {
 
     public:
-<<<<<<< Updated upstream
-	// The name parameter must be a permallocated string.
-      explicit NetNode(NetScope*s, perm_string n, unsigned npins);
-
-      virtual ~NetNode();
-
-      virtual bool emit_node(struct target_t*) const;
-      virtual void dump_node(std::ostream&, unsigned) const;
-=======
       NetAbs(NetScope*s, perm_string n, unsigned width);
       ~NetAbs();
 
       unsigned width() const;
->>>>>>> Stashed changes
 
       virtual void dump_node(ostream&, unsigned ind) const;
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
     private:
-<<<<<<< Updated upstream
-      friend class Design;
-      NetNode*node_next_, *node_prev_;
-      Design*design_;
-};
-
-/*
- * A NetDelaySrc is an input-only device that calculates a path delay
- * based on the time that the inputs change. This class is used by the
- * NetNet class, and NetDelaySrc objects cannot exist outside of its
- * association with NetNet objects.
- */
-class NetDelaySrc  : public NetObj {
-
-    public:
-      explicit NetDelaySrc(NetScope*s, perm_string n, unsigned nsrc,
-                           bool condit_src, bool conditional, bool parallel);
-      ~NetDelaySrc();
-
-	// These functions set the delays from the values in the
-	// source. These set_delays functions implement the various
-	// rules wrt collections of transitions.
-
-	// One transition specified.
-      void set_delays(uint64_t del);
-	// Two transitions: rise and fall
-      void set_delays(uint64_t rise, uint64_t fall);
-	// Three transitions
-      void set_delays(uint64_t rise, uint64_t fall, uint64_t tz);
-      void set_delays(uint64_t t01, uint64_t t10, uint64_t t0z,
-		      uint64_t tz1, uint64_t t1z, uint64_t tz0);
-      void set_delays(uint64_t t01, uint64_t t10, uint64_t t0z,
-		      uint64_t tz1, uint64_t t1z, uint64_t tz0,
-		      uint64_t t0x, uint64_t tx1, uint64_t t1x,
-		      uint64_t tx0, uint64_t txz, uint64_t tzx);
-
-      uint64_t get_delay(unsigned pe) const;
-
-      void set_posedge();
-      void set_negedge();
-      bool is_posedge() const;
-      bool is_negedge() const;
-
-      unsigned src_count() const;
-      Link&src_pin(unsigned);
-      const Link&src_pin(unsigned) const;
-
-      bool is_condit() const;
-      bool has_condit() const;
-      Link&condit_pin();
-      const Link&condit_pin() const;
-
-      bool is_parallel() const;
-
-      void dump(std::ostream&, unsigned ind) const;
-
-    private:
-      uint64_t transition_delays_[12];
-      bool condit_flag_;
-      bool conditional_;
-      bool parallel_;
-      bool posedge_;
-      bool negedge_;
-
-    private: // Not implemented
-      NetDelaySrc(const NetDelaySrc&);
-      NetDelaySrc& operator= (const NetDelaySrc&);
-};
-
-/*
- * NetNet is a special kind of NetObj that doesn't really do anything,
- * but carries the properties of the wire/reg/trireg, including its
- * name. Scalars and vectors are all the same thing here, a NetNet
- * with a single pin. The difference between a scalar and vector is
- * the width of the atomic vector datum it carries.
- *
- * NetNet objects can also appear as side effects of synthesis or
- * other abstractions.
- *
- * Note that INTEGER types are an alias for a ``reg signed [31:0]''.
- *
- * NetNet objects have a name and exist within a scope, so the
- * constructor takes a pointer to the containing scope. The object
- * automatically adds itself to the scope.
- *
- * NetNet objects are located by searching NetScope objects.
- *
- * The pins of a NetNet object are usually PASSIVE: they do not drive
- * anything and they are not a data sink, per se. The pins follow the
- * values on the nexus. The exceptions are reg, trireg, tri0, tri1,
- * supply0, and supply1 objects, whose pins are classed as OUTPUT.
- */
-
-class PortType
-{
-public:
-	enum Enum ENUM_UNSIGNED_INT { NOT_A_PORT, PIMPLICIT, PINPUT, POUTPUT, PINOUT, PREF };
-
-    /*
-     * Merge Port types (used to construct a sane combined port-type
-     * for module ports with complex defining expressions).
-     *
-     */
-    static Enum merged( Enum lhs, Enum rhs );
-};
-
-extern std::ostream& operator << (std::ostream&, PortType::Enum);
-
-  /*
-   * Information on actual ports (rather than port-connected signals) of
-   * module.
-   * N.b. must be POD as passed through a "C" interface in the t-dll-api.
-   */
-struct PortInfo
-{
-    PortType::Enum  type;
-    unsigned long   width;
-    perm_string     name;
-};
-
-
-class NetNet  : public NetObj, public PortType {
-
-    public:
-      enum Type ENUM_UNSIGNED_INT { NONE, IMPLICIT, IMPLICIT_REG, INTEGER, WIRE, TRI, TRI1,
-		  SUPPLY0, SUPPLY1, WAND, TRIAND, TRI0, WOR, TRIOR, REG,
-		  UNRESOLVED_WIRE };
-
-      typedef PortType::Enum PortType;
-
-      static const std::list<netrange_t>not_an_array;
-
-    public:
-	// This form is the more generic form of the constructor. For
-	// now, the unpacked type is not buried into an ivl_type_s object.
-      explicit NetNet(NetScope*s, perm_string n, Type t,
-		      const std::list<netrange_t>&unpacked,
-		      ivl_type_t type);
-
-	// This form builds a NetNet from its record/enum/darray
-	// definition. They should probably be replaced with a single
-	// version that takes an ivl_type_s* base.
-      explicit NetNet(NetScope*s, perm_string n, Type t, netstruct_t*type);
-      explicit NetNet(NetScope*s, perm_string n, Type t, netdarray_t*type);
-      explicit NetNet(NetScope*s, perm_string n, Type t, netvector_t*type);
-=======
       unsigned width_;
 };
 
@@ -1695,753 +1372,8 @@ class NetAddSub  : public NetNode {
       const Link& pin_DataA() const;
       const Link& pin_DataB() const;
       const Link& pin_Result() const;
->>>>>>> Stashed changes
 
       virtual void dump_node(ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
-      virtual void functor_node(Design*des, functor_t*fun);
-
-    private:
-      unsigned width_;
-};
-
-/*
- * The NetArrayDq node represents an array dereference. The NetNet
- * that this object refers to is an array, and the Address pin selects
- * which word of the array to place on the Result.
-*/
-class NetArrayDq  : public NetNode {
-
-<<<<<<< Updated upstream
-      // If this net net is a port (i.e. a *sub*port net of a module port)
-      // its port index is number of the module it connects through
-      int get_module_port_index() const;                // -1 Not connected to port...
-      void set_module_port_index(unsigned idx);
-
-      ivl_variable_type_t data_type() const;
-
-	/* If a NetNet is signed, then its value is to be treated as
-	   signed. Otherwise, it is unsigned. */
-      bool get_signed() const;
-
-	/* Used to maintain original type of net since integers are
-	   implemented as 'reg signed [31:0]' in Icarus */
-      bool get_isint() const;
-
-      bool get_scalar() const;
-
-      inline const ivl_type_s* net_type(void) const { return net_type_; }
-      const netenum_t*enumeration(void) const;
-      const netstruct_t*struct_type(void) const;
-      const netdarray_t*darray_type(void) const;
-      const netqueue_t*queue_type(void) const;
-      const netclass_t*class_type(void) const;
-
-	/* Attach a discipline to the net. */
-      ivl_discipline_t get_discipline() const;
-      void set_discipline(ivl_discipline_t dis);
-
-	/* This method returns a reference to the packed dimensions
-	   for the vector. These are arranged as a list where the
-	   first range in the list (front) is the left-most range in
-	   the Verilog declaration. These packed dims are compressed
-	   to represent the dimensions of all the subtypes. */
-      const std::vector<netrange_t>& packed_dims() const { return slice_dims_; }
-
-      const std::vector<netrange_t>& unpacked_dims() const { return unpacked_dims_; }
-
-	/* The vector_width returns the bit width of the packed array,
-	   vector or scalar that is this NetNet object.  */
-      inline unsigned long vector_width() const { return slice_width(0); }
-
-	/* Given a prefix of indices, figure out how wide the
-	   resulting slice would be. This is a generalization of the
-	   vector_width(), where the depth would be 0. */
-      unsigned long slice_width(size_t depth) const;
-
-	/* This method converts a signed index (the type that might be
-	   found in the Verilog source) to canonical. It accounts
-	   for variation in the definition of the
-	   reg/wire/whatever. Note that a canonical index of a
-	   multi-dimensioned packed array is a single dimension. For
-	   example, "reg [4:1][3:0]..." has the canonical dimension
-	   [15:0] and the sb_to_idx() method will convert [2][2] to
-	   the canonical index [6]. */
-      long sb_to_idx(const std::list<long>&prefix, long sb) const;
-
-	/* This method converts a partial packed indices list and a
-	   tail index, and generates a canonical slice offset and
-	   width. */
-      bool sb_to_slice(const std::list<long>&prefix, long sb, long&off, unsigned long&wid) const;
-
-	/* This method checks that the signed index is valid for this
-	   signal. If it is, the above sb_to_idx can be used to get
-	   the pin# from the index. */
-      bool sb_is_valid(const std::list<long>&prefix, long sb) const;
-
-	/* This method returns 0 for scalars and vectors, and greater
-	   for arrays. The value is the number of array
-	   indices. (Currently only one array index is supported.) */
-      inline unsigned unpacked_dimensions() const { return unpacked_dims_.size(); }
-
-	/* This method returns 0 for scalars, but vectors and other
-	   PACKED arrays have packed dimensions. */
-      inline size_t packed_dimensions() const { return slice_dims_.size(); }
-
-	// This is the number of array elements.
-      unsigned unpacked_count() const;
-=======
-    public:
-      NetArrayDq(NetScope*s, perm_string name, NetNet*mem, unsigned awid);
-      ~NetArrayDq();
-
-      unsigned width() const;
-      unsigned awidth() const;
-      unsigned size() const;
-      const NetNet*mem() const;
-
-      Link& pin_Address();
-      Link& pin_Result();
-
-      const Link& pin_Address() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
->>>>>>> Stashed changes
-
-    private:
-      NetNet*mem_;
-      unsigned awidth_;
-
-<<<<<<< Updated upstream
-	// NetESignal objects may reference this object. Keep a
-	// reference count so that I keep track of them.
-      void incr_eref();
-      void decr_eref();
-      unsigned peek_eref() const;
-
-	// Assignment statements count their lrefs here. And by
-	// assignment statements, we mean BEHAVIORAL assignments.
-      void incr_lref();
-      void decr_lref();
-      unsigned peek_lref() const { return lref_count_; }
-
-	// Treating this node as a uwire, this function tests whether
-	// any bits in the canonical part are already driven. This is
-	// only useful for UNRESOLVED_WIRE objects. The msb and lsb
-	// are the part select of the signal, and the widx is the word
-	// index if this is an unpacked array.
-      bool test_and_set_part_driver(unsigned msb, unsigned lsb, int widx =0);
-=======
-};
-
-/*
- * Convert an IVL_VT_REAL input to a logical value with the
- * given width. The input is pin(1) and the output is pin(0).
- */
-class NetCastInt4  : public NetNode {
->>>>>>> Stashed changes
-
-    public:
-      NetCastInt4(NetScope*s, perm_string n, unsigned width);
-
-<<<<<<< Updated upstream
-	/* Manage path delays */
-      void add_delay_path(class NetDelaySrc*path);
-      unsigned delay_paths(void) const;
-      const class NetDelaySrc*delay_path(unsigned idx) const;
-
-      virtual void dump_net(std::ostream&, unsigned) const;
-
-    private:
-      void initialize_dir_();
-
-    private:
-      Type   type_    : 5;
-      PortType port_type_ : 3;
-      bool local_flag_: 1;
-      ivl_type_t net_type_;
-      ivl_discipline_t discipline_;
-
-      std::vector<netrange_t> unpacked_dims_;
-
-	// These are the widths of the various slice depths. There is
-	// one entry in this vector for each packed dimension. The
-	// value at N is the slice width if N indices are provided.
-	//
-	// For example: slice_wids_[0] is vector_width().
-      void calculate_slice_widths_from_packed_dims_(void);
-      std::vector<netrange_t> slice_dims_;
-      std::vector<unsigned long> slice_wids_;
-
-      unsigned eref_count_;
-      unsigned lref_count_;
-
-	// When the signal is an unresolved wire, we need more detail
-	// which bits are assigned. This mask is true for each bit
-	// that is known to be driven.
-      std::vector<bool> lref_mask_;
-
-      std::vector<class NetDelaySrc*> delay_paths_;
-      int       port_index_;
-};
-
-/*
- * This object type is used for holding local variable values when
- * evaluating constant user functions.
- */
-struct LocalVar {
-      int nwords;  // zero for a simple variable, -1 for reference
-      union {
-	    NetExpr*  value;  // a simple variable
-	    NetExpr** array;  // an array variable
-	    LocalVar* ref;    // A reference to a previous scope
-      };
-};
-
-class NetBaseDef {
-    public:
-      NetBaseDef(NetScope*n, const std::vector<NetNet*>&po,
-		 const std::vector<NetExpr*>&pd);
-      virtual ~NetBaseDef();
-
-      const NetScope*scope() const;
-      NetScope*scope();
-
-      unsigned port_count() const;
-      NetNet*port(unsigned idx) const;
-      NetExpr*port_defe(unsigned idx) const;
-
-      void set_proc(NetProc*p);
-
-	//const string& name() const;
-      const NetProc*proc() const;
-
-    private:
-      NetScope*scope_;
-      std::vector<NetNet*>ports_;
-      std::vector<NetExpr*>pdefaults_;
-
-    protected:
-      NetProc*proc_;
-};
-
-/*
- * Some definitions (and methods to manipulate them) are common to a
- * couple of types. Keep them here.
- */
-class Definitions {
-
-    public:
-      Definitions();
-      ~Definitions();
-
-	// Add the enumeration to the set of enumerations in this
-	// scope. Include a key that the elaboration can use to look
-	// up this enumeration based on the pform type.
-      void add_enumeration_set(const enum_type_t*key, netenum_t*enum_set);
-
-      bool add_enumeration_name(netenum_t*enum_set, perm_string enum_name);
-
-	// Look up the enumeration literal in this scope. if the name
-	// is present, then return the enumeration type that declares it.
-      const netenum_t* enumeration_for_name(perm_string name);
-
-	// Look up the enumeration set that was added with the given
-	// key. This is used by enum_type_t::elaborate_type to locate
-	// a previously elaborated enumeration.
-      netenum_t* enumeration_for_key(const enum_type_t*key) const;
-
-	// Look up an enumeration literal in this scope. If the
-	// literal is present, return the expression that defines its
-	// value.
-      const NetExpr* enumeration_expr(perm_string key);
-
-	// Definitions scopes can also hold classes, by name.
-      void add_class(netclass_t*class_type);
-
-    protected:
-	// Enumerations. The enum_sets_ is a list of all the
-	// enumerations present in this scope. The enum_names_ is a
-	// map of all the enumeration names back to the sets that
-	// contain them.
-      std::map<const enum_type_t*,netenum_t*> enum_sets_;
-      std::map<perm_string,NetEConstEnum*> enum_names_;
-
-	// This is a map of all the classes (by name) in this scope.
-      std::map<perm_string,netclass_t*> classes_;
-
-};
-
-/*
- * This object type is used to contain a logical scope within a
- * design. The scope doesn't represent any executable hardware, but is
- * just a handle that netlist processors can use to grab at the design.
- */
-class NetScope : public Definitions, public Attrib {
-
-    public:
-      enum TYPE { MODULE, CLASS, TASK, FUNC, BEGIN_END, FORK_JOIN, GENBLOCK, PACKAGE };
-
-	/* Create a new scope associated with a given compilation unit,
-	   and attach it to the given parent. If no compilation unit is
-	   specified, the parent's compilation unit is used. The name
-	   is expected to have been permallocated. */
-      NetScope(NetScope*up, const hname_t&name, TYPE t, NetScope*in_unit=0,
-	       bool nest=false, bool program=false, bool interface=false,
-               bool compilation_unit=false);
-      ~NetScope();
-
-	/* Rename the scope using the name generated by inserting as
-	   many pad characters as required between prefix and suffix
-	   to make the name unique in the parent scope. Return false
-	   if a unique name couldn't be generated. */
-      bool auto_name(const char* prefix, char pad, const char* suffix);
-
-      void add_imports(const std::map<perm_string,PPackage*>*imports);
-      NetScope*find_import(const Design*des, perm_string name);
-
-      void add_typedefs(const std::map<perm_string,data_type_t*>*typedefs);
-
-        /* Search the scope hierarchy for the scope where 'type' was defined. */
-      NetScope*find_typedef_scope(const Design*des, data_type_t*type);
-
-	/* Routine to search for the enumeration given a name. It basically
-	 * does what enumeration_for_name() does but searched the hierarchy. */
-      const netenum_t*find_enumeration_for_name(const Design*des, perm_string name);
-
-	/* Parameters exist within a scope, and these methods allow
-	   one to manipulate the set. In these cases, the name is the
-	   *simple* name of the parameter, the hierarchy is implicit in
-	   the scope. */
-
-      struct range_t;
-      void set_parameter(perm_string name, bool is_annotatable,
-			 PExpr*val, data_type_t*data_type,
-			 bool local_flag, bool overridable,
-			 NetScope::range_t*range_list,
-			 const LineInfo&file_line);
-      void set_parameter(perm_string name, NetExpr*val,
-			 const LineInfo&file_line);
-
-      const NetExpr*get_parameter(Design*des, const char* name,
-				  ivl_type_t&ivl_type);
-      const NetExpr*get_parameter(Design*des, perm_string name,
-				  ivl_type_t&ivl_type);
-
-	/* These are used by defparam elaboration to replace the
-	   expression with a new expression, without affecting the
-	   range or signed_flag. Return false if the name does not
-	   exist. */
-      void replace_parameter(Design *des, perm_string name, PExpr*val, NetScope*scope);
-
-	/* This is used to ensure the value of a parameter cannot be
-	   changed at run-time. This is required if a specparam is used
-	   in an expression that must be evaluated at compile-time.
-	   Returns true if the named parameter is a specparam and has
-	   not already been set to be unannotatable. */
-      bool make_parameter_unannotatable(perm_string name);
-
-	/* These methods set or access events that live in this
-	   scope. */
-
-      void add_event(NetEvent*);
-      void rem_event(NetEvent*);
-      NetEvent*find_event(perm_string name);
-
-	/* These methods add or find a genvar that lives in this scope. */
-      void add_genvar(perm_string name, LineInfo *li);
-      LineInfo* find_genvar(perm_string name);
-
-	/* These methods manage signals. The add_ and rem_signal
-	   methods are used by the NetNet objects to make themselves
-	   available to the scope, and the find_signal method can be
-	   used to locate signals within a scope. */
-
-      void add_signal(NetNet*);
-      void rem_signal(NetNet*);
-      NetNet* find_signal(perm_string name);
-
-      netclass_t* find_class(const Design*des, perm_string name);
-
-	/* The unit(), parent(), and child() methods allow users of
-	   NetScope objects to locate nearby scopes. */
-      NetScope* unit() { return unit_; }
-      NetScope* parent() { return up_; }
-      NetScope* child(const hname_t&name);
-      const NetScope* unit() const { return unit_; }
-      const NetScope* parent() const { return up_; }
-      const NetScope* child(const hname_t&name) const;
-
-	/* A helper function to find the enclosing class scope. */
-      const NetScope* get_class_scope() const;
-
-	// Look for a child scope by name. This ignores the number
-	// part of the child scope name, so there may be multiple
-	// matches. Only return one. This function is only really
-	// useful for some elaboration error checking.
-      const NetScope* child_byname(perm_string name) const;
-
-	// Nested modules have slightly different scope search rules.
-      inline bool nested_module() const { return nested_module_; }
-	// Program blocks and interfaces have elaboration constraints.
-      inline bool program_block() const { return program_block_; }
-      inline bool is_interface() const { return is_interface_; }
-      inline bool is_unit() const { return is_unit_; }
-      inline TYPE type() const { return type_; }
-      void print_type(std::ostream&) const;
-
-	// This provides a link to the variable initialisation process
-	// for use when evaluating a constant function. Note this is
-	// only used for static functions - the variable initialization
-	// for automatic functions is included in the function definition.
-      void set_var_init(const NetProc*proc) { var_init_ = proc; }
-      const NetProc* var_init() const { return var_init_; }
-
-      void set_task_def(NetTaskDef*);
-      void set_func_def(NetFuncDef*);
-      void set_class_def(netclass_t*);
-      void set_module_name(perm_string);
-
-      NetTaskDef* task_def();
-      NetFuncDef* func_def();
-
-	// This is used by the evaluate_function setup to collect
-	// local variables from the scope.
-      void evaluate_function_find_locals(const LineInfo&loc,
-					 std::map<perm_string,LocalVar>&ctx) const;
-
-      void set_line(perm_string file, perm_string def_file,
-                    unsigned lineno, unsigned def_lineno);
-      void set_line(perm_string file, unsigned lineno);
-      void set_line(const LineInfo *info);
-      perm_string get_file() const { return file_; };
-      perm_string get_def_file() const { return def_file_; };
-      unsigned get_lineno() const { return lineno_; };
-      unsigned get_def_lineno() const { return def_lineno_; };
-
-      std::string get_fileline() const;
-      std::string get_def_fileline() const;
-
-      bool in_func() const;
-
-	/* Provide a link back to the pform to allow early elaboration of
-           constant functions. */
-      void set_func_pform(const PFunction*pfunc) { func_pform_ = pfunc; };
-      const PFunction*func_pform() const { return func_pform_; };
-
-        /* Allow tracking of elaboration stages. The three stages are:
-             1 - scope elaboration
-             2 - signal elaboration
-             3 - statement elaboration
-           This is only used for functions, to support early elaboration.
-        */
-      void set_elab_stage(unsigned stage) { elab_stage_ = stage; };
-      unsigned elab_stage() const { return elab_stage_; };
-
-	/* Is this a function called in a constant expression. */
-      void need_const_func(bool need_const) { need_const_func_ = need_const; };
-      bool need_const_func() const { return need_const_func_; };
-
-	/* Is this a constant function. */
-      void is_const_func(bool is_const) { is_const_func_ = is_const; };
-      bool is_const_func() const { return is_const_func_; };
-
-	/* Is the task or function automatic. */
-      void is_auto(bool is_auto__) { is_auto_ = is_auto__; };
-      bool is_auto() const { return is_auto_; };
-
-	/* Is the module a cell (is in a `celldefine) */
-      void is_cell(bool is_cell__) { is_cell_ = is_cell__; };
-      bool is_cell() const { return is_cell_; };
-
-	/* Is there a call to a system task in this scope. */
-      void calls_sys_task(bool calls_stask__) { calls_stask_ = calls_stask__; };
-      bool calls_sys_task() const { return calls_stask_; };
-
-        /* Is this scope elaborating a final procedure? */
-      void in_final(bool in_final__) { in_final_ = in_final__; };
-      bool in_final() const { return in_final_; };
-
-      const NetTaskDef* task_def() const;
-      const NetFuncDef* func_def() const;
-      const netclass_t* class_def() const;
-
-	/* If the scope represents a module instance, the module_name
-	   is the name of the module itself. */
-      perm_string module_name() const;
-	/* If the scope is a module then it may have ports that we need
-	 * to keep track of. */
-
-      void set_num_ports(unsigned int num_ports);
-      void add_module_port_net(NetNet*port);
-      unsigned module_port_nets() const;
-      NetNet*module_port_net(unsigned idx) const;
-
-      void add_module_port_info( unsigned idx,
-                            perm_string name,  // May be "" for undeclared port
-                            PortType::Enum type,
-                            unsigned long width );
-
-      const std::vector<PortInfo> &module_port_info() const;
-
-	/* Scopes have their own time units and time precision. The
-	   unit and precision are given as power of 10, i.e., -3 is
-	   units of milliseconds.
-
-	   If a NetScope is created with a parent scope, the new scope
-	   will initially inherit the unit and precision of the
-	   parent scope. */
-
-      void time_unit(int);
-      void time_precision(int);
-      void time_from_timescale(bool);
-
-      int time_unit() const;
-      int time_precision() const;
-      bool time_from_timescale() const;
-
-	/* The fullname of the scope is the hierarchical name
-	   component (which includes the name and array index) whereas
-	   the basename is just my name. */
-      perm_string basename() const;
-      const hname_t& fullname() const { return name_; }
-
-      void run_defparams(class Design*);
-      void run_defparams_later(class Design*);
-
-      void evaluate_parameters(class Design*);
-
-	// Look for defparams that never matched, and print warnings.
-      void residual_defparams(class Design*);
-
-      bool symbol_exists(perm_string sym);
-
-	/* This method generates a non-hierarchical name that is
-	   guaranteed to be unique within this scope. */
-      perm_string local_symbol();
-
-      void dump(std::ostream&) const;
-	// Check to see if the scope has items that are not allowed
-	// in an always_comb/ff/latch process.
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      void emit_scope(struct target_t*tgt) const;
-      bool emit_defs(struct target_t*tgt) const;
-
-	/* This method runs the functor on me. Recurse through the
-	   children of this node as well. */
-      void run_functor(Design*des, functor_t*fun);
-
-	/* These are used in synthesis. They provide shared pullup and
-	   pulldown nodes for this scope. */
-      void add_tie_hi(Design*des);
-      void add_tie_lo(Design*des);
-      Link&tie_hi() const { return tie_hi_->pin(0); };
-      Link&tie_lo() const { return tie_lo_->pin(0); };
-
-	/* This member is used during elaboration to pass defparam
-	   assignments from the scope pass to the parameter evaluation
-	   step. After that, it is not used. */
-
-      std::list<std::pair<pform_name_t,PExpr*> > defparams;
-      std::list<std::pair<std::list<hname_t>,PExpr*> > defparams_later;
-
-    public:
-      struct range_t {
-	    bool exclude_flag;
-	      // Lower bound
-	    bool low_open_flag;
-	    NetExpr*low_expr;
-	      // Upper bound
-	    bool high_open_flag;
-	    NetExpr*high_expr;
-	      // Link to the next range specification
-	    struct range_t*next;
-      };
-
-	/* After everything is all set up, the code generators like
-	   access to these things to make up the parameter lists. */
-      struct param_expr_t : public LineInfo {
-	    param_expr_t() : val_expr(0), val_type(0), val_scope(0),
-		             solving(false), is_annotatable(false),
-		             local_flag(false),
-		             range(0), val(0), ivl_type(0) { }
-	    // Source expression and data type (before elaboration)
-	    PExpr*val_expr;
-	    data_type_t*val_type;
-	    // Scope information
-            NetScope*val_scope;
-	    // Evaluation status
-	    bool solving;
-	    // specparam status
-	    bool is_annotatable;
-	    // Is this a localparam?
-	    bool local_flag;
-	    // Can it be overriden?
-	    bool overridable;
-	    // range constraints
-	    struct range_t*range;
-	    // Expression value and type (elaborated versoins of val_expr/val_type)
-	    NetExpr*val;
-	    ivl_type_t ivl_type;
-      };
-      std::map<perm_string,param_expr_t>parameters;
-
-      typedef std::map<perm_string,param_expr_t>::iterator param_ref_t;
-
-      param_ref_t find_parameter(perm_string name);
-
-	/* Module instance arrays are collected here for access during
-	   the multiple elaboration passes. */
-      typedef std::vector<NetScope*> scope_vec_t;
-      std::map<perm_string, scope_vec_t>instance_arrays;
-
-	/* Loop generate uses this as scratch space during
-	   elaboration. Expression evaluation can use this to match
-	   names. */
-      perm_string genvar_tmp;
-      long genvar_tmp_val;
-
-      std::map<perm_string,LocalVar> loop_index_tmp;
-
-    private:
-      void evaluate_parameter_logic_(Design*des, param_ref_t cur);
-      void evaluate_parameter_real_(Design*des, param_ref_t cur);
-      void evaluate_parameter_string_(Design*des, param_ref_t cur);
-      void evaluate_parameter_(Design*des, param_ref_t cur);
-
-    private:
-      TYPE type_;
-      hname_t name_;
-
-	// True if the scope is a nested module/program block
-      bool nested_module_;
-	// True if the scope is a program block
-      bool program_block_;
-	// True if the scope is an interface
-      bool is_interface_;
-	// True if the scope is a compilation unit
-      bool is_unit_;
-
-      perm_string file_;
-      perm_string def_file_;
-      unsigned lineno_;
-      unsigned def_lineno_;
-
-      signed char time_unit_, time_prec_;
-      bool time_from_timescale_;
-
-      const std::map<perm_string,PPackage*>*imports_;
-
-      std::map<perm_string,data_type_t*>typedefs_;
-
-      NetEvent *events_;
-
-      std::map<perm_string,LineInfo*> genvars_;
-
-      typedef std::map<perm_string,NetNet*>::const_iterator signals_map_iter_t;
-      std::map <perm_string,NetNet*> signals_map_;
-      perm_string module_name_;
-      std::vector<NetNet*> port_nets;
-
-      std::vector<PortInfo> ports_;
-
-      const NetProc*var_init_;
-
-      union {
-	    NetTaskDef*task_;
-	    NetFuncDef*func_;
-	    netclass_t*class_def_;
-      };
-      const PFunction*func_pform_;
-      unsigned elab_stage_;
-
-      NetScope*unit_;
-      NetScope*up_;
-      std::map<hname_t,NetScope*> children_;
-
-      unsigned lcounter_;
-      bool need_const_func_, is_const_func_, is_auto_, is_cell_, calls_stask_;
-
-      /* Final procedures sets this to notify statements that
-	 they are part of a final procedure. */
-      bool in_final_;
-
-      NetNode*tie_hi_;
-      NetNode*tie_lo_;
-};
-
-/*
- * This class implements the LPM_ABS component. The node has a single
- * input, a signed expression, that it converts to the absolute
- * value. The gate is simple: pin(0) is the output and pin(1) is the input.
- */
-class NetAbs  : public NetNode {
-
-    public:
-      NetAbs(NetScope*s, perm_string n, unsigned width);
-      ~NetAbs();
-
-      unsigned width() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
-      virtual void functor_node(Design*des, functor_t*fun);
-
-=======
-      unsigned width() const { return width_; }
-
-      virtual void dump_node(ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
-
-    private:
-      unsigned width_;
-};
-
-class NetCastInt2  : public NetNode {
-
-    public:
-      NetCastInt2(NetScope*s, perm_string n, unsigned width);
-
-      unsigned width() const { return width_; }
-
-      virtual void dump_node(ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
-
->>>>>>> Stashed changes
-    private:
-      unsigned width_;
-};
-
-/*
- * Convert an input to IVL_VT_REAL. The input is pin(1), which can be
- * any vector type (VT_BOOL or VT_LOGIC) and the output is pin(0),
- * which is IVL_VT_REAL. The conversion interprets the input as an
- * unsigned value unless the signed_flag is true.
- */
-class NetCastReal  : public NetNode {
-
-    public:
-<<<<<<< Updated upstream
-      NetAddSub(NetScope*s, perm_string n, unsigned width);
-      ~NetAddSub();
-
-	// Get the width of the device (that is, the width of the
-	// operands and results).
-      unsigned width() const;
-
-      Link& pin_Cout();
-      Link& pin_DataA();
-      Link& pin_DataB();
-      Link& pin_Result();
-
-      const Link& pin_Cout() const;
-      const Link& pin_DataA() const;
-      const Link& pin_DataB() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -2471,7 +1403,7 @@ class NetArrayDq  : public NetNode {
       const Link& pin_Address() const;
       const Link& pin_Result() const;
 
-      virtual void dump_node(std::ostream&, unsigned ind) const;
+      virtual void dump_node(ostream&, unsigned ind) const;
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -2491,7 +1423,7 @@ class NetCastInt4  : public NetNode {
 
       unsigned width() const { return width_; }
 
-      virtual void dump_node(std::ostream&, unsigned ind) const;
+      virtual void dump_node(ostream&, unsigned ind) const;
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -2505,7 +1437,7 @@ class NetCastInt2  : public NetNode {
 
       unsigned width() const { return width_; }
 
-      virtual void dump_node(std::ostream&, unsigned ind) const;
+      virtual void dump_node(ostream&, unsigned ind) const;
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -2525,14 +1457,7 @@ class NetCastReal  : public NetNode {
 
       bool signed_flag() const { return signed_flag_; }
 
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
-      NetCastReal(NetScope*s, perm_string n, bool signed_flag);
-
-      bool signed_flag() const { return signed_flag_; }
-
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -2558,21 +1483,12 @@ class NetCLShift  : public NetNode {
       Link& pin_Data();
       Link& pin_Result();
       Link& pin_Distance();
-<<<<<<< Updated upstream
-
-      const Link& pin_Data() const;
-      const Link& pin_Result() const;
-      const Link& pin_Distance() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
       const Link& pin_Data() const;
       const Link& pin_Result() const;
       const Link& pin_Distance() const;
 
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -2628,58 +1544,12 @@ class NetCompare  : public NetNode {
       const Link& pin_DataB() const;
 
       virtual void functor_node(Design*, functor_t*);
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
       unsigned width_;
       bool signed_flag_;
-<<<<<<< Updated upstream
-};
-
-
-/*
- * This node is a means to connect net inputs together to form a wider
- * vector. The output (pin 0) is a concatenation of the input vectors,
- * with pin-1 at the LSB, pin-2 next, and so on. This node is most
- * like the NetLogic node, as it has one output at pin 0 and the
- * remaining pins are the input that are combined to make the
- * output. It is separated out because it it generally a special case
- * for the code generators.
- *
- * When constructing the node, the width is the vector_width of the
- * output, and the cnt is the number of pins. (the number of input
- * vectors.)
- */
-class NetConcat  : public NetNode {
-
-    public:
-      NetConcat(NetScope*scope, perm_string n, unsigned wid, unsigned cnt,
-		bool transparent_flag = false);
-      ~NetConcat();
-
-      unsigned width() const;
-	// This is true if the concatenation is a transparent
-	// concatenation, meaning strengths are passed through as
-	// is. In this case, the output strengths of this node will be
-	// ignored.
-      bool transparent() const { return transparent_; }
-
-      void dump_node(std::ostream&, unsigned ind) const;
-      bool emit_node(struct target_t*) const;
-      void functor_node(Design*des, functor_t*fun);
-
-    private:
-      unsigned width_;
-      bool transparent_;
-};
-
-
-=======
 };
 
 
@@ -2720,7 +1590,6 @@ class NetConcat  : public NetNode {
 };
 
 
->>>>>>> Stashed changes
 /*
  * This class represents a theoretical (though not necessarily
  * practical) integer divider gate. This is not to represent any real
@@ -2748,21 +1617,12 @@ class NetDivide  : public NetNode {
       Link& pin_DataA();
       Link& pin_DataB();
       Link& pin_Result();
-<<<<<<< Updated upstream
-
-      const Link& pin_DataA() const;
-      const Link& pin_DataB() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
       const Link& pin_DataA() const;
       const Link& pin_DataB() const;
       const Link& pin_Result() const;
 
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -2797,18 +1657,6 @@ class NetModulo  : public NetNode {
 
       void set_signed(bool);
       bool get_signed() const;
-<<<<<<< Updated upstream
-
-      Link& pin_DataA();
-      Link& pin_DataB();
-      Link& pin_Result();
-
-      const Link& pin_DataA() const;
-      const Link& pin_DataB() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
       Link& pin_DataA();
       Link& pin_DataB();
@@ -2819,7 +1667,6 @@ class NetModulo  : public NetNode {
       const Link& pin_Result() const;
 
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -2868,11 +1715,7 @@ class NetFF  : public NetNode {
       void sset_value(const verinum&val);
       const verinum& sset_value() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -2904,11 +1747,7 @@ class NetLatch  : public NetNode {
       const Link& pin_Data() const;
       const Link& pin_Q() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -2940,18 +1779,6 @@ class NetMult  : public NetNode {
       unsigned width_r() const; // Result
       unsigned width_a() const; // DataA
       unsigned width_b() const; // DataB
-<<<<<<< Updated upstream
-
-      Link& pin_DataA();
-      Link& pin_DataB();
-      Link& pin_Result();
-
-      const Link& pin_DataA() const;
-      const Link& pin_DataB() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
       Link& pin_DataA();
       Link& pin_DataB();
@@ -2962,7 +1789,6 @@ class NetMult  : public NetNode {
       const Link& pin_Result() const;
 
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -3004,14 +1830,6 @@ class NetMux  : public NetNode {
       Link& pin_Result();
       Link& pin_Data(unsigned si);
       Link& pin_Sel();
-<<<<<<< Updated upstream
-
-      const Link& pin_Result() const;
-      const Link& pin_Data(unsigned) const;
-      const Link& pin_Sel() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
       const Link& pin_Result() const;
       const Link& pin_Data(unsigned) const;
@@ -3062,7 +1880,6 @@ class NetPow  : public NetNode {
       const Link& pin_Result() const;
 
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -3075,75 +1892,6 @@ class NetPow  : public NetNode {
 
 
 /*
-<<<<<<< Updated upstream
- * This class implements a basic LPM_POW combinational power. It
- * is used as a structural representation of the ** operator. The
- * device has inputs A and B and output Result all with independent
- * widths.
- *
- * NOTE: Check this width thing. I think that the independence of the
- * widths is not necessary or even useful.
- */
-class NetPow  : public NetNode {
-
-    public:
-      NetPow(NetScope*sc, perm_string n, unsigned width,
-	      unsigned wa, unsigned wb);
-      ~NetPow();
-
-      bool get_signed() const;
-      void set_signed(bool);
-
-	// Get the width of the device bussed inputs. There are these
-	// parameterized widths:
-      unsigned width_r() const; // Result
-      unsigned width_a() const; // DataA
-      unsigned width_b() const; // DataB
-
-      Link& pin_DataA();
-      Link& pin_DataB();
-      Link& pin_Result();
-
-      const Link& pin_DataA() const;
-      const Link& pin_DataB() const;
-      const Link& pin_Result() const;
-
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-      virtual bool emit_node(struct target_t*) const;
-      virtual void functor_node(Design*des, functor_t*fun);
-
-    private:
-      bool signed_;
-      unsigned width_r_;
-      unsigned width_a_;
-      unsigned width_b_;
-};
-
-
-/*
- * The NetReplicate node takes a vector input and makes it into a larger
- * vector by repeating the input vector some number of times. The
- * repeat count is a fixed value. This is just like the repeat
- * concatenation of Verilog: {<repeat>{<vector>}}.
- *
- * When constructing this node, the wid is the vector width of the
- * output, and the rpt is the repeat count. The wid must be an even
- * multiple of the cnt, and wid/cnt is the expected input width.
- *
- * The device has exactly 2 pins: pin(0) is the output and pin(1) the
- * input.
- */
-class NetReplicate  : public NetNode {
-
-    public:
-      NetReplicate(NetScope*scope, perm_string n, unsigned wid, unsigned rpt);
-      ~NetReplicate();
-
-      unsigned width() const;
-      unsigned repeat() const;
-
-      void dump_node(std::ostream&, unsigned ind) const;
-=======
  * The NetReplicate node takes a vector input and makes it into a larger
  * vector by repeating the input vector some number of times. The
  * repeat count is a fixed value. This is just like the repeat
@@ -3166,7 +1914,6 @@ class NetReplicate  : public NetNode {
       unsigned repeat() const;
 
       void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       bool emit_node(struct target_t*) const;
 
     private:
@@ -3192,11 +1939,7 @@ class NetUserFunc  : public NetNode {
 
       const NetEvWait* trigger() const { return trigger_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -3222,11 +1965,7 @@ class NetSysFunc  : public NetNode {
 
       const NetEvWait* trigger() const { return trigger_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -3252,11 +1991,7 @@ class NetTran  : public NetNode, public IslandBranch {
       unsigned part_width() const;
       unsigned part_offset() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -3280,11 +2015,13 @@ class NetExpr  : public LineInfo {
       virtual ~NetExpr() =0;
 
       virtual void expr_scan(struct expr_scan_t*) const =0;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual void bv_to_int(ostringstream& expr, ostringstream& target) const;
+      virtual void int_to_bv(ostringstream& expr, int width, ostringstream& target) const;
+      virtual void bv_int_bv(ostringstream& expr, int width, ostringstream& target) const;
+      virtual void extract(ostringstream& expr, int msi, int lsi, ostringstream& target) const;
+      virtual void bv_compare_zero(ostringstream& expr, string op_, int width, ostringstream& target) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
 	// This is the advanced description of the type. I think I
 	// want to replace the other type description members with
@@ -3334,11 +2071,7 @@ class NetExpr  : public LineInfo {
 	// allocated constant, or nil if the expression cannot be
 	// evaluated for any reason.
       virtual NetExpr*evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					std::map<perm_string,LocalVar>&ctx) const;
-=======
 					map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
 	// Get the Nexus that are the input to this
 	// expression. Normally this descends down to the reference to
@@ -3384,11 +2117,8 @@ class NetEArrayPattern  : public NetExpr {
       const NetExpr* item(size_t idx) const { return items_[idx]; }
 
       void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      void dump(std::ostream&) const;
-=======
       void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       NetEArrayPattern* dup_expr() const;
       NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
@@ -3419,28 +2149,18 @@ class NetEConst  : public NetExpr {
            to an unsized value. This is used after evaluating a
            unsized constant expression. */
       void trim();
-<<<<<<< Updated upstream
-
-      virtual void expr_scan(struct expr_scan_t*) const;
-      virtual void dump(std::ostream&) const;
-
-=======
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
->>>>>>> Stashed changes
       virtual NetEConst* dup_expr() const;
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*);
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
       virtual NetExpr*evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					std::map<perm_string,LocalVar>&ctx) const;
-=======
 					map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       verinum value_;
@@ -3449,32 +2169,20 @@ class NetEConst  : public NetExpr {
 class NetEConstEnum  : public NetEConst {
 
     public:
-<<<<<<< Updated upstream
-      explicit NetEConstEnum(perm_string name, const netenum_t*enum_set,
-			     const verinum&val);
-=======
       explicit NetEConstEnum(Definitions*scope, perm_string name,
 			     const netenum_t*enum_set, const verinum&val);
->>>>>>> Stashed changes
       ~NetEConstEnum();
 
       perm_string name() const;
       const netenum_t*enumeration() const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
 
       virtual NetEConstEnum* dup_expr() const;
 
     private:
-<<<<<<< Updated upstream
-=======
       Definitions*scope_;
->>>>>>> Stashed changes
       const netenum_t*enum_set_;
       perm_string name_;
 };
@@ -3490,11 +2198,7 @@ class NetEConstParam  : public NetEConst {
       const NetScope*scope() const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
 
       virtual NetEConstParam* dup_expr() const;
 
@@ -3519,22 +2223,10 @@ class NetECReal  : public NetExpr {
 
 	// The type of this expression is ET_REAL
       ivl_variable_type_t expr_type() const;
-<<<<<<< Updated upstream
-
-      virtual void expr_scan(struct expr_scan_t*) const;
-      virtual void dump(std::ostream&) const;
-
-      virtual NetECReal* dup_expr() const;
-      virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*);
-      virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
-                                  bool nested_func = false) const;
-
-      virtual NetExpr*evaluate_function(const LineInfo&loc,
-					std::map<perm_string,LocalVar>&ctx) const;
-=======
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       virtual NetECReal* dup_expr() const;
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*);
@@ -3543,7 +2235,6 @@ class NetECReal  : public NetExpr {
 
       virtual NetExpr*evaluate_function(const LineInfo&loc,
 					map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       verireal value_;
@@ -3553,7 +2244,7 @@ class NetECString  : public NetEConst {
     public:
       explicit NetECString(const std::string& val);
       ~NetECString();
-
+      virtual int dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const;
       // The type of a string is IVL_VT_STRING
       ivl_variable_type_t expr_type() const;
 };
@@ -3569,11 +2260,7 @@ class NetECRealParam  : public NetECReal {
       const NetScope*scope() const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
 
       virtual NetECRealParam* dup_expr() const;
 
@@ -3628,11 +2315,7 @@ class NetPartSelect  : public NetNode {
 	/* Is the select signal signed? */
       inline bool signed_flag() const { return signed_flag_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       bool emit_node(struct target_t*tgt) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -3669,11 +2352,7 @@ class NetSubstitute : public NetNode {
       inline unsigned width() const { return wid_; }
       inline unsigned base() const  { return off_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*tgt) const;
       virtual void functor_node(Design*des, functor_t*fun);
 
@@ -3702,11 +2381,7 @@ class NetBUFZ  : public NetNode {
       unsigned width() const;
       bool transparent() const { return transparent_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -3751,11 +2426,7 @@ class NetCaseCmp  : public NetNode {
 	// What kind of case compare?
       inline kind_t kind() const { return kind_; }
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
 
     private:
@@ -3763,11 +2434,7 @@ class NetCaseCmp  : public NetNode {
       const kind_t kind_;
 };
 
-<<<<<<< Updated upstream
-extern std::ostream& operator << (std::ostream&fd, NetCaseCmp::kind_t that);
-=======
 extern ostream& operator << (ostream&fd, NetCaseCmp::kind_t that);
->>>>>>> Stashed changes
 
 /* NOTE: This class should be replaced with the NetLiteral class
  * below, that is more general in that it supports different types of
@@ -3794,40 +2461,11 @@ class NetConst  : public NetNode {
 
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*, functor_t*);
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       verinum value_;
 };
-<<<<<<< Updated upstream
-
-/*
- * This class represents instances of the LPM_CONSTANT device. The
- * node has only outputs and a constant value. The width is available
- * by getting the pin_count(), and the value bits are available one at
- * a time. There is no meaning to the aggregation of bits to form a
- * wide NetConst object, although some targets may have an easier time
- * detecting interesting constructs if they are combined.
- */
-class NetLiteral  : public NetNode {
-
-    public:
-	// A read-valued literal.
-      explicit NetLiteral(NetScope*s, perm_string n, const verireal&val);
-      ~NetLiteral();
-
-      ivl_variable_type_t data_type() const;
-
-      const verireal& value_real() const;
-
-      virtual bool emit_node(struct target_t*) const;
-      virtual void functor_node(Design*, functor_t*);
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
 
 /*
  * This class represents instances of the LPM_CONSTANT device. The
@@ -3851,7 +2489,6 @@ class NetLiteral  : public NetNode {
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*, functor_t*);
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       verireal real_;
@@ -3890,11 +2527,7 @@ class NetLogic  : public NetNode {
       unsigned width() const;
       bool is_cassign() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*, functor_t*);
 
@@ -3919,11 +2552,7 @@ class NetSignExtend  : public NetNode {
 
       unsigned width() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*, functor_t*);
 
@@ -3948,11 +2577,7 @@ class NetUReduce  : public NetNode {
       TYPE type() const;
       unsigned width() const;
 
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool emit_node(struct target_t*) const;
       virtual void functor_node(Design*, functor_t*);
 
@@ -4016,18 +2641,14 @@ class NetUDP  : public NetNode {
       explicit NetUDP(NetScope*s, perm_string n, unsigned pins, PUdp*u);
 
       virtual bool emit_node(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
 	/* Use these methods to scan the truth table of the
 	   device. "first" returns the first item in the table, and
 	   "next" returns the next item in the table. The method will
 	   return false when the scan is done. */
-      bool first(std::string&inp, char&out) const;
-      bool next(std::string&inp, char&out) const;
+      bool first(string&inp, char&out) const;
+      bool next(string&inp, char&out) const;
       unsigned rows() const { return udp->tinput.count(); }
 
       unsigned nin() const { return pin_count()-1; }
@@ -4038,11 +2659,7 @@ class NetUDP  : public NetNode {
       char get_initial() const;
 
       unsigned port_count() const;
-<<<<<<< Updated upstream
-      std::string port_name(unsigned idx) const;
-=======
       string port_name(unsigned idx) const;
->>>>>>> Stashed changes
 
     private:
       mutable unsigned table_idx;
@@ -4085,11 +2702,7 @@ class NetProc : public virtual LineInfo {
 	// identifiers to values. The function returns true if the
 	// processing succeeds, or false otherwise.
       virtual bool evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
 	// This method is called by functors that want to scan a
 	// process in search of matchable patterns.
@@ -4119,17 +2732,10 @@ class NetProc : public virtual LineInfo {
 	// The clock/gate enables generated by synthesis operate at a
 	// vector level (i.e. they are asserted if any bit(s) in the
 	// vector are driven).
-<<<<<<< Updated upstream
-      typedef std::vector<bool> mask_t;
-      virtual bool synth_async(Design*des, NetScope*scope,
-			       NexusSet&nex_map, NetBus&nex_out,
-			       NetBus&enables, std::vector<mask_t>&bitmasks);
-=======
       typedef vector<bool> mask_t;
       virtual bool synth_async(Design*des, NetScope*scope,
-			       NexusSet&nex_map, NetBus&nex_out,
-			       NetBus&enables, vector<mask_t>&bitmasks);
->>>>>>> Stashed changes
+			      NexusSet&nex_map, NetBus&nex_out,
+			      NetBus&enables, vector<mask_t>&bitmasks);
 
 	// Synthesize as synchronous logic, and return true on success.
 	// That means binding the outputs to the data port of a FF, and
@@ -4149,22 +2755,19 @@ class NetProc : public virtual LineInfo {
 			      bool&ff_negedge,
 			      NetNet*ff_clock, NetBus&ff_ce,
 			      NetBus&ff_aclr,  NetBus&ff_aset,
-<<<<<<< Updated upstream
-			      std::vector<verinum>&ff_aset_value,
-			      NexusSet&nex_map, NetBus&nex_out,
-			      std::vector<mask_t>&bitmasks,
-			      const std::vector<NetEvProbe*>&events);
-
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
 			      vector<verinum>&ff_aset_value,
 			      NexusSet&nex_map, NetBus&nex_out,
 			      vector<mask_t>&bitmasks,
 			      const std::vector<NetEvProbe*>&events);
 
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
-
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<smt_var>& used, bool result, int caseitemidx, const char* modname) const;
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<RefVar*>& lrefs, set<smt_var>& used, const char* modname) const;
+      virtual void bv_to_int(ostringstream& expr, ostringstream& target) const;
+      virtual void int_to_bv(ostringstream& expr, int width, ostringstream& target) const;
+      virtual void bv_int_bv(ostringstream& expr, int width, ostringstream& target) const;
+      virtual void bv_compare_zero(ostringstream& expr, string op_, int width, ostringstream& target) const;
 	// Recursively checks to see if there is delay in this element.
       virtual DelayType delay_type(bool print_delay=false) const;
 	// Check to see if the item is synthesizable.
@@ -4175,11 +2778,7 @@ class NetProc : public virtual LineInfo {
 					   NexusSet&nex_map,
 					   NetBus&nex_out,
 					   NetBus&enables,
-<<<<<<< Updated upstream
-					   std::vector<mask_t>&bitmasks,
-=======
 					   vector<mask_t>&bitmasks,
->>>>>>> Stashed changes
 					   NetProc*substmt);
     private:
       friend class NetBlock;
@@ -4196,11 +2795,7 @@ class NetAlloc  : public NetProc {
       explicit NetAlloc(NetScope*);
       ~NetAlloc();
 
-<<<<<<< Updated upstream
-      const std::string name() const;
-=======
       const string name() const;
->>>>>>> Stashed changes
 
       const NetScope* scope() const;
 
@@ -4208,11 +2803,7 @@ class NetAlloc  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       NetScope*scope_;
@@ -4258,11 +2849,7 @@ class NetAssign_ {
 
 	// This is so NetAssign_ objects can be passed to ivl_assert
 	// and other macros that call this method.
-<<<<<<< Updated upstream
-      std::string get_fileline() const;
-=======
       string get_fileline() const;
->>>>>>> Stashed changes
 
 	// If this expression exists, then it is used to select a word
 	// from an array/memory.
@@ -4332,11 +2919,8 @@ class NetAssign_ {
 	// This pointer is for keeping simple lists.
       NetAssign_* more;
 
-<<<<<<< Updated upstream
-      void dump_lval(std::ostream&o) const;
-=======
       void dump_lval(ostream&o) const;
->>>>>>> Stashed changes
+      int dump_smt(set<RefVar*>& lrefs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
 	// Nested l-value. If this is set, sig_ must NOT be set!
@@ -4359,7 +2943,7 @@ class NetAssignBase : public NetProc {
 
     public:
       NetAssignBase(NetAssign_*lv, NetExpr*rv);
-      virtual ~NetAssignBase() =0;
+      virtual ~NetAssignBase() = 0;
 
 	// This is the (procedural) value that is to be assigned when
 	// the assignment is executed.
@@ -4386,19 +2970,13 @@ class NetAssignBase : public NetProc {
 
       bool synth_async(Design*des, NetScope*scope,
 		       NexusSet&nex_map, NetBus&nex_out,
-<<<<<<< Updated upstream
-		       NetBus&enables, std::vector<mask_t>&bitmasks);
-
-	// This dumps all the lval structures.
-      void dump_lval(std::ostream&) const;
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
 		       NetBus&enables, vector<mask_t>&bitmasks);
 
 	// This dumps all the lval structures.
       void dump_lval(ostream&) const;
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<RefVar*>& lrefs, set<smt_var>& used, const char* modname) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -4420,26 +2998,15 @@ class NetAssign : public NetAssignBase {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       void eval_func_lval_op_real_(const LineInfo&loc, verireal&lv, const verireal&rv) const;
       void eval_func_lval_op_(const LineInfo&loc, verinum&lv, verinum&rv) const;
-<<<<<<< Updated upstream
-      bool eval_func_lval_(const LineInfo&loc, std::map<perm_string,LocalVar>&ctx,
-=======
       bool eval_func_lval_(const LineInfo&loc, map<perm_string,LocalVar>&ctx,
->>>>>>> Stashed changes
 			   const NetAssign_*lval, NetExpr*rval_result) const;
 
       char op_;
@@ -4454,11 +3021,7 @@ class NetAssignNB  : public NetAssignBase {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
       unsigned nevents() const;
@@ -4469,7 +3032,6 @@ class NetAssignNB  : public NetAssignBase {
       NetEvWait*event_;
       NetExpr*count_;
 };
-
 
 /*
  * A block is stuff like begin-end blocks, that contain an ordered
@@ -4497,34 +3059,20 @@ class NetBlock  : public NetProc {
       const NetProc*proc_next(const NetProc*cur) const;
 
       bool evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-			     std::map<perm_string,LocalVar>&ctx) const;
-=======
 			     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
 	// synthesize as asynchronous logic, and return true.
       bool synth_async(Design*des, NetScope*scope,
 		       NexusSet&nex_map, NetBus&nex_out,
-<<<<<<< Updated upstream
-		       NetBus&enables, std::vector<mask_t>&bitmasks);
-=======
 		       NetBus&enables, vector<mask_t>&bitmasks);
->>>>>>> Stashed changes
 
       bool synth_sync(Design*des, NetScope*scope,
 		      bool&ff_negedge,
 		      NetNet*ff_clk, NetBus&ff_ce,
 		      NetBus&ff_aclr,NetBus&ff_aset,
-<<<<<<< Updated upstream
-		      std::vector<verinum>&ff_aset_value,
-		      NexusSet&nex_map, NetBus&nex_out,
-		      std::vector<mask_t>&bitmasks,
-=======
 		      vector<verinum>&ff_aset_value,
 		      NexusSet&nex_map, NetBus&nex_out,
 		      vector<mask_t>&bitmasks,
->>>>>>> Stashed changes
 		      const std::vector<NetEvProbe*>&events);
 
 	// This version of emit_recurse scans all the statements of
@@ -4537,11 +3085,8 @@ class NetBlock  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -4592,31 +3137,12 @@ class NetCase  : public NetProc {
 
       bool synth_async(Design*des, NetScope*scope,
 		       NexusSet&nex_map, NetBus&nex_out,
-<<<<<<< Updated upstream
-		       NetBus&enables, std::vector<mask_t>&bitmasks);
-
-      virtual bool emit_proc(struct target_t*) const;
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-
-    private:
-      bool evaluate_function_vect_(const LineInfo&loc,
-				   std::map<perm_string,LocalVar>&ctx) const;
-      bool evaluate_function_real_(const LineInfo&loc,
-				   std::map<perm_string,LocalVar>&ctx) const;
-
-      bool synth_async_casez_(Design*des, NetScope*scope,
-			      NexusSet&nex_map, NetBus&nex_out,
-			      NetBus&enables, std::vector<mask_t>&bitmasks);
-
-=======
 		       NetBus&enables, vector<mask_t>&bitmasks);
 
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<smt_var>& used, bool result, int caseitemidx, const char* modname) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
@@ -4632,7 +3158,6 @@ class NetCase  : public NetProc {
 			      NexusSet&nex_map, NetBus&nex_out,
 			      NetBus&enables, vector<mask_t>&bitmasks);
 
->>>>>>> Stashed changes
       ivl_case_quality_t quality_;
       TYPE type_;
 
@@ -4657,11 +3182,8 @@ class NetCAssign  : public NetAssignBase {
       explicit NetCAssign(NetAssign_*lv, NetExpr*rv);
       ~NetCAssign();
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool emit_proc(struct target_t*) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -4701,42 +3223,26 @@ class NetCondit  : public NetProc {
       bool is_asynchronous();
       bool synth_async(Design*des, NetScope*scope,
 		       NexusSet&nex_map, NetBus&nex_out,
-<<<<<<< Updated upstream
-		       NetBus&enables, std::vector<mask_t>&bitmasks);
-=======
 		       NetBus&enables, vector<mask_t>&bitmasks);
->>>>>>> Stashed changes
 
       bool synth_sync(Design*des, NetScope*scope,
 		      bool&ff_negedge,
 		      NetNet*ff_clk, NetBus&ff_ce,
 		      NetBus&ff_aclr,NetBus&ff_aset,
-<<<<<<< Updated upstream
-		      std::vector<verinum>&ff_aset_value,
-		      NexusSet&nex_map, NetBus&nex_out,
-		      std::vector<mask_t>&bitmasks,
-=======
 		      vector<verinum>&ff_aset_value,
 		      NexusSet&nex_map, NetBus&nex_out,
 		      vector<mask_t>&bitmasks,
->>>>>>> Stashed changes
 		      const std::vector<NetEvProbe*>&events);
 
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<smt_var>& used, bool result, int caseitemidx, const char* modname) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetExpr* expr_;
@@ -4759,11 +3265,7 @@ class NetContribution : public NetProc {
       const NetExpr* rval() const;
 
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       NetEAccess*lval_;
@@ -4783,11 +3285,8 @@ class NetDeassign : public NetAssignBase {
       ~NetDeassign();
 
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private: // not implemented
@@ -4816,17 +3315,11 @@ class NetDisable  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetScope*target_;
@@ -4855,19 +3348,11 @@ class NetDoWhile  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetExpr* cond_;
@@ -4948,7 +3433,7 @@ class NetEvent : public LineInfo {
 
 	// Locate the first event that matches my behavior and
 	// monitors the same signals.
-      void find_similar_event(std::list<NetEvent*>&);
+      void find_similar_event(list<NetEvent*>&);
 
 	// This method replaces pointers to me with pointers to
 	// that. It is typically used to replace similar events
@@ -5007,11 +3492,8 @@ class NetEvTrig  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -5035,11 +3517,7 @@ class NetEvNBTrig  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -5085,35 +3563,21 @@ class NetEvWait  : public NetProc {
 
       virtual bool synth_async(Design*des, NetScope*scope,
 			       NexusSet&nex_map, NetBus&nex_out,
-<<<<<<< Updated upstream
-			       NetBus&enables, std::vector<mask_t>&bitmasks);
-=======
 			       NetBus&enables, vector<mask_t>&bitmasks);
->>>>>>> Stashed changes
 
       virtual bool synth_sync(Design*des, NetScope*scope,
 			      bool&ff_negedge,
 			      NetNet*ff_clk, NetBus&ff_ce,
 			      NetBus&ff_aclr,NetBus&ff_aset,
-<<<<<<< Updated upstream
-			      std::vector<verinum>&ff_aset_value,
-			      NexusSet&nex_map, NetBus&nex_out,
-			      std::vector<mask_t>&bitmasks,
-			      const std::vector<NetEvProbe*>&events);
-
-      virtual void dump(std::ostream&, unsigned ind) const;
-	// This will ignore any statement.
-      virtual void dump_inline(std::ostream&) const;
-=======
 			      vector<verinum>&ff_aset_value,
 			      NexusSet&nex_map, NetBus&nex_out,
 			      vector<mask_t>&bitmasks,
 			      const std::vector<NetEvProbe*>&events);
 
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
 	// This will ignore any statement.
       virtual void dump_inline(ostream&) const;
->>>>>>> Stashed changes
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -5124,11 +3588,7 @@ class NetEvWait  : public NetProc {
       bool has_t0_trigger_;
 };
 
-<<<<<<< Updated upstream
-std::ostream& operator << (std::ostream&out, const NetEvWait&obj);
-=======
 ostream& operator << (ostream&out, const NetEvWait&obj);
->>>>>>> Stashed changes
 
 class NetEvProbe  : public NetNode {
 
@@ -5145,14 +3605,10 @@ class NetEvProbe  : public NetNode {
       NetEvent* event();
       const NetEvent* event() const;
 
-      void find_similar_probes(std::list<NetEvProbe*>&);
+      void find_similar_probes(list<NetEvProbe*>&);
 
       virtual bool emit_node(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump_node(std::ostream&, unsigned ind) const;
-=======
       virtual void dump_node(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       NetEvent*event_;
@@ -5172,11 +3628,8 @@ class NetForce  : public NetAssignBase {
       explicit NetForce(NetAssign_*l, NetExpr*r);
       ~NetForce();
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool emit_proc(struct target_t*) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 };
@@ -5197,19 +3650,12 @@ class NetForever : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetProc*statement_;
@@ -5225,23 +3671,6 @@ class NetForLoop : public NetProc {
       void wrap_up();
 
       void emit_recurse(struct target_t*) const;
-<<<<<<< Updated upstream
-
-      virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
-                                  bool nested_func = false) const;
-      virtual void nex_output(NexusSet&);
-      virtual bool emit_proc(struct target_t*) const;
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-
-	// synthesize as asynchronous logic, and return true.
-      bool synth_async(Design*des, NetScope*scope,
-		       NexusSet&nex_map, NetBus&nex_out,
-		       NetBus&enables, std::vector<mask_t>&bitmasks);
-=======
 
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
@@ -5257,7 +3686,6 @@ class NetForLoop : public NetProc {
       bool synth_async(Design*des, NetScope*scope,
 		       NexusSet&nex_map, NetBus&nex_out,
 		       NetBus&enables, vector<mask_t>&bitmasks);
->>>>>>> Stashed changes
 
     private:
       NetNet*index_;
@@ -5279,11 +3707,7 @@ class NetFree   : public NetProc {
       explicit NetFree(NetScope*);
       ~NetFree();
 
-<<<<<<< Updated upstream
-      const std::string name() const;
-=======
       const string name() const;
->>>>>>> Stashed changes
 
       const NetScope* scope() const;
 
@@ -5291,11 +3715,7 @@ class NetFree   : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       NetScope*scope_;
@@ -5334,11 +3754,7 @@ class NetFuncDef : public NetBaseDef {
 	// cannot evaluate to a constant, this returns nil.
       NetExpr* evaluate_function(const LineInfo&loc, const std::vector<NetExpr*>&args) const;
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned ind) const;
-=======
       void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
 
     private:
       NetNet*result_sig_;
@@ -5373,11 +3789,8 @@ class NetPDelay  : public NetProc {
       virtual void nex_output(NexusSet&);
 
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -5405,19 +3818,13 @@ class NetRepeat : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<smt_var>& used, bool result, int caseitemidx, const char* modname) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetExpr*expr_;
@@ -5437,11 +3844,8 @@ class NetRelease : public NetAssignBase {
       ~NetRelease();
 
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -5472,17 +3876,11 @@ class NetSTask  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       const char* name_;
@@ -5505,19 +3903,11 @@ class NetSTask  : public NetProc {
 class NetTaskDef : public NetBaseDef {
 
     public:
-<<<<<<< Updated upstream
-      NetTaskDef(NetScope*n, const std::vector<NetNet*>&po,
-		 const std::vector<NetExpr*>&pd);
-      ~NetTaskDef();
-
-      void dump(std::ostream&, unsigned) const;
-=======
       NetTaskDef(NetScope*n, const vector<NetNet*>&po,
 		 const std::vector<NetExpr*>&pd);
       ~NetTaskDef();
 
       void dump(ostream&, unsigned) const;
->>>>>>> Stashed changes
       DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -5542,6 +3932,7 @@ class NetELast : public NetExpr {
 
       virtual ivl_variable_type_t expr_type() const;
       virtual void dump(std::ostream&) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual NetELast*dup_expr() const;
@@ -5572,19 +3963,8 @@ class NetEUFunc  : public NetExpr {
 
       virtual ivl_variable_type_t expr_type() const;
       virtual const netenum_t* enumeration() const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-
-      virtual void expr_scan(struct expr_scan_t*) const;
-      virtual NetEUFunc*dup_expr() const;
-      virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
-                                  bool nested_func = false) const;
-      virtual NetExpr* eval_tree();
-      virtual NetExpr*evaluate_function(const LineInfo&loc,
-					std::map<perm_string,LocalVar>&ctx) const;
-
-=======
       virtual void dump(ostream&) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual NetEUFunc*dup_expr() const;
@@ -5594,7 +3974,6 @@ class NetEUFunc  : public NetExpr {
       virtual NetExpr*evaluate_function(const LineInfo&loc,
 					map<perm_string,LocalVar>&ctx) const;
 
->>>>>>> Stashed changes
       virtual NetNet* synthesize(Design*des, NetScope*scope, NetExpr*root);
 
     private:
@@ -5622,11 +4001,8 @@ class NetEAccess : public NetExpr {
       NetBranch*   get_branch() const { return branch_; }
 
       virtual ivl_variable_type_t expr_type() const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual NetEAccess*dup_expr() const;
@@ -5649,7 +4025,7 @@ class NetUTask  : public NetProc {
       explicit NetUTask(NetScope*);
       ~NetUTask();
 
-      const std::string name() const;
+      const string name() const;
 
       const NetScope* task() const;
 
@@ -5657,11 +4033,8 @@ class NetUTask  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -5688,24 +4061,19 @@ class NetWhile  : public NetProc {
                                   bool nested_func = false) const;
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&, unsigned ind) const;
-      virtual DelayType delay_type(bool print_delay=false) const;
-      virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
-      virtual bool evaluate_function(const LineInfo&loc,
-				     std::map<perm_string,LocalVar>&ctx) const;
-=======
       virtual void dump(ostream&, unsigned ind) const;
+      virtual void gen_stats(smt_stats* proc_stats);
+      virtual void dump_smt(ofstream& o, set<RefVar*>& refs, set<smt_var>& used, bool result, int caseitemidx, const char* modname) const;;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
     private:
       NetExpr*cond_;
       NetProc*proc_;
 };
+
 
 /*
  * The is the top of any process. It carries the type (initial or
@@ -5739,29 +4107,23 @@ class NetProcTop  : public LineInfo, public Attrib {
 	   or return false if that cannot be done. */
       bool synth_sync(Design*des);
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned ind) const;
-=======
       void dump(ostream&, unsigned ind) const;
->>>>>>> Stashed changes
+      virtual void gen_stats(smt_stats* proc_stats);
       bool emit(struct target_t*tgt) const;
-
+      unsigned get_id();
+      void set_id(unsigned id);
     private:
       bool tie_off_floating_inputs_(Design*des,
 				    NexusSet&nex_map, NetBus&nex_in,
-<<<<<<< Updated upstream
-				    std::vector<NetProc::mask_t>&bitmasks,
-=======
 				    vector<NetProc::mask_t>&bitmasks,
->>>>>>> Stashed changes
 				    bool is_ff_input);
 
       const ivl_process_type_t type_;
       NetProc*const statement_;
       Design*synthesized_design_;
-
       NetScope*scope_;
       friend class Design;
+      unsigned id_;
       NetProcTop*next_;
 };
 
@@ -5775,15 +4137,6 @@ class NetAnalogTop  : public LineInfo, public Attrib {
 
       NetProc*statement();
       const NetProc*statement() const;
-<<<<<<< Updated upstream
-
-      NetScope*scope();
-      const NetScope*scope() const;
-
-      void dump(std::ostream&, unsigned ind) const;
-      bool emit(struct target_t*tgt) const;
-
-=======
 
       NetScope*scope();
       const NetScope*scope() const;
@@ -5791,7 +4144,6 @@ class NetAnalogTop  : public LineInfo, public Attrib {
       void dump(ostream&, unsigned ind) const;
       bool emit(struct target_t*tgt) const;
 
->>>>>>> Stashed changes
     private:
       const ivl_process_type_t type_;
       NetProc* statement_;
@@ -5853,20 +4205,13 @@ class NetEBinary  : public NetExpr {
       virtual NetEBinary* dup_expr() const;
       virtual NetExpr* eval_tree();
       virtual NetExpr* evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					 std::map<perm_string,LocalVar>&ctx) const;
-=======
 					 map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     protected:
       char op_;
@@ -6009,8 +4354,6 @@ class NetEBLogic : public NetEBinary {
       NetEConst* eval_arguments_(const NetExpr*l, const NetExpr*r) const;
 };
 
-<<<<<<< Updated upstream
-=======
 /*
  * Support the binary min(l,r) and max(l,r) operators. The opcodes
  * supported are:
@@ -6031,74 +4374,12 @@ class NetEBMinMax : public NetEBinary {
       NetExpr* eval_tree_real_(const NetExpr*l, const NetExpr*r) const;
 };
 
->>>>>>> Stashed changes
 /*
- * Support the binary min(l,r) and max(l,r) operators. The opcodes
- * supported are:
- *
- *   m -- min
- *   M -- max
- */
-class NetEBMinMax : public NetEBinary {
-
-    public:
-<<<<<<< Updated upstream
-      NetEBMinMax(char op, NetExpr*l, NetExpr*r, unsigned wid, bool signed_flag);
-      ~NetEBMinMax();
-
-      virtual ivl_variable_type_t expr_type() const;
-=======
-      NetEBMult(char op, NetExpr*l, NetExpr*r, unsigned wid, bool signed_flag);
-      ~NetEBMult();
-
-      virtual ivl_variable_type_t expr_type() const;
-
-      virtual NetEBMult* dup_expr() const;
-      virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
->>>>>>> Stashed changes
-
-    private:
-      NetExpr* eval_arguments_(const NetExpr*l, const NetExpr*r) const;
-      NetExpr* eval_tree_real_(const NetExpr*l, const NetExpr*r) const;
-<<<<<<< Updated upstream
-=======
-};
-
-/*
- * Support the binary power (**) operator.
- */
-class NetEBPow : public NetEBinary {
-
-    public:
-      NetEBPow(char op, NetExpr*l, NetExpr*r, unsigned wid, bool signed_flag);
-      ~NetEBPow();
-
-      virtual ivl_variable_type_t expr_type() const;
-
-      virtual NetEBPow* dup_expr() const;
-      virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-
-    private:
-      NetExpr* eval_arguments_(const NetExpr*l, const NetExpr*r) const;
-      NetExpr* eval_tree_real_(const NetExpr*l, const NetExpr*r) const;
->>>>>>> Stashed changes
-};
-
-/*
-<<<<<<< Updated upstream
  * Support the binary multiplication (*) operator.
-=======
- * Support the binary shift operators. The supported operators are:
- *
- *   l  -- left shift (<<)
- *   r  -- right shift (>>)
- *   R  -- right shift arithmetic (>>>)
->>>>>>> Stashed changes
  */
 class NetEBMult : public NetEBinary {
 
     public:
-<<<<<<< Updated upstream
       NetEBMult(char op, NetExpr*l, NetExpr*r, unsigned wid, bool signed_flag);
       ~NetEBMult();
 
@@ -6110,24 +4391,9 @@ class NetEBMult : public NetEBinary {
     private:
       NetExpr* eval_arguments_(const NetExpr*l, const NetExpr*r) const;
       NetExpr* eval_tree_real_(const NetExpr*l, const NetExpr*r) const;
-=======
-      NetEBShift(char op, NetExpr*l, NetExpr*r, unsigned wid, bool signed_flag);
-      ~NetEBShift();
-
-	// A shift expression only needs the left expression to have a
-	// definite width to give the expression a definite width.
-      virtual bool has_width() const;
-
-      virtual NetEBShift* dup_expr() const;
-      virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-
-    private:
-      NetEConst* eval_arguments_(const NetExpr*l, const NetExpr*r) const;
->>>>>>> Stashed changes
 };
 
 /*
-<<<<<<< Updated upstream
  * Support the binary power (**) operator.
  */
 class NetEBPow : public NetEBinary {
@@ -6173,8 +4439,6 @@ class NetEBShift : public NetEBinary {
 
 
 /*
-=======
->>>>>>> Stashed changes
  * This expression node supports the concat expression. This is an
  * operator that just glues the results of many expressions into a
  * single value.
@@ -6203,28 +4467,18 @@ class NetEConcat  : public NetExpr {
       virtual NetEConcat* dup_expr() const;
       virtual NetEConst*  eval_tree();
       virtual NetExpr* evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					 std::map<perm_string,LocalVar>&ctx) const;
-      virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual void expr_scan(struct expr_scan_t*) const;
-      virtual void dump(std::ostream&) const;
-=======
 					 map<perm_string,LocalVar>&ctx) const;
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*root);
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(std::set<RefVar*>& refs, std::set<smt_var>& used, ostringstream& expr) const;
 
     private:
       std::vector<NetExpr*>parms_;
       unsigned repeat_;
       ivl_variable_type_t expr_type_;
 
-<<<<<<< Updated upstream
-      NetEConst* eval_arguments_(const std::vector<NetExpr*>&vals, unsigned gap) const;
-=======
       NetEConst* eval_arguments_(const vector<NetExpr*>&vals, unsigned gap) const;
->>>>>>> Stashed changes
 };
 
 
@@ -6271,17 +4525,11 @@ class NetESelect  : public NetExpr {
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual NetEConst* eval_tree();
       virtual NetExpr*evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					std::map<perm_string,LocalVar>&ctx) const;
-      virtual NetESelect* dup_expr() const;
-      virtual NetNet*synthesize(Design*des, NetScope*scope, NetExpr*root);
-      virtual void dump(std::ostream&) const;
-=======
 					map<perm_string,LocalVar>&ctx) const;
       virtual NetESelect* dup_expr() const;
       virtual NetNet*synthesize(Design*des, NetScope*scope, NetExpr*root);
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       NetExpr*expr_;
@@ -6306,7 +4554,8 @@ class NetEEvent : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-      virtual void dump(std::ostream&os) const;
+      virtual void dump(ostream&os) const;
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       NetEvent*event_;
@@ -6330,11 +4579,8 @@ class NetENetenum  : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       const netenum_t*netenum_;
@@ -6359,11 +4605,8 @@ class NetENew : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       ivl_type_t obj_type_;
@@ -6386,11 +4629,8 @@ class NetENull : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 };
 
 /*
@@ -6417,11 +4657,8 @@ class NetEProperty : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       NetNet*net_;
@@ -6447,11 +4684,8 @@ class NetEScope  : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       NetScope*scope_;
@@ -6480,21 +4714,14 @@ class NetESFunc  : public NetExpr {
 
       virtual NetExpr* eval_tree();
       virtual NetExpr* evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					 std::map<perm_string,LocalVar>&ctx) const;
-=======
 					 map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
       virtual ivl_variable_type_t expr_type() const;
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
       virtual const netenum_t* enumeration() const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual NetESFunc*dup_expr() const;
@@ -6630,11 +4857,8 @@ class NetEShallowCopy : public NetExpr {
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
 
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&os) const;
-=======
       virtual void dump(ostream&os) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
       void expr_scan_oper1(struct expr_scan_t*) const;
       void expr_scan_oper2(struct expr_scan_t*) const;
@@ -6664,20 +4888,13 @@ class NetETernary  : public NetExpr {
       virtual NetETernary* dup_expr() const;
       virtual NetExpr* eval_tree();
       virtual NetExpr*evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					std::map<perm_string,LocalVar>&ctx) const;
-=======
 					map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
       virtual ivl_variable_type_t expr_type() const;
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*root);
 
     public:
@@ -6726,22 +4943,16 @@ class NetEUnary  : public NetExpr {
       virtual NetEUnary* dup_expr() const;
       virtual NetExpr* eval_tree();
       virtual NetExpr* evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					 std::map<perm_string,LocalVar>&ctx) const;
-=======
 					 map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
 
       virtual ivl_variable_type_t expr_type() const;
       virtual NexusSet* nex_input(bool rem_out = true, bool always_sens = false,
                                   bool nested_func = false) const;
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
+      
 
     protected:
       char op_;
@@ -6788,11 +4999,7 @@ class NetECast : public NetEUnary {
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
       virtual NetECast* dup_expr() const;
       virtual ivl_variable_type_t expr_type() const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
 
     private:
       virtual NetExpr* eval_arguments_(const NetExpr*ex) const;
@@ -6826,11 +5033,7 @@ class NetESignal  : public NetExpr {
       const netenum_t*enumeration() const;
 
       virtual NetExpr*evaluate_function(const LineInfo&loc,
-<<<<<<< Updated upstream
-					std::map<perm_string,LocalVar>&ctx) const;
-=======
 					map<perm_string,LocalVar>&ctx) const;
->>>>>>> Stashed changes
 
 	// This is the expression for selecting an array word, if this
 	// signal refers to an array.
@@ -6848,11 +5051,8 @@ class NetESignal  : public NetExpr {
       virtual ivl_variable_type_t expr_type() const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
-<<<<<<< Updated upstream
-      virtual void dump(std::ostream&) const;
-=======
       virtual void dump(ostream&) const;
->>>>>>> Stashed changes
+      virtual int dump_smt(set<RefVar*>& refs, set<smt_var>& used, ostringstream& expr, const char* modname) const;
 
     private:
       NetNet*net_;
@@ -6896,15 +5096,9 @@ class Design {
 	   steps can then use the get_flag() function to get the value
 	   of an interesting key. */
 
-<<<<<<< Updated upstream
-      void set_flags(const std::map<std::string,const char*>&f) { flags_ = f; }
-
-      const char* get_flag(const std::string&key) const;
-=======
       void set_flags(const map<string,const char*>&f) { flags_ = f; }
 
       const char* get_flag(const string&key) const;
->>>>>>> Stashed changes
 
       NetScope* make_root_scope(perm_string name, NetScope*unit_scope,
 				bool program_block, bool is_interface);
@@ -6950,17 +5144,10 @@ class Design {
 	   is pushed onto the scope_elaborations list. The scope
 	   elaborator will go through this list elaborating scopes
 	   until the list is empty. */
-<<<<<<< Updated upstream
-      std::list<elaborator_work_item_t*>elaboration_work_list;
-      void run_elaboration_work(void);
-
-      std::set<NetScope*> defparams_later;
-=======
       list<elaborator_work_item_t*>elaboration_work_list;
       void run_elaboration_work(void);
 
       set<NetScope*> defparams_later;
->>>>>>> Stashed changes
 
 	// PARAMETERS
 
@@ -6990,6 +5177,8 @@ class Design {
       void add_branch(NetBranch*);
 
 	// PROCESSES
+      NetProcTop* find_process();
+      NetProcTop* find_next_process(NetProcTop*);
       void add_process(NetProcTop*);
       void add_process(NetAnalogTop*);
       void delete_process(NetProcTop*);
@@ -6999,11 +5188,7 @@ class Design {
       NetNet* find_discipline_reference(ivl_discipline_t dis, NetScope*scope);
 
 	// Iterate over the design...
-<<<<<<< Updated upstream
-      void dump(std::ostream&) const;
-=======
       void dump(ostream&) const;
->>>>>>> Stashed changes
       void functor(struct functor_t*);
       void join_islands(void);
       int emit(struct target_t*) const;
@@ -7021,11 +5206,7 @@ class Design {
 
 	// Keep a tree of scopes. The NetScope class handles the wide
 	// tree and per-hop searches for me.
-      std::list<NetScope*>root_scopes_;
-
-	// Keep a map of all the elaborated packages. Note that
-	// packages do not nest.
-      std::map<perm_string,NetScope*>packages_;
+      list<NetScope*>root_scopes_;
 
 	// Keep a map of all the elaborated packages. Note that
 	// packages do not nest.
@@ -7048,17 +5229,10 @@ class Design {
       NetAnalogTop*aprocs_;
 
 	// Map of discipline take to NetNet for the reference node.
-<<<<<<< Updated upstream
-      std::map<perm_string,NetNet*>discipline_references_;
-
-	// Map the design arguments to values.
-      std::map<std::string,const char*> flags_;
-=======
       map<perm_string,NetNet*>discipline_references_;
 
 	// Map the design arguments to values.
       map<string,const char*> flags_;
->>>>>>> Stashed changes
 
       int des_precision_;
       delay_sel_t des_delay_sel_;
@@ -7098,24 +5272,11 @@ extern Link* find_next_output(Link*lnk);
 const NetNet* find_link_signal(const NetObj*net, unsigned pin,
 			       unsigned&bidx);
 
-inline std::ostream& operator << (std::ostream&o, const NetExpr&exp)
+inline ostream& operator << (ostream&o, const NetExpr&exp)
 { exp.dump(o); return o; }
 
-extern std::ostream& operator << (std::ostream&, NetNet::Type);
+extern ostream& operator << (ostream&, NetNet::Type);
 
-/*
- * Manipulator to dump a scope complete path to the output. The
- * manipulator is "scope_path" and works like this:
- *
- *   out << .... << scope_path(sc) << ... ;
- */
-struct __ScopePathManip { const NetScope*scope; };
-inline __ScopePathManip scope_path(const NetScope*scope)
-{ __ScopePathManip tmp; tmp.scope = scope; return tmp; }
-
-<<<<<<< Updated upstream
-extern std::ostream& operator << (std::ostream&o, __ScopePathManip);
-=======
 /*
  * Manipulator to dump a scope complete path to the output. The
  * manipulator is "scope_path" and works like this:
@@ -7127,17 +5288,12 @@ inline __ScopePathManip scope_path(const NetScope*scope)
 { __ScopePathManip tmp; tmp.scope = scope; return tmp; }
 
 extern ostream& operator << (ostream&o, __ScopePathManip);
->>>>>>> Stashed changes
 
 struct __ObjectPathManip { const NetObj*obj; };
 inline __ObjectPathManip scope_path(const NetObj*obj)
 { __ObjectPathManip tmp; tmp.obj = obj; return tmp; }
 
-<<<<<<< Updated upstream
-extern std::ostream& operator << (std::ostream&o, __ObjectPathManip);
-=======
 extern ostream& operator << (ostream&o, __ObjectPathManip);
->>>>>>> Stashed changes
 
 /*
  * If this link has a nexus_ pointer, then it is the last Link in the

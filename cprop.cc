@@ -28,10 +28,6 @@
 # include  "compiler.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-=======
->>>>>>> Stashed changes
 
 /*
  * The cprop function below invokes constant propagation where

@@ -32,11 +32,6 @@
 # include  <iomanip>
 # include  <typeinfo>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 static ostream& operator << (ostream&out, port_mode_t that)
 {
       switch (that) {

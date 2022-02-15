@@ -91,6 +91,9 @@ svector<Node*>& CfgNode::construct_node(int t)
 		case 8:
 			node->type = "ISCONTROL.CASEZ";
 			break;
+		case 9:
+			node->type = "DELAY";
+			break;
 	}
 
 	svector<Node*>* nodes = new svector<Node*>();
@@ -576,6 +579,112 @@ set<string>& CondNode::get_mods()
 	}
       	return *tmp;
 }
+
+DelayNode::DelayNode()
+:CfgNode()
+{
+}
+
+DelayNode::~DelayNode()
+{
+}
+
+DelayNode::DelayNode(int ln)
+:CfgNode(ln)
+{
+
+}
+
+void DelayNode::add_node(CfgNode* node, int type)
+{
+    	if(type == 0)
+    	  root = node;
+    	else
+    	  st = node;
+}
+ 
+CfgNode* DelayNode::get_node(int type)
+{
+    	if(type == 0)
+    	  return root;
+    	else 
+    	  return st;
+}
+
+void DelayNode::add_dsucc(int dsucc)
+{
+	if(st)
+	    	st->add_dsucc(dsucc);
+}
+
+set<string>& DelayNode::get_refs()
+{
+	set<string>* refs = new set<string>;
+	set<string>::iterator pos;
+	if(root){
+		for(pos = root->get_refs().begin(); pos != root->get_refs().end(); ++pos)
+      		    refs->insert(*pos);
+	}
+	if(st){
+		for(pos = st->get_refs().begin(); pos != st->get_refs().end(); ++pos)
+      		    refs->insert(*pos);
+	}
+      	return *refs;
+}
+
+set<string>& DelayNode::get_defs()
+{
+	set<string>* defs = new set<string>;
+	set<string>::iterator pos;
+	if(root){
+		for(pos = root->get_defs().begin(); pos != root->get_defs().end(); ++pos)
+      		    defs->insert(*pos);
+	}
+	if(st){
+		for(pos = st->get_defs().begin(); pos != st->get_defs().end(); ++pos)
+      		    defs->insert(*pos);
+	}
+      	return *defs;
+}
+
+set<string>& DelayNode::get_funcs()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::iterator pos;
+	if(root){
+		for(pos = root->get_funcs().begin(); pos != root->get_funcs().end(); ++pos)
+      		    tmp->insert(*pos);
+	}
+	if(st){
+		for(pos = st->get_funcs().begin(); pos != st->get_funcs().end(); ++pos)
+      		    tmp->insert(*pos);
+	}
+      	return *tmp;
+}
+
+set<string>& DelayNode::get_mods()
+{
+	set<string>* tmp = new set<string>;
+	set<string>::iterator pos;
+	if(root){
+		for(pos = root->get_mods().begin(); pos != root->get_mods().end(); ++pos)
+      		    tmp->insert(*pos);
+	}
+	if(st){
+		for(pos = st->get_mods().begin(); pos != st->get_mods().end(); ++pos)
+      		    tmp->insert(*pos);
+	}
+      	return *tmp;
+}
+
+void DelayNode::dump(ostream&o)
+{
+	    if(root)
+		    root->dump(o);
+	    if(st)
+		    st->dump(o);
+}
+
      
 EventNode::EventNode()
 :CfgNode()
@@ -1000,30 +1109,37 @@ CfgNode* ModuleNode::get_assignnode(int idx)
 	return assigns_[idx];
 }
 
-int ModuleNode::find_node(CfgNode& node, int type)
+int ModuleNode::find_node(int lineno, int type)
 {
 	unsigned idx;
 	switch(type){
 	  case 0:
 	    for(idx = 0; idx < procs_.count(); ++idx)
-	      if(node.get_lineno() == procs_[idx]->get_lineno())
+	      if(lineno == procs_[idx]->get_lineno())
 	        return idx;
 	    return -1;
+		break;
 	  case 1:
 	    for(idx = 0; idx < funcs_.count(); ++idx)
-	      if(node.get_lineno() == funcs_[idx]->get_lineno())
+	      if(lineno == funcs_[idx]->get_lineno())
 	        return idx;
 	    return -1;
+		break;
 	  case 2:
 	    for(idx = 0; idx < tasks_.count(); ++idx)
-	      if(node.get_lineno() == tasks_[idx]->get_lineno())
+	      if(lineno == tasks_[idx]->get_lineno())
 	        return idx;
 	    return -1;
+		break;
 	  case 3:
 	    for(idx = 0; idx < assigns_.count(); ++idx)
-	      if(node.get_lineno() == assigns_[idx]->get_lineno())
+	      if(lineno == assigns_[idx]->get_lineno())
 	        return idx;
 	    return -1;
+		break;
+	  default:
+		  return -1;
+		  break;
 	}
 }
 
@@ -1278,6 +1394,16 @@ svector<Node*>& GenerateNode::construct_node(int)
 	return *nodes;
 }
 
+svector<Node*>& DelayNode::construct_node(int)
+{
+	svector<Node*>* nodes = new svector<Node*>();
+	if(root)
+		nodes = new svector<Node*>(*nodes, root->construct_node(9));
+    if(st)
+		nodes = new svector<Node*>(*nodes, st->construct_node(0));
+	return *nodes;
+}
+
 svector<Node*>& EventNode::construct_node(int)
 {
 	svector<Node*>* nodes = new svector<Node*>();
@@ -1362,6 +1488,15 @@ void CondNode::Ndump(std::ostream&o, int&nNo)
 		if_->Ndump(o, nNo);
 	if(else_)
 		else_->Ndump(o, nNo);
+}
+
+void DelayNode::Ndump(std::ostream&o, int&nNo)
+{
+	o<<"event ";
+	if(root)
+	    root->Ndump(o, nNo);
+    if(st)
+	    st->Ndump(o, nNo);
 }
 
 void EventNode::Ndump(std::ostream&o, int&nNo)
@@ -1457,6 +1592,14 @@ void CondNode::Pdump(std::ostream&o, int&pNo)
 		if_->Pdump(o, pNo);
 	if(else_)
 		else_->Pdump(o, pNo);
+}
+
+void DelayNode::Pdump(std::ostream&o, int&pNo)
+{
+	if(root)
+	    root->Pdump(o, pNo);
+    if(st)
+	    st->Pdump(o, pNo);
 }
 
 void EventNode::Pdump(std::ostream&o, int&pNo)

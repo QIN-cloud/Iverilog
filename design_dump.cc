@@ -36,11 +36,6 @@
 # include  "ivl_assert.h"
 # include  "PExpr.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 static ostream& operator<< (ostream&o, NetBlock::Type t)
 {
       switch (t) {
@@ -1484,6 +1479,7 @@ void NetScope::dump(ostream&o) const
 
 	/* Dump the parameters for this scope. */
       {
+		  o<<"parameters:"<<parameters.size()<<endl;
 	    map<perm_string,param_expr_t>::const_iterator pp;
 	    for (pp = parameters.begin()
 		       ; pp != parameters.end() ;  ++ pp ) {
@@ -1535,6 +1531,7 @@ void NetScope::dump(ostream&o) const
 
 	/* Dump the saved defparam assignments here. */
       {
+		  o<<"defparams:"<<defparams.size()<<endl;
 	    list<pair<pform_name_t,PExpr*> >::const_iterator pp;
 	    for (pp = defparams.begin()
 		       ; pp != defparams.end() ;  ++ pp ) {
@@ -1544,6 +1541,7 @@ void NetScope::dump(ostream&o) const
       }
 
       {
+		  o<<"defparams_later:"<<defparams_later.size()<<endl;
 	    list<pair<list<hname_t>,PExpr*> >::const_iterator pp;
 	    for (pp = defparams_later.begin()
 		       ; pp != defparams_later.end() ;  ++ pp ) {
@@ -1984,6 +1982,8 @@ void NetEUnary::dump(ostream&o) const
 
 void Design::dump(ostream&o) const
 {
+	  cout << "???????" << endl;
+
       o << "DESIGN TIME PRECISION: 10e" << get_precision() << endl;
 
       o << "PACKAGES:" << endl;

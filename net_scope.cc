@@ -25,21 +25,12 @@
 # include  "netclass.h"
 # include  "netenum.h"
 # include  "netvector.h"
-<<<<<<< Updated upstream
-# include  "PExpr.h"
-=======
->>>>>>> Stashed changes
 # include  "PPackage.h"
 # include  <cstring>
 # include  <cstdlib>
 # include  <sstream>
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 class PExpr;
 
 Definitions::Definitions()
@@ -62,11 +53,7 @@ bool Definitions::add_enumeration_name(netenum_t*enum_set, perm_string name)
       netenum_t::iterator enum_val = enum_set->find_name(name);
       assert(enum_val != enum_set->end_name());
 
-<<<<<<< Updated upstream
-      NetEConstEnum*val = new NetEConstEnum(name, enum_set, enum_val->second);
-=======
       NetEConstEnum*val = new NetEConstEnum(this, name, enum_set, enum_val->second);
->>>>>>> Stashed changes
 
       pair<map<perm_string,NetEConstEnum*>::iterator, bool> cur;
       cur = enum_names_.insert(make_pair(name,val));
@@ -132,10 +119,7 @@ NetScope::NetScope(NetScope*up, const hname_t&n, NetScope::TYPE t, NetScope*in_u
   is_interface_(interface), is_unit_(compilation_unit), unit_(in_unit), up_(up)
 {
       imports_ = 0;
-<<<<<<< Updated upstream
-=======
       typedefs_ = 0;
->>>>>>> Stashed changes
       events_ = 0;
       lcounter_ = 0;
       is_auto_ = false;
@@ -260,11 +244,7 @@ NetScope*NetScope::find_import(const Design*des, perm_string name)
 void NetScope::add_typedefs(const map<perm_string,data_type_t*>*typedefs)
 {
       if (!typedefs->empty())
-<<<<<<< Updated upstream
-	    typedefs_ = *typedefs;
-=======
 	    typedefs_ = typedefs;
->>>>>>> Stashed changes
 }
 
 NetScope*NetScope::find_typedef_scope(const Design*des, data_type_t*type)
@@ -273,11 +253,7 @@ NetScope*NetScope::find_typedef_scope(const Design*des, data_type_t*type)
 
       NetScope *cur_scope = this;
       while (cur_scope) {
-<<<<<<< Updated upstream
-	    if (cur_scope->typedefs_.find(type->name) != cur_scope->typedefs_.end())
-=======
 	    if (cur_scope->typedefs_ && cur_scope->typedefs_->find(type->name) != cur_scope->typedefs_->end())
->>>>>>> Stashed changes
 		  return cur_scope;
 	    NetScope*import_scope = cur_scope->find_import(des, type->name);
 	    if (import_scope)
@@ -327,11 +303,7 @@ const netenum_t*NetScope::find_enumeration_for_name(const Design*des, perm_strin
  */
 void NetScope::set_parameter(perm_string key, bool is_annotatable,
 			     PExpr*val, data_type_t*val_type,
-<<<<<<< Updated upstream
-			     bool local_flag, bool overridable,
-=======
 			     bool local_flag,
->>>>>>> Stashed changes
 			     NetScope::range_t*range_list,
 			     const LineInfo&file_line)
 {
@@ -341,10 +313,6 @@ void NetScope::set_parameter(perm_string key, bool is_annotatable,
       ref.val_type = val_type;
       ref.val_scope = this;
       ref.local_flag = local_flag;
-<<<<<<< Updated upstream
-      ref.overridable = overridable;
-=======
->>>>>>> Stashed changes
       ivl_assert(file_line, ref.range == 0);
       ref.range = range_list;
       ref.val = 0;
@@ -391,14 +359,8 @@ bool NetScope::auto_name(const char*prefix, char pad, const char* suffix)
       while (use_prefix.size() <= max_pad_attempts) {
 	      // Try this name...
 	    string tmp = use_prefix + suffix;
-<<<<<<< Updated upstream
-	    perm_string base_name = lex_strings.make(tmp.c_str());
-	    hname_t new_name(base_name, name_.peek_numbers());
-	    if (!up_->child(new_name) && !up_->symbol_exists(base_name)) {
-=======
 	    hname_t new_name(lex_strings.make(tmp.c_str()), name_.peek_numbers());
 	    if (!up_->child(new_name)) {
->>>>>>> Stashed changes
 		    // Ah, this name is unique. Rename myself, and
 		    // change my name in the parent scope.
 		  name_ = new_name;
@@ -417,38 +379,6 @@ bool NetScope::auto_name(const char*prefix, char pad, const char* suffix)
  * Return false if the parameter does not already exist.
  * A parameter is not automatically created.
  */
-<<<<<<< Updated upstream
-void NetScope::replace_parameter(Design *des, perm_string key, PExpr*val, NetScope*scope)
-{
-      if (parameters.find(key) == parameters.end()) {
-	    cerr << val->get_fileline() << ": error: parameter `"
-	         << key << "` not found in `"
-	         << scope_path(this) << "`." << endl;
-	    des->errors++;
-	    return;
-      }
-
-      param_expr_t&ref = parameters[key];
-      if (ref.local_flag) {
-	    cerr << val->get_fileline() << ": error: "
-	         << "Cannot override localparam `" << key << "` in `"
-	         << scope_path(this) << "`." << endl;
-	    des->errors++;
-	    return;
-      }
-      if (!ref.overridable) {
-	    cerr << val->get_fileline() << ": error: "
-		 << "Cannot override parameter `" << key << "` in `"
-		 << scope_path(this) << "`. Parameter cannot be overriden "
-		 << "in the scope it has been declared in."
-		 << endl;
-	    des->errors++;
-	    return;
-      }
-
-      ref.val_expr = val;
-      ref.val_scope = scope;
-=======
 bool NetScope::replace_parameter(perm_string key, PExpr*val, NetScope*scope)
 {
       if (parameters.find(key) == parameters.end())
@@ -461,7 +391,6 @@ bool NetScope::replace_parameter(perm_string key, PExpr*val, NetScope*scope)
       ref.val_expr = val;
       ref.val_scope = scope;
       return true;
->>>>>>> Stashed changes
 }
 
 bool NetScope::make_parameter_unannotatable(perm_string key)
@@ -514,13 +443,22 @@ NetScope::param_ref_t NetScope::find_parameter(perm_string key)
       map<perm_string,param_expr_t>::iterator idx;
 
       idx = parameters.find(key);
-      if (idx != parameters.end()) return idx;
+      return idx;
 
 	// To get here the parameter must already exist, so we should
 	// never get here.
-      assert(0);
+      //assert(0);
 	// But return something to avoid a compiler warning.
-      return idx;
+}
+
+bool NetScope::find_parameter(perm_string key, param_ref_t &expr)
+{
+      expr = find_parameter(key);
+      if(expr == parameters.end())
+      {
+            return false;
+      }
+      return true;
 }
 
 void NetScope::print_type(ostream&stream) const
@@ -881,27 +819,6 @@ const NetScope* NetScope::child_byname(perm_string name) const
 }
 
 
-<<<<<<< Updated upstream
-bool NetScope::symbol_exists(perm_string sym)
-{
-      if (signals_map_.find(sym) != signals_map_.end())
-            return true;
-      if (parameters.find(sym) != parameters.end())
-            return true;
-      if (genvars_.find(sym) != genvars_.end())
-            return true;
-      if (classes_.find(sym) != classes_.end())
-          return true;
-      if (typedefs_.find(sym) != typedefs_.end())
-          return true;
-      if (find_event(sym))
-          return true;
-
-      return false;
-}
-
-=======
->>>>>>> Stashed changes
 perm_string NetScope::local_symbol()
 {
       perm_string sym;
@@ -910,10 +827,6 @@ perm_string NetScope::local_symbol()
 	    res << "_ivl_" << (lcounter_++);
 	    perm_string sym_tmp = lex_strings.make(res.str());
 
-<<<<<<< Updated upstream
-	      // If the name already exists, try again.
-	    if (symbol_exists(sym_tmp))
-=======
 	      // If the name already exists as a signal, try again.
 	    if (signals_map_.find(sym_tmp) != signals_map_.end())
 		  continue;
@@ -924,7 +837,6 @@ perm_string NetScope::local_symbol()
 		  continue;
 	      // If the name already exists as a class, try again.
 	    if (classes_.find(sym_tmp) != classes_.end())
->>>>>>> Stashed changes
 		  continue;
 
 	      // No collisions, this is the one.
@@ -961,4 +873,57 @@ void NetScope::add_tie_lo(Design*des)
 
 	    connect(sig->pin(0), tie_lo_->pin(0));
       }
+}
+
+Var* NetScope::build_var(perm_string& s, int index)
+{
+	Var* tmp = new Var;
+      NetNet* net = find_signal(s);
+      assert(net);
+      if(net->packed_dims().size() <= 1)
+      {
+            Var* tmp = new Var;
+            tmp->name = s;
+            switch (net->port_type())
+            {
+            case PortType::NOT_A_PORT : tmp->ptype = "NOT_A_PORT";
+                  break;
+            case PortType::PIMPLICIT : tmp->ptype = "PIMPLICIT";
+                  break;
+            case PortType::PINOUT : tmp->ptype = "PINOUT";
+                  break;
+            case PortType::PINPUT : tmp->ptype = "PINPUT";
+                  break;
+            case PortType::POUTPUT : tmp->ptype = "POUTPUT";
+                  break;
+            case PortType::PREF : tmp->ptype = "PREF";
+                  break;
+            default:
+                  break;
+            }
+            tmp->time = 0;
+            tmp->space = 0;
+            tmp->varidx = index;
+            if(net->packed_dims().size())
+            {
+                  tmp->lsb = net->packed_dims().front().get_lsb();
+                  tmp->msb = net->packed_dims().front().get_msb();
+                  tmp->width = net->vector_width();
+            }
+            else
+            {
+                  tmp->lsb = 0;
+                  tmp->msb = 0;
+                  tmp->width = 1;
+            }
+            return tmp;
+      }
+      
+      else
+      {
+            cerr << get_fileline() << " Memory is unsupported now!" << endl;
+            exit(0);
+      }
+
+      return 0;
 }

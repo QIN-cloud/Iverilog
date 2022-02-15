@@ -37,10 +37,6 @@
 # include  "netvector.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-=======
->>>>>>> Stashed changes
 
 ostream& operator<< (ostream&o, NetNet::Type t)
 {

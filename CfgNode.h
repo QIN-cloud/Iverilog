@@ -130,6 +130,7 @@ class CaseNode : public CfgNode {
     CaseNode(int ln);
     ~CaseNode();
 
+
     void add_node(CfgNode* node);
     svector<CfgNode*>& get_nodes();
     CfgNode* get_node(int idx);
@@ -182,12 +183,38 @@ class CondNode : public CfgNode{
     CfgNode* else_;
 };
 
+class DelayNode : public CfgNode{
+  public:
+    DelayNode();
+    DelayNode(int ln);
+    ~DelayNode();
+    void add_node(CfgNode* node, int type);    
+    CfgNode* get_node(int type);
+
+    virtual set<string>& get_funcs();
+	  virtual set<string>& get_mods();
+	  virtual void add_dsucc(int dsucc);    
+    virtual set<string>& get_refs();    
+    virtual set<string>& get_defs();    
+    virtual void dump(std::ostream&o);
+
+    virtual void Ndump(std::ostream&o, int&nNo);
+    virtual void Pdump(std::ostream&o, int&pNo);
+
+    virtual svector<Node*>& construct_node(int);
+
+  	virtual void set_caseitem(list<PExpr*> caseitem){root->set_caseitem(caseitem);};
+
+  private:
+    CfgNode* root;
+    CfgNode* st;
+};
+
 class EventNode : public CfgNode{
   public:
     EventNode();
     EventNode(int ln);
     ~EventNode();
-
     void add_node(CfgNode* node, int type);    
     CfgNode* get_node(int type);
 
@@ -215,7 +242,6 @@ class LoopNode : public CfgNode{
     LoopNode();
     LoopNode(int ln);
     ~LoopNode();
-
     void add_node(CfgNode* node, int type);    
     CfgNode* get_node(int type);
 
@@ -243,7 +269,6 @@ class ProcessNode : public CfgNode {
     ProcessNode();
     ProcessNode(int ln);
     ~ProcessNode();
-    
     void add_node(CfgNode* node, int type);
     CfgNode* get_node(int type);
     
@@ -259,17 +284,17 @@ class ProcessNode : public CfgNode {
 
     virtual svector<Node*>& construct_node(int);
 
-	unsigned get_id(){return id_;};
-	void set_id(unsigned id){id_ = id;};
+	  unsigned get_id(){return id_;};
+	  void set_id(unsigned id){id_ = id;};
 
-	void set_sync(bool sync){sync_ = sync;}
-	bool get_sync(){return sync_;}
+  	void set_sync(bool sync){sync_ = sync;}
+	  bool get_sync(){return sync_;}
     
   private:
     CfgNode* root_;
     CfgNode* st_;
-	unsigned id_;
-	bool sync_;
+	  unsigned id_;
+	  bool sync_;
 };
 
 class GenerateNode : public CfgNode {
@@ -277,7 +302,6 @@ class GenerateNode : public CfgNode {
     GenerateNode():CfgNode(){}
     GenerateNode(int ln):CfgNode(ln){}
     ~GenerateNode(){}
-    
     void add_node(CfgNode* node, int type);
     void add_node(ProcessNode* node, int type);
     void add_node(GenerateNode* node);
@@ -309,7 +333,6 @@ class ModuleNode : public CfgNode {
     ModuleNode();
     ModuleNode(int ln);
     ~ModuleNode();
-    
     void add_node(ProcessNode* node, int type); //type indicate to add node to which vector, 0 for proc, 1 for func and 2 for assign
     void add_node(CfgNode* node);
     void add_node(GenerateNode* node);
@@ -321,7 +344,7 @@ class ModuleNode : public CfgNode {
     unsigned nodes_count(int type);
     CfgNode* get_procnode(int idx, int type);
     CfgNode* get_assignnode(int idx);
-    int find_node(CfgNode& node, int type);
+    int find_node(int lineno, int type);
 
     Cfg* build_cfg(ProcessNode*);
 	Module_Cfgs* build_cfgs();

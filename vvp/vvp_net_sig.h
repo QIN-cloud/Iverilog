@@ -1,11 +1,7 @@
 #ifndef IVL_vvp_net_sig_H
 #define IVL_vvp_net_sig_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2004-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2004-2020 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -37,17 +33,11 @@
 #ifdef HAVE_IOSFWD
 # include  <iosfwd>
 #else
-<<<<<<< Updated upstream
-# include  <iostream>
-#endif
-
-=======
 class ostream;
 #endif
 
 using namespace std;
 
->>>>>>> Stashed changes
 /* vvp_fun_signal
  * This node is the place holder in a vvp network for signals,
  * including nets of various sort. The output from a signal follows

@@ -35,8 +35,6 @@
 using namespace std;
 
 /*
-<<<<<<< Updated upstream
-=======
  * Some types have a list of ranges that need to be elaborated. This
  * function elaborates the ranges referenced by "dims" into the vector
  * "ranges".
@@ -75,7 +73,6 @@ static void elaborate_array_ranges(Design*des, NetScope*scope,
 }
 
 /*
->>>>>>> Stashed changes
  * Elaborations of types may vary depending on the scope that it is
  * done in, so keep a per-scope cache of the results.
  */
@@ -167,12 +164,7 @@ ivl_type_s* enum_type_t::elaborate_type_raw(Design*, NetScope*scope) const
 ivl_type_s* vector_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       vector<netrange_t> packed;
-<<<<<<< Updated upstream
-      if (pdims.get())
-	    evaluate_ranges(des, scope, this, packed, *pdims);
-=======
       elaborate_array_ranges(des, scope, packed, pdims.get());
->>>>>>> Stashed changes
 
       netvector_t*tmp = new netvector_t(packed, base_type);
       tmp->set_signed(signed_flag);
@@ -200,26 +192,8 @@ ivl_type_s* string_type_t::elaborate_type_raw(Design*, NetScope*) const
 ivl_type_s* parray_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       vector<netrange_t>packed;
-<<<<<<< Updated upstream
-      if (dims.get())
-	    evaluate_ranges(des, scope, this, packed, *dims);
-
-      if (base_type->figure_packed_base_type() == IVL_VT_NO_TYPE) {
-		cerr << this->get_fileline() << " error: Packed array ";
-		if (!name.nil())
-		      cerr << "`" << name << "` ";
-		cerr << "base-type `";
-		if (base_type->name.nil())
-		      cerr << *base_type;
-		else
-		      cerr << base_type->name;
-		cerr << "` is not packed." << endl;
-		des->errors++;
-      }
-=======
       elaborate_array_ranges(des, scope, packed, dims.get());
 
->>>>>>> Stashed changes
       ivl_type_t etype = base_type->elaborate_type(des, scope);
 
       return new netparray_t(packed, etype);
@@ -229,14 +203,7 @@ netstruct_t* struct_type_t::elaborate_type_raw(Design*des, NetScope*scope) const
 {
       netstruct_t*res = new netstruct_t;
 
-<<<<<<< Updated upstream
-      res->set_line(*this);
-
       res->packed(packed_flag);
-      res->set_signed(signed_flag);
-=======
-      res->packed(packed_flag);
->>>>>>> Stashed changes
 
       if (union_flag)
 	    res->union_flag(true);

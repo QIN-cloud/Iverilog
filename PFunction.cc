@@ -23,11 +23,6 @@
 # include <cassert>
 # include "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 PFunction::PFunction(perm_string name, LexicalScope*parent, bool is_auto__)
 : PTaskFunc(name, parent), statement_(0)
 {

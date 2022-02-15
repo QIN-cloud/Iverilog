@@ -1,11 +1,7 @@
 #ifndef IVL_pform_types_H
 #define IVL_pform_types_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2007-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2007-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -86,20 +82,12 @@ typedef std::pair<PExpr*,PExpr*> pform_range_t;
  * declarations.
  */
 struct pform_port_t {
-<<<<<<< Updated upstream
-      pform_port_t(perm_string n, std::list<pform_range_t>*ud, PExpr*e)
-=======
       pform_port_t(perm_string n, list<pform_range_t>*ud, PExpr*e)
->>>>>>> Stashed changes
 	: name(n), udims(ud), expr(e) { }
       ~pform_port_t() { }
 
       perm_string name;
-<<<<<<< Updated upstream
-      std::list<pform_range_t>*udims;
-=======
       list<pform_range_t>*udims;
->>>>>>> Stashed changes
       PExpr*expr;
 };
 
@@ -194,33 +182,19 @@ struct enum_type_t : public data_type_t {
 	// Return the elaborated version of the type.
       virtual ivl_type_s*elaborate_type_raw(Design*des, NetScope*scope) const;
 
-<<<<<<< Updated upstream
-      ivl_variable_type_t figure_packed_base_type() const;
-
-=======
->>>>>>> Stashed changes
       SymbolType symbol_type() const;
 
       ivl_variable_type_t base_type;
       bool signed_flag;
       bool integer_flag; // True if "integer" was used
-<<<<<<< Updated upstream
-      std::unique_ptr< std::list<pform_range_t> > range;
-      std::unique_ptr< std::list<named_pexpr_t> > names;
-=======
       std::unique_ptr< list<pform_range_t> > range;
       std::unique_ptr< list<named_pexpr_t> > names;
       LineInfo li;
->>>>>>> Stashed changes
 };
 
 struct struct_member_t : public LineInfo {
       std::unique_ptr<data_type_t> type;
-<<<<<<< Updated upstream
-      std::unique_ptr< std::list<decl_assignment_t*> > names;
-=======
       std::unique_ptr< list<decl_assignment_t*> > names;
->>>>>>> Stashed changes
       void pform_dump(std::ostream&out, unsigned indent) const;
 };
 
@@ -231,12 +205,7 @@ struct struct_type_t : public data_type_t {
 
       bool packed_flag;
       bool union_flag;
-<<<<<<< Updated upstream
-      bool signed_flag;
-      std::unique_ptr< std::list<struct_member_t*> > members;
-=======
       std::unique_ptr< list<struct_member_t*> > members;
->>>>>>> Stashed changes
 };
 
 struct atom2_type_t : public data_type_t {
@@ -248,11 +217,6 @@ struct atom2_type_t : public data_type_t {
       virtual std::ostream& debug_dump(std::ostream&out) const;
 
       ivl_type_s* elaborate_type_raw(Design*des, NetScope*scope) const;
-<<<<<<< Updated upstream
-
-      ivl_variable_type_t figure_packed_base_type() const;
-=======
->>>>>>> Stashed changes
 };
 
 extern atom2_type_t size_type;
@@ -290,11 +254,7 @@ struct vector_type_t : public data_type_t {
       bool reg_flag; // True if "reg" was used
       bool integer_flag; // True if "integer" was used
       bool implicit_flag; // True if this type is implicitly logic/reg
-<<<<<<< Updated upstream
-      std::unique_ptr< std::list<pform_range_t> > pdims;
-=======
       std::unique_ptr< list<pform_range_t> > pdims;
->>>>>>> Stashed changes
 };
 
 struct array_base_t : public data_type_t {
@@ -303,11 +263,7 @@ struct array_base_t : public data_type_t {
       : base_type(btype), dims(pd) { }
 
       data_type_t*base_type;
-<<<<<<< Updated upstream
-      std::unique_ptr< std::list<pform_range_t> > dims;
-=======
       std::unique_ptr< list<pform_range_t> > dims;
->>>>>>> Stashed changes
 };
 
 /*

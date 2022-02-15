@@ -52,10 +52,6 @@
 # include  "compiler.h"
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-=======
->>>>>>> Stashed changes
 
 // Implemented in elab_scope.cc
 extern void set_scope_timescale(Design*des, NetScope*scope, PScope*pscope);
@@ -66,47 +62,6 @@ void PGate::elaborate(Design*, NetScope*) const
 	    typeid(*this).name() << endl;
 }
 
-<<<<<<< Updated upstream
-unsigned PGate::calculate_array_size_(Design*des, NetScope*scope,
-				      long&high, long&low) const
-{
-      if (ranges_ && ranges_->size() > 1) {
-	    if (gn_system_verilog()) {
-		  cerr << get_fileline() << ": sorry: Multi-dimensional"
-		       << " arrays of instances are not yet supported." << endl;
-	    } else {
-		  cerr << get_fileline() << ": error: Multi-dimensional"
-		       << " arrays of instances require SystemVerilog." << endl;
-	    }
-	    des->errors += 1;
-	    return 0;
-      }
-
-      unsigned size = 1;
-      high = 0;
-      low = 0;
-
-      if (ranges_) {
-	    if (!evaluate_range(des, scope, this, ranges_->front(), high, low))
-		return 0;
-
-	    if (high > low)
-		  size = high - low + 1;
-	    else
-		  size = low - high + 1;
-
-	    if (debug_elaborate) {
-		  cerr << get_fileline() << ": debug: PGate: Make array "
-		       << "[" << high << ":" << low << "]" << " of "
-		       << size << " instances for " << get_name() << endl;
-	    }
-      }
-
-      return size;
-}
-
-=======
->>>>>>> Stashed changes
 /*
  * Elaborate the continuous assign. (This is *not* the procedural
  * assign.) Elaborate the lvalue and rvalue, and do the assignment.
@@ -278,8 +233,6 @@ void PGAssign::elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval
       assign_unpacked_with_bufz(des, scope, this, lval, rval_net);
 }
 
-<<<<<<< Updated upstream
-=======
 unsigned PGBuiltin::calculate_array_count_(Design*des, NetScope*scope,
 					   long&high, long&low) const
 {
@@ -335,7 +288,6 @@ unsigned PGBuiltin::calculate_array_count_(Design*des, NetScope*scope,
       return count;
 }
 
->>>>>>> Stashed changes
 void PGBuiltin::calculate_gate_and_lval_count_(unsigned&gate_count,
                                                unsigned&lval_count) const
 {
@@ -771,11 +723,7 @@ void PGBuiltin::elaborate(Design*des, NetScope*scope) const
 	   the count is 1, and high==low==0. */
 
       long low=0, high=0;
-<<<<<<< Updated upstream
-      unsigned array_count = calculate_array_size_(des, scope, high, low);
-=======
       unsigned array_count = calculate_array_count_(des, scope, high, low);
->>>>>>> Stashed changes
       if (array_count == 0) return;
 
       unsigned gate_count = 0, lval_count = 0;
@@ -906,17 +854,10 @@ void PGBuiltin::elaborate(Design*des, NetScope*scope) const
                     // to be the exact width required (this will be checked
                     // later). But if this is a single instance, consensus
                     // is that we just take the LSB of the port expression.
-<<<<<<< Updated upstream
-		  NetExpr*tmp = elab_and_eval(des, scope, ex, is_array() ? -1 : 1);
-                  if (tmp == 0)
-                        continue;
-                  if (!is_array() && tmp->expr_width() != 1)
-=======
 		  NetExpr*tmp = elab_and_eval(des, scope, ex, msb_ ? -1 : 1);
                   if (tmp == 0)
                         continue;
                   if (msb_ == 0 && tmp->expr_width() != 1)
->>>>>>> Stashed changes
                         tmp = new NetESelect(tmp, make_const_0(1), 1,
                                              IVL_SEL_IDX_UP);
 		  sig = tmp->synthesize(des, scope, tmp);
@@ -1260,11 +1201,7 @@ void PGModule::elaborate_mod_(Design*des, Module*rmod, NetScope*scope) const
 		    // Handle wildcard named port
 		  if (pins_[idx].name[0] == '*') {
 			for (unsigned j = 0 ; j < nexp ; j += 1) {
-<<<<<<< Updated upstream
-			      if (rmod->ports[j] && !pins[j] && !pins_is_explicitly_not_connected[j]) {
-=======
 			      if ((!pins[j]) && (!pins_is_explicitly_not_connected[j])) {
->>>>>>> Stashed changes
 				    pins_fromwc[j] = true;
 				    NetNet*       net = 0;
 				    const NetExpr*par = 0;
@@ -1383,33 +1320,12 @@ void PGModule::elaborate_mod_(Design*des, Module*rmod, NetScope*scope) const
 
       for (unsigned idx = 0 ;  idx < pins.size() ;  idx += 1) {
 	    bool unconnected_port = false;
-<<<<<<< Updated upstream
-	    bool using_default = false;
-
-	    perm_string port_name = rmod->get_port_name(idx);
-
-	      // If the port is unconnected, substitute the default
-	      // value. The parser ensures that a default value only
-	      // exists for input ports.
-	    if (pins[idx] == 0) {
-		  PExpr*default_value = rmod->get_port_default_value(idx);
-		  if (default_value) {
-			pins[idx] = default_value;
-			using_default = true;
-		  }
-	    }
-
-	      // Skip unconnected module ports. This happens when a
-	      // null parameter is passed in and there is no default
-	      // value.
-=======
 
 	    perm_string port_name = rmod->get_port_name(idx);
 
 	      // Skip unconnected module ports. This happens when a
 	      // null parameter is passed in.
 
->>>>>>> Stashed changes
 	    if (pins[idx] == 0) {
 
 		  if (pins_fromwc[idx]) {
@@ -1589,18 +1505,10 @@ void PGModule::elaborate_mod_(Design*des, Module*rmod, NetScope*scope) const
 		       port is actually empty on the inside. We assume
 		       in that case that the port is input. */
 
-<<<<<<< Updated upstream
-		  NetExpr*tmp_expr = elab_and_eval(des, scope, pins[idx], -1, using_default);
-		  if (tmp_expr == 0) {
-			cerr << pins[idx]->get_fileline()
-			     << ": error: Failed to elaborate port "
-			     << (using_default ? "default value." : "expression.")
-=======
 		  NetExpr*tmp_expr = elab_and_eval(des, scope, pins[idx], -1);
 		  if (tmp_expr == 0) {
 			cerr << pins[idx]->get_fileline()
 			     << ": error: Failed to elaborate port expression."
->>>>>>> Stashed changes
 			     << endl;
 			des->errors += 1;
 			continue;
@@ -2067,8 +1975,6 @@ void PGModule::elaborate_mod_(Design*des, Module*rmod, NetScope*scope) const
 
 }
 
-<<<<<<< Updated upstream
-=======
 unsigned PGModule::calculate_instance_count_(Design*des, NetScope*scope,
                                              long&high, long&low,
                                              perm_string name) const
@@ -2125,7 +2031,6 @@ unsigned PGModule::calculate_instance_count_(Design*des, NetScope*scope,
       return count;
 }
 
->>>>>>> Stashed changes
 /*
  * From a UDP definition in the source, make a NetUDP
  * object. Elaborate the pin expressions as netlists, then connect
@@ -2157,12 +2062,8 @@ void PGModule::elaborate_udp_(Design*des, PUdp*udp, NetScope*scope) const
       }
 
       long low = 0, high = 0;
-<<<<<<< Updated upstream
-      unsigned inst_count = calculate_array_size_(des, scope, high, low);
-=======
       unsigned inst_count = calculate_instance_count_(des, scope, high, low,
                                                       my_name);
->>>>>>> Stashed changes
       if (inst_count == 0) return;
 
       if (inst_count != 1) {
@@ -4292,61 +4193,6 @@ static bool check_parm_is_const(NetExpr*param)
       return false;
 }
 
-<<<<<<< Updated upstream
-static bool get_value_as_long(const NetExpr*expr, long&val)
-{
-      switch(expr->expr_type()) {
-	  case IVL_VT_REAL: {
-	    const NetECReal*c = dynamic_cast<const NetECReal*> (expr);
-	    assert(c);
-	    verireal tmp = c->value();
-	    val = tmp.as_long();
-	    break;
-	  }
-
-	  case IVL_VT_BOOL:
-	  case IVL_VT_LOGIC: {
-	    const NetEConst*c = dynamic_cast<const NetEConst*>(expr);
-	    assert(c);
-	    verinum tmp = c->value();
-	    if (tmp.is_string()) return false;
-	    val = tmp.as_long();
-	    break;
-	  }
-
-	  default:
-	    return false;
-      }
-
-      return true;
-}
-
-static bool get_value_as_string(const NetExpr*expr, string&str)
-{
-      switch(expr->expr_type()) {
-	  case IVL_VT_REAL:
-	    return false;
-	    break;
-
-	  case IVL_VT_BOOL:
-	  case IVL_VT_LOGIC: {
-	    const NetEConst*c = dynamic_cast<const NetEConst*>(expr);
-	    assert(c);
-	    verinum tmp = c->value();
-	    if (!tmp.is_string()) return false;
-	    str = tmp.as_string();
-	    break;
-	  }
-
-	  default:
-	    return false;
-      }
-
-      return true;
-}
-
-=======
->>>>>>> Stashed changes
 /* Elaborate an elaboration task. */
 bool PCallTask::elaborate_elab(Design*des, NetScope*scope) const
 {
@@ -4389,11 +4235,7 @@ bool PCallTask::elaborate_elab(Design*des, NetScope*scope) const
                   eparms[idx] = elab_sys_task_arg(des, scope, name, idx, ex);
 		  if (!check_parm_is_const(eparms[idx])) {
 			cerr << get_fileline() << ": error: Elaboration task "
-<<<<<<< Updated upstream
-			     << name << "() parameter [" << idx+1 << "] '"
-=======
 			     << name << " parameter [" << idx+1 << "] '"
->>>>>>> Stashed changes
 			     << *eparms[idx] << "' is not constant." << endl;
 			des->errors += 1;
 			const_parms = false;
@@ -4404,66 +4246,23 @@ bool PCallTask::elaborate_elab(Design*des, NetScope*scope) const
       }
       if (!const_parms) return true;
 
-<<<<<<< Updated upstream
-	// Drop the $ and convert to upper case for the severity string
-=======
 	/* Drop the $ and convert to upper case for the severity string */
->>>>>>> Stashed changes
       string sstr = name.str()+1;
       transform(sstr.begin(), sstr.end(), sstr.begin(), ::toupper);
 
       cerr << sstr << ": " << get_fileline() << ":";
       if (parm_count != 0) {
-<<<<<<< Updated upstream
-	    unsigned param_start = 0;
-	      // Drop the finish number, but check it is actually valid!
-	    if (name == "$fatal") {
-		  long finish_num = 1;
-		  if (!get_value_as_long(eparms[0],finish_num)) {
-			cerr << endl;
-			cerr << get_fileline() << ": error: Elaboration task "
-			        "$fatal() finish number argument must be "
-			        "numeric." << endl;;
-			des->errors += 1;
-			cerr << string(sstr.size()+1, ' ');
-		  } else if ((finish_num < 0) || (finish_num > 2)) {
-			cerr << endl;
-			cerr << get_fileline() << ": error: Elaboration task "
-			        "$fatal() finish number argument must be in "
-			        "the range [0-2], given '" << finish_num
-			     << "'." << endl;;
-			des->errors += 1;
-			cerr << string(sstr.size()+1, ' ');
-		  }
-		  param_start += 1;
-	    }
-
-	      // FIXME: For now just handle a single string value.
-	    string str;
-	    if ((parm_count == param_start + 1) && (get_value_as_string(eparms[param_start], str))) {
-		  cerr << " " << str;
-	    } else if (param_start < parm_count) {
-		  cerr << endl;
-		  cerr << get_fileline() << ": sorry: Elaboration tasks "
-		          "currently only support a single string argument.";
-		  des->errors += 1;
-	    }
-=======
 	    cerr << " ";
->>>>>>> Stashed changes
 /*
 	    cerr << *eparms[0];
 	    for (unsigned idx = 1; idx < parm_count; idx += 1) {
 	    cerr << ", " << *eparms[idx];
 	    }
 */
-<<<<<<< Updated upstream
-=======
 // FIXME: Need to actually handle this.
 	    cerr << "sorry: Elaboration tasks with arguments "
 	            "are not currently supported.";
 	    des->errors += 1;
->>>>>>> Stashed changes
       }
       cerr << endl;
 
@@ -6058,8 +5857,8 @@ bool PProcess::elaborate(Design*des, NetScope*scope) const
 			   attrib_list[adx].val);
 
       delete[]attrib_list;
-
       top->set_line(*this);
+	  top->set_id(id_);
       des->add_process(top);
 
 	/* Detect the special case that this is a combinational
@@ -6508,11 +6307,7 @@ void netclass_t::elaborate(Design*des, PClass*pclass)
 
 bool PGenerate::elaborate(Design*des, NetScope*container) const
 {
-<<<<<<< Updated upstream
-      if (directly_nested)
-=======
       if (direct_nested_)
->>>>>>> Stashed changes
 	    return elaborate_direct_(des, container);
 
       bool flag = true;
@@ -6537,11 +6332,7 @@ bool PGenerate::elaborate(Design*des, NetScope*container) const
 	    for (generate_it_t cur = generate_schemes.begin()
 		       ; cur != generate_schemes.end() ; ++ cur ) {
 		  PGenerate*item = *cur;
-<<<<<<< Updated upstream
-		  if (item->directly_nested || !item->scope_list_.empty()) {
-=======
 		  if (item->direct_nested_ || !item->scope_list_.empty()) {
->>>>>>> Stashed changes
 			flag &= item->elaborate(des, container);
 		  }
 	    }
@@ -6603,11 +6394,7 @@ bool PGenerate::elaborate_direct_(Design*des, NetScope*container) const
 		  cerr << get_fileline() << ": PGenerate::elaborate_direct_: "
 		       << "item->scope_name=" << item->scope_name
 		       << ", item->scheme_type=" << item->scheme_type
-<<<<<<< Updated upstream
-		       << ", item->directly_nested=" << item->directly_nested
-=======
 		       << ", item->direct_nested_=" << item->direct_nested_
->>>>>>> Stashed changes
 		       << ", item->scope_list_.size()=" << item->scope_list_.size()
 		       << "." << endl;
 	    }
@@ -6620,20 +6407,12 @@ bool PGenerate::elaborate_direct_(Design*des, NetScope*container) const
 		  for (generate_it_t icur = item->generate_schemes.begin()
 			     ; icur != item->generate_schemes.end() ; ++ icur ) {
 			PGenerate*case_item = *icur;
-<<<<<<< Updated upstream
-			if (case_item->directly_nested || !case_item->scope_list_.empty()) {
-=======
 			if (case_item->direct_nested_ || !case_item->scope_list_.empty()) {
->>>>>>> Stashed changes
 			      flag &= case_item->elaborate(des, container);
 			}
 		  }
 	    } else {
-<<<<<<< Updated upstream
-		  if (item->directly_nested || !item->scope_list_.empty()) {
-=======
 		  if (item->direct_nested_ || !item->scope_list_.empty()) {
->>>>>>> Stashed changes
 			  // Found the item, and it is direct nested.
 			flag &= item->elaborate(des, container);
 		  }
@@ -7159,10 +6938,7 @@ static void check_timescales()
 		    // We don't need a timescale if the compilation unit
 		    // contains no items outside a design element.
 		  if (pp->parameters.empty() &&
-<<<<<<< Updated upstream
-=======
 		      pp->localparams.empty() &&
->>>>>>> Stashed changes
 		      pp->wires.empty() &&
 		      pp->tasks.empty() &&
 		      pp->funcs.empty() &&
@@ -7222,10 +6998,7 @@ static void check_timescales()
 		  continue;
 
 	    if (pp->parameters.empty() &&
-<<<<<<< Updated upstream
-=======
 		pp->localparams.empty() &&
->>>>>>> Stashed changes
 		pp->wires.empty() &&
 		pp->tasks.empty() &&
 		pp->funcs.empty() &&

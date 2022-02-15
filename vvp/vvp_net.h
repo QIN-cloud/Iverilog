@@ -34,21 +34,14 @@
 #ifdef HAVE_IOSFWD
 # include  <iosfwd>
 #else
-<<<<<<< Updated upstream
-# include  <iostream>
-=======
 class ostream;
->>>>>>> Stashed changes
 #endif
 
 # include  "ivl_alloc.h"
 
-<<<<<<< Updated upstream
-=======
 using namespace std;
 
 
->>>>>>> Stashed changes
 /* Data types */
 class  vvp_scalar_t;
 
@@ -193,11 +186,7 @@ inline vvp_bit4_t operator & (vvp_bit4_t a, vvp_bit4_t b)
 
 
 extern vvp_bit4_t operator ^ (vvp_bit4_t a, vvp_bit4_t b);
-<<<<<<< Updated upstream
-extern std::ostream& operator<< (std::ostream&o, vvp_bit4_t a);
-=======
 extern ostream& operator<< (ostream&o, vvp_bit4_t a);
->>>>>>> Stashed changes
 
   /* Return >0, ==0 or <0 if the from-to transition represents a
      posedge, no edge, or negedge. */
@@ -540,11 +529,7 @@ inline vvp_vector4_t operator ~ (const vvp_vector4_t&that)
       return res;
 }
 
-<<<<<<< Updated upstream
-extern std::ostream& operator << (std::ostream&, const vvp_vector4_t&);
-=======
 extern ostream& operator << (ostream&, const vvp_vector4_t&);
->>>>>>> Stashed changes
 
 extern vvp_bit4_t compare_gtge(const vvp_vector4_t&a,
 			       const vvp_vector4_t&b,
@@ -754,11 +739,7 @@ extern vvp_vector4_t c4string_to_vector4(const char*str);
 extern bool crstring_test(const char*str);
 extern double crstring_to_double(const char*str);
 
-<<<<<<< Updated upstream
-extern std::ostream& operator<< (std::ostream&, const vvp_vector2_t&);
-=======
 extern ostream& operator<< (ostream&, const vvp_vector2_t&);
->>>>>>> Stashed changes
 
 inline vvp_vector2_t::vvp_vector2_t(const vvp_vector2_t&that)
 {
@@ -911,11 +892,7 @@ inline vvp_scalar_t resolve(vvp_scalar_t a, vvp_scalar_t b)
       return fully_featured_resolv_(a,b);
 }
 
-<<<<<<< Updated upstream
-extern std::ostream& operator<< (std::ostream&, vvp_scalar_t);
-=======
 extern ostream& operator<< (ostream&, vvp_scalar_t);
->>>>>>> Stashed changes
 
 /*
  * This class is a way to carry vectors of strength modeled
@@ -999,11 +976,7 @@ extern bool c8string_test(const char*str);
 extern vvp_vector8_t c8string_to_vector8(const char*str);
 
   /* Print a vector8 value to a stream. */
-<<<<<<< Updated upstream
-extern std::ostream& operator<< (std::ostream&, const vvp_vector8_t&);
-=======
 extern ostream& operator<< (ostream&, const vvp_vector8_t&);
->>>>>>> Stashed changes
 
 inline vvp_vector8_t::vvp_vector8_t(unsigned size__)
 : size_(size__)
@@ -1102,11 +1075,7 @@ template <class T> class vvp_sub_pointer_t {
 };
 
 typedef vvp_sub_pointer_t<vvp_net_t> vvp_net_ptr_t;
-<<<<<<< Updated upstream
-template <class T> std::ostream& operator << (std::ostream&out, vvp_sub_pointer_t<T> val)
-=======
 template <class T> ostream& operator << (ostream&out, vvp_sub_pointer_t<T> val)
->>>>>>> Stashed changes
 { out << val.ptr() << "[" << val.port() << "]"; return out; }
 
 /*

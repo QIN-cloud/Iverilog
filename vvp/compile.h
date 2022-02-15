@@ -1,11 +1,7 @@
 #ifndef IVL_compile_H
 #define IVL_compile_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2001-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2001-2020 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -31,20 +27,13 @@
 # include  "sv_vpi_user.h"
 # include  "vvp_net.h"
 
-<<<<<<< Updated upstream
-=======
 using namespace std;
 
->>>>>>> Stashed changes
 /*
  * The file names are kept in this vector. Entry 0 is "N/A" and 1 is
  * for interactive commands.
  */
-<<<<<<< Updated upstream
-extern std::vector<const char*> file_names;
-=======
 extern vector<const char*> file_names;
->>>>>>> Stashed changes
 
 /*
  * The functions described here are the compile time support
@@ -65,11 +54,7 @@ extern bool verbose_flag;
  * If this file opened, then write debug information to this
  * file. This is used for debugging the VVP runtime itself.
  */
-<<<<<<< Updated upstream
-extern std::ofstream debug_file;
-=======
 extern ofstream debug_file;
->>>>>>> Stashed changes
 
 /*
  *  Connect a list of symbols to a contiguous set of ipoints.

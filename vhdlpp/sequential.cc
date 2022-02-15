@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2011 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,11 +21,6 @@
 # include  "expression.h"
 # include  <cassert>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 template<typename T>
 inline static void visit_stmt_list(std::list<T*>& stmts, SeqStmtVisitor& func)
 {

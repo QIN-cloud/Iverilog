@@ -9,13 +9,7 @@ url="http://iverilog.icarus.com/"
 license=('GPLv2+')
 depends=("${MINGW_PACKAGE_PREFIX}-readline"
          "${MINGW_PACKAGE_PREFIX}-gcc-libs")
-<<<<<<< Updated upstream
-makedepends=("autoconf"
-             "man-db"
-             "${MINGW_PACKAGE_PREFIX}-gcc"
-=======
 makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
->>>>>>> Stashed changes
              "${MINGW_PACKAGE_PREFIX}-ghostscript")
 
 source=()

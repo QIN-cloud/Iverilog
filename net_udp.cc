@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2000-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2000-2010 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  * Copyright (c) 2001 Stephan Boettcher <stephan@nevis.columbia.edu>
  *
  *    This source code is free software; you can redistribute it
@@ -26,11 +22,6 @@
 # include  "compiler.h"
 # include  "netlist.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 NetUDP::NetUDP(NetScope*s, perm_string n, unsigned pins, PUdp *u)
   : NetNode(s, n, pins), udp(u)
 {

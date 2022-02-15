@@ -25,11 +25,8 @@
 # include  <string>
 # include  <vector>
 # include  <list>
-<<<<<<< Updated upstream
-=======
 # include  "Statement.h"
 # include  "PDesign.h"
->>>>>>> Stashed changes
 class Design;
 class NetExpr;
 class NetNet;
@@ -50,14 +47,11 @@ class PTaskFunc : public PScope, public PNamedItem {
 
       void set_ports(std::vector<pform_tf_port_t>*p);
 
-<<<<<<< Updated upstream
-=======
       unsigned port_count(); //2021.2.4
       PWire* get_port(unsigned idx);
       ProcessNode* build_node(PDesign& de);
 	virtual set<string>& get_funcs() {};
 
->>>>>>> Stashed changes
       void set_this(class_type_t*use_type, PWire*this_wire);
 
 	// If this task is a method of a class, this returns a pointer
@@ -110,12 +104,6 @@ class PTask  : public PTaskFunc {
 
       bool is_auto() const { return is_auto_; };
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned) const;
-
-      SymbolType symbol_type() const;
-
-=======
       void dump(ostream&, unsigned) const;
 
       SymbolType symbol_type() const;
@@ -125,7 +113,6 @@ class PTask  : public PTaskFunc {
       ProcessNode* build_node(PDesign& de);
       virtual set<string>& get_funcs();
 
->>>>>>> Stashed changes
     private:
       Statement*statement_;
       bool is_auto_;
@@ -157,21 +144,12 @@ class PFunction : public PTaskFunc {
 	// definition. If the statement is a simple statement, make a
 	// block to contain the statements.
       void push_statement_front(Statement*stmt);
-<<<<<<< Updated upstream
 
 	// This is only used if this function is a constructor. In
 	// that case, this method looks for a PChainConstructor in the
 	// statement and extracts it if found.
       PChainConstructor*extract_chain_constructor();
 
-=======
-
-	// This is only used if this function is a constructor. In
-	// that case, this method looks for a PChainConstructor in the
-	// statement and extracts it if found.
-      PChainConstructor*extract_chain_constructor();
-
->>>>>>> Stashed changes
       void elaborate_scope(Design*des, NetScope*scope) const;
 
 	/* elaborate the ports and return value. */
@@ -182,12 +160,6 @@ class PFunction : public PTaskFunc {
 
       bool is_auto() const { return is_auto_; };
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned) const;
-
-      SymbolType symbol_type() const;
-
-=======
       void dump(ostream&, unsigned) const;
 
       SymbolType symbol_type() const;
@@ -197,7 +169,6 @@ class PFunction : public PTaskFunc {
       ProcessNode* build_node(PDesign& de);
       virtual set<string>& get_funcs();
       
->>>>>>> Stashed changes
     private:
       data_type_t* return_type_;
       Statement *statement_;
@@ -210,42 +181,24 @@ class PLet : public PTaskFunc {
       typedef struct let_port {
 	    data_type_t*type_;
 	    perm_string name_;
-<<<<<<< Updated upstream
-	    std::list<pform_range_t>*range_;
-	    PExpr*def_;
-
-	    void dump(std::ostream&, unsigned) const;
-=======
 	    list<pform_range_t>*range_;
 	    PExpr*def_;
 
 	    void dump(ostream&, unsigned) const;
->>>>>>> Stashed changes
       } let_port_t;
 
 // FIXME: Should the port list be a vector. Check once implemented completely
       explicit PLet(perm_string name, LexicalScope*parent,
-<<<<<<< Updated upstream
-                    std::list<let_port_t*>*ports, PExpr*expr);
-=======
                     list<let_port_t*>*ports, PExpr*expr);
->>>>>>> Stashed changes
       ~PLet();
 
       void elaborate_sig(Design*des, NetScope*scope) const { (void)des; (void)scope; }
       void elaborate(Design*des, NetScope*scope) const { (void)des; (void)scope; }
 
-<<<<<<< Updated upstream
-      void dump(std::ostream&, unsigned) const;
-
-    private:
-      std::list<let_port_t*>*ports_;
-=======
       void dump(ostream&, unsigned) const;
 
     private:
       list<let_port_t*>*ports_;
->>>>>>> Stashed changes
       PExpr*expr_;
 };
 

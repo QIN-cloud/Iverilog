@@ -36,11 +36,6 @@
 # include  <climits>
 # include  "ivl_assert.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * These methods generate a NetAssign_ object for the l-value of the
  * assignment. This is common code for the = and <= statements.
@@ -262,27 +257,12 @@ NetAssign_* PEIdent::elaborate_lval(Design*des,
 	    use_sel = name_tail.index.back().sel;
 
 	// Special case: The l-value is an entire memory, or array
-<<<<<<< Updated upstream
-	// slice. Detect the situation by noting if the index count
-	// is less than the array dimensions (unpacked).
-      if (reg->unpacked_dimensions() > name_tail.index.size()) {
-	    if (gn_system_verilog()) {
-		  cerr << get_fileline() << ": sorry: Assignment to an entire"
-		        " array or to an array slice is not yet supported."
-		       << endl;
-	    } else {
-		  cerr << get_fileline() << ": error: Assignment to an entire"
-		        " array or to an array slice requires SystemVerilog."
-		       << endl;
-	    }
-=======
 	// slice. This is, in fact, an error in l-values. Detect the
 	// situation by noting if the index count is less than the
 	// array dimensions (unpacked).
       if (reg->unpacked_dimensions() > name_tail.index.size()) {
 	    cerr << get_fileline() << ": error: Cannot assign to array "
 		 << path_ << ". Did you forget a word index?" << endl;
->>>>>>> Stashed changes
 	    des->errors += 1;
 	    return 0;
       }
@@ -883,29 +863,12 @@ bool PEIdent::elaborate_lval_net_part_(Design*des,
 	      // If there are fewer indices then there are packed
 	      // dimensions, then this is a range of slices. Calculate
 	      // it into a big slice.
-<<<<<<< Updated upstream
-	    bool lrc, mrc;
-	    unsigned long tmp_lwid, tmp_mwid;
-	    lrc = reg->sb_to_slice(prefix_indices, lsb, loff, tmp_lwid);
-	    mrc = reg->sb_to_slice(prefix_indices, msb, moff, tmp_mwid);
-	    if (!mrc || !lrc) {
-		  cerr << get_fileline() << ": error: ";
-		  cerr << "Part-select [" << msb << ":" << lsb;
-		  cerr << "] exceeds the declared bounds for ";
-		  cerr << reg->name();
-		  if (reg->unpacked_dimensions() > 0) cerr << "[]";
-		  cerr << "." << endl;
-		  des->errors += 1;
-		  return 0;
-	    }
-=======
 	    bool lrc;
 	    unsigned long tmp_lwid, tmp_mwid;
 	    lrc = reg->sb_to_slice(prefix_indices,lsb, loff, tmp_lwid);
 	    ivl_assert(*this, lrc);
 	    lrc = reg->sb_to_slice(prefix_indices,msb, moff, tmp_mwid);
 	    ivl_assert(*this, lrc);
->>>>>>> Stashed changes
 
 	    if (loff < moff) {
 		  moff = moff + tmp_mwid - 1;
@@ -985,60 +948,6 @@ bool PEIdent::elaborate_lval_net_idx_(Design*des,
 	      // we will handle it in the code generator.
 	    if (base_c->value().is_defined()) {
 		  long lsv = base_c->value().as_long();
-<<<<<<< Updated upstream
-		  long rel_base = 0;
-		    // Get the signal range.
-		  const vector<netrange_t>&packed = reg->packed_dims();
-		  if (prefix_indices.size()+1 < reg->packed_dims().size()) {
-			  // Here we are selecting one or more sub-arrays.
-			  // Make this work by finding the indexed sub-arrays and
-			  // creating a generated slice that spans the whole range.
-			long loff, moff;
-			unsigned long lwid, mwid;
-			bool lrc, mrc;
-			mrc = reg->sb_to_slice(prefix_indices, lsv, moff, mwid);
-			if (use_sel == index_component_t::SEL_IDX_UP)
-			      lrc = reg->sb_to_slice(prefix_indices, lsv+wid-1, loff, lwid);
-			else
-			      lrc = reg->sb_to_slice(prefix_indices, lsv-wid+1, loff, lwid);
-			if (!mrc || !lrc) {
-			      cerr << get_fileline() << ": error: ";
-			      cerr << "Part-select [" << lsv;
-			      if (index_tail.sel == index_component_t::SEL_IDX_UP) {
-				    cerr << "+:";
-			      } else {
-				    cerr << "-:";
-			      }
-			      cerr << wid << "] exceeds the declared bounds for ";
-			      cerr << reg->name();
-			      if (reg->unpacked_dimensions() > 0) cerr << "[]";
-			      cerr << "." << endl;
-			      des->errors += 1;
-			      return 0;
-			}
-			ivl_assert(*this, lwid == mwid);
-
-			if (moff > loff) {
-			      rel_base = loff;
-			      wid = moff + mwid - loff;
-			} else {
-			      rel_base = moff;
-			      wid = loff + lwid - moff;
-			}
-		  } else {
-			long offset = 0;
-			  // We want the last range, which is where we work.
-			const netrange_t&rng = packed.back();
-			if (((rng.get_msb() < rng.get_lsb()) &&
-			     use_sel == index_component_t::SEL_IDX_UP) ||
-			    ((rng.get_msb() > rng.get_lsb()) &&
-			     use_sel == index_component_t::SEL_IDX_DO)) {
-			      offset = -wid + 1;
-			}
-			rel_base = reg->sb_to_idx(prefix_indices,lsv) + offset;
-		  }
-		  delete base;
-=======
 		  long offset = 0;
 		    // Get the signal range.
 		  const vector<netrange_t>&packed = reg->packed_dims();
@@ -1054,7 +963,6 @@ bool PEIdent::elaborate_lval_net_idx_(Design*des,
 		  }
 		  delete base;
 		  long rel_base = reg->sb_to_idx(prefix_indices,lsv) + offset;
->>>>>>> Stashed changes
 		    /* If we cover the entire lvalue just skip the select. */
 		  if (rel_base == 0 && wid == reg->vector_width()) return true;
 		  base = new NetEConst(verinum(rel_base));

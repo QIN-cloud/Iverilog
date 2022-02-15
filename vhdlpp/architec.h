@@ -53,13 +53,8 @@ class Architecture : public Scope, public LineInfo {
 	    virtual ~Statement() =0;
 
 	    virtual int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-	    virtual int emit(std::ostream&out, Entity*ent, Architecture*arc);
-	    virtual void dump(std::ostream&out, int indent = 0) const;
-=======
 	    virtual int emit(ostream&out, Entity*ent, Architecture*arc);
 	    virtual void dump(ostream&out, int indent = 0) const;
->>>>>>> Stashed changes
       };
 
     public:
@@ -105,17 +100,10 @@ class Architecture : public Scope, public LineInfo {
 	// of the specified entity. This method is used by the
 	// elaborate code to display generated code to the specified
 	// output.
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity);
-
-	// The dump method writes a debug display to the given output.
-      void dump(std::ostream&out, perm_string of_entity, int indent = 0) const;
-=======
       int emit(ostream&out, Entity*entity);
 
 	// The dump method writes a debug display to the given output.
       void dump(ostream&out, perm_string of_entity, int indent = 0) const;
->>>>>>> Stashed changes
 
     private:
       perm_string name_;
@@ -155,13 +143,8 @@ class GenerateStatement : public Architecture::Statement {
 
     protected:
       int elaborate_statements(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      int emit_statements(std::ostream&out, Entity*ent, Architecture*arc);
-      void dump_statements(std::ostream&out, int indent) const;
-=======
       int emit_statements(ostream&out, Entity*ent, Architecture*arc);
       void dump_statements(ostream&out, int indent) const;
->>>>>>> Stashed changes
 
     private:
       perm_string name_;
@@ -176,13 +159,8 @@ class ForGenerate : public GenerateStatement {
       ~ForGenerate();
 
       int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, Architecture*arc);
-      void dump(std::ostream&out, int ident =0) const;
-=======
       int emit(ostream&out, Entity*entity, Architecture*arc);
       void dump(ostream&out, int ident =0) const;
->>>>>>> Stashed changes
 
     private:
       perm_string genvar_;
@@ -198,11 +176,7 @@ class IfGenerate : public GenerateStatement {
       ~IfGenerate();
 
       int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, Architecture*arc);
-=======
       int emit(ostream&out, Entity*entity, Architecture*arc);
->>>>>>> Stashed changes
 
     private:
       Expression*cond_;
@@ -220,13 +194,8 @@ class SignalAssignment  : public Architecture::Statement {
       ~SignalAssignment();
 
       virtual int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      virtual int emit(std::ostream&out, Entity*entity, Architecture*arc);
-      virtual void dump(std::ostream&out, int ident =0) const;
-=======
       virtual int emit(ostream&out, Entity*entity, Architecture*arc);
       virtual void dump(ostream&out, int ident =0) const;
->>>>>>> Stashed changes
 
     private:
       ExpName*lval_;
@@ -240,13 +209,8 @@ class CondSignalAssignment : public Architecture::Statement {
       ~CondSignalAssignment();
 
       int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, Architecture*arc);
-      void dump(std::ostream&out, int ident =0) const;
-=======
       int emit(ostream&out, Entity*entity, Architecture*arc);
       void dump(ostream&out, int ident =0) const;
->>>>>>> Stashed changes
 
     private:
       ExpName*lval_;
@@ -266,13 +230,8 @@ class ComponentInstantiation  : public Architecture::Statement {
       ~ComponentInstantiation();
 
       virtual int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      virtual int emit(std::ostream&out, Entity*entity, Architecture*arc);
-      virtual void dump(std::ostream&out, int indent =0) const;
-=======
       virtual int emit(ostream&out, Entity*entity, Architecture*arc);
       virtual void dump(ostream&out, int indent =0) const;
->>>>>>> Stashed changes
 
 	// Returns the expression that initializes a generic (or NULL if not found).
       Expression*find_generic_map(perm_string by_name) const;
@@ -297,22 +256,13 @@ class StatementList : public Architecture::Statement {
           return elaborate(ent, static_cast<ScopeBase*>(arc));
       }
 
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*ent, Architecture*arc) {
-=======
       int emit(ostream&out, Entity*ent, Architecture*arc) {
->>>>>>> Stashed changes
           return emit(out, ent, static_cast<ScopeBase*>(arc));
       }
 
       virtual int elaborate(Entity*ent, ScopeBase*scope);
-<<<<<<< Updated upstream
-      virtual int emit(std::ostream&out, Entity*entity, ScopeBase*scope);
-      virtual void dump(std::ostream&out, int indent =0) const;
-=======
       virtual int emit(ostream&out, Entity*entity, ScopeBase*scope);
       virtual void dump(ostream&out, int indent =0) const;
->>>>>>> Stashed changes
 
       std::list<SequentialStmt*>& stmt_list() { return statements_; }
 
@@ -327,13 +277,8 @@ class InitialStatement : public StatementList {
       explicit InitialStatement(std::list<SequentialStmt*>*statement_list)
           : StatementList(statement_list) {}
 
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, ScopeBase*scope);
-      void dump(std::ostream&out, int indent =0) const;
-=======
       int emit(ostream&out, Entity*entity, ScopeBase*scope);
       void dump(ostream&out, int indent =0) const;
->>>>>>> Stashed changes
 };
 
 // There is no direct VHDL counterpart to SV 'final' statement,
@@ -343,13 +288,8 @@ class FinalStatement : public StatementList {
       explicit FinalStatement(std::list<SequentialStmt*>*statement_list)
           : StatementList(statement_list) {}
 
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, ScopeBase*scope);
-      void dump(std::ostream&out, int indent =0) const;
-=======
       int emit(ostream&out, Entity*entity, ScopeBase*scope);
       void dump(ostream&out, int indent =0) const;
->>>>>>> Stashed changes
 };
 
 class ProcessStatement : public StatementList, public Scope {
@@ -362,13 +302,8 @@ class ProcessStatement : public StatementList, public Scope {
       ~ProcessStatement();
 
       int elaborate(Entity*ent, Architecture*arc);
-<<<<<<< Updated upstream
-      int emit(std::ostream&out, Entity*entity, Architecture*arc);
-      void dump(std::ostream&out, int indent =0) const;
-=======
       int emit(ostream&out, Entity*entity, Architecture*arc);
       void dump(ostream&out, int indent =0) const;
->>>>>>> Stashed changes
 
     private:
       perm_string iname_;

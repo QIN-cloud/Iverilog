@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2011-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2011-2013 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -32,11 +28,6 @@
 # include  <typeinfo>
 # include  <ivl_assert.h>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 int Scope::emit_signals(ostream&out, Entity*entity, ScopeBase*scope)
 {
     int errors = 0;

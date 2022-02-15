@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 1999-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -26,11 +22,6 @@
 # include  "PExpr.h"
 # include  <cassert>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 PWire::PWire(perm_string n,
 	     NetNet::Type t,
 	     NetNet::PortType pt,
@@ -141,17 +132,7 @@ ivl_variable_type_t PWire::get_data_type() const
 
 void PWire::set_signed(bool flag)
 {
-<<<<<<< Updated upstream
-	// For a non-ANSI style port declaration where the data type is
-	// specified in a corresponding variable declaration, the signed
-	// attribute may be attached to either the port declaration or to
-	// the variable declaration (IEEE 1364-2005 section 12.3.3). The
-	// signal is signed if either the port or the variable is signed.
-	// Handle that here.
-      signed_ = signed_ || flag;
-=======
       signed_ = flag;
->>>>>>> Stashed changes
 }
 
 bool PWire::get_signed() const
@@ -283,11 +264,7 @@ void PWire::set_unpacked_idx(const list<pform_range_t>&ranges)
 
 void PWire::set_data_type(data_type_t*type)
 {
-<<<<<<< Updated upstream
-      assert(set_data_type_ == 0 || set_data_type_ == type);
-=======
       assert(set_data_type_ == 0);
->>>>>>> Stashed changes
       set_data_type_ = type;
 
       if (vector_type_t*tmp = dynamic_cast<vector_type_t*>(type)) {

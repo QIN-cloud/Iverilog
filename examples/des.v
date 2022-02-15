@@ -22,12 +22,13 @@ reg [1:64] pt, key;
 wire [1:64] ct;
 integer i;
 
-des des(pt, key, ct, clk);
+des des1(pt, key, ct, clk);
 
 initial
 begin
 $dumpfile("des.vcd");
 $dumpvars(0, top);
+
 
 key = 64'h0000000000000000;
 pt  = 64'h0000000000000000;
@@ -172,7 +173,7 @@ wire	[1:32] r0x,r1x,r2x,r3x,r4x,r5x,r6x,r7x,r8x,r9x,r10x,r11x,r12x,r13x,r14x,r15
 
 keysched keysched(key, k1x,k2x,k3x,k4x,k5x,k6x,k7x,k8x,k9x,k10x,k11x,k12x,k13x,k14x,k15x,k16x);
 ip ip(pt, l0x, r0x);
-roundfunc round1(clk, l0x, r0x, l1x, r1x, k1x);
+roundfunc des1(clk, l0x, r0x, l1x, r1x, k1x);
 roundfunc round2(clk, l1x, r1x, l2x, r2x, k2x);
 roundfunc round3(clk, l2x, r2x, l3x, r3x, k3x);
 roundfunc round4(clk, l3x, r3x, l4x, r4x, k4x);

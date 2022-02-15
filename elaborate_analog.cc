@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2008-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2008-2012 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -30,11 +26,6 @@
 
 # include  <typeinfo>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 NetProc* AContrib::elaborate(Design*des, NetScope*scope) const
 {
       NetExpr*lval = elab_and_eval(des, scope, lval_, -1);

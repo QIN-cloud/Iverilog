@@ -1,11 +1,7 @@
 /*
  *  VHDL code generation for scopes.
  *
-<<<<<<< Updated upstream
- *  Copyright (C) 2008-2021  Nick Gasson (nick@nickg.me.uk)
-=======
  *  Copyright (C) 2008-2014  Nick Gasson (nick@nickg.me.uk)
->>>>>>> Stashed changes
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,11 +27,6 @@
 #include <cassert>
 #include <cstring>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * This represents the portion of a nexus that is visible within
  * a VHDL scope. If that nexus portion does not contain a signal,

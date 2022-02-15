@@ -24,11 +24,6 @@
 # include  "subprogram.h"
 # include  "std_types.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 int SequentialStmt::elaborate(Entity*, ScopeBase*)
 {
       return 0;

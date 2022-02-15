@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2008-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2008 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -27,11 +23,6 @@
 # include  "parse_misc.h"
 # include  "AStatement.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 AContrib* pform_contribution_statement(const struct vlltype&loc,
 					 PExpr*lval, PExpr*rval)
 {

@@ -37,12 +37,6 @@
 # include  <cstdio>
 # include  <cassert>
 # include  <cstdlib>
-<<<<<<< Updated upstream
-
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * Callback handles are created when the VPI function registers a
  * callback. The handle is stored by the run time, and it triggered

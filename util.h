@@ -1,11 +1,7 @@
 #ifndef IVL_util_H
 #define IVL_util_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2000-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2000-2014 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -47,11 +43,7 @@ struct attrib_list_t {
       verinum val;
 };
 
-<<<<<<< Updated upstream
-extern attrib_list_t* evaluate_attributes(const std::map<perm_string,PExpr*>&att,
-=======
 extern attrib_list_t* evaluate_attributes(const map<perm_string,PExpr*>&att,
->>>>>>> Stashed changes
 					  unsigned&natt,
 					  Design*des, NetScope*scope);
 

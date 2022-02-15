@@ -31,11 +31,7 @@ class named_expr_t {
 
       perm_string name() const { return name_; }
       Expression* expr() const { return expr_; }
-<<<<<<< Updated upstream
-      void dump(std::ostream&out, int indent) const;
-=======
       void dump(ostream&out, int indent) const;
->>>>>>> Stashed changes
     private:
       perm_string name_;
       Expression* expr_;

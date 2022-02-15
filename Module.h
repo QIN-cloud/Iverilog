@@ -1,11 +1,7 @@
 #ifndef IVL_Module_H
 #define IVL_Module_H
-/*
-<<<<<<< Updated upstream
- * Copyright (c) 1998-2021 Stephen Williams (steve@icarus.com)
-=======
+/* 
  * Copyright (c) 1998-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -28,10 +24,7 @@
 # include  <map>
 # include  <vector>
 # include  <utility>
-<<<<<<< Updated upstream
-=======
 # include  "svector.h"
->>>>>>> Stashed changes
 # include  "StringHeap.h"
 # include  "HName.h"
 # include  "named.h"
@@ -39,11 +32,13 @@
 # include  "PNamedItem.h"
 # include  "netlist.h"
 # include  "pform_types.h"
-<<<<<<< Updated upstream
-=======
 # include  "slice.h"
 # include  "PDesign.h"
->>>>>>> Stashed changes
+# include  "cfg.h"
+# include  "vcdvar.h"
+# include  "testpath.h"
+# include  <fstream>
+
 class PExpr;
 class PEIdent;
 class PGate;
@@ -54,27 +49,37 @@ class PTask;
 class PFunction;
 class PWire;
 class PProcess;
+class PDesign;
 class Design;
 class NetScope;
-<<<<<<< Updated upstream
-=======
-class ModuleNode;
 class PData;
-class dd_var;
+class VcdVar;
+struct cond_expr;
 
-struct cond_time_expr;
+typedef map<string, VcdVar*> vcd_vars;
 
-typedef struct vcd_var{
-	string name_;
-	bool little_endia;
-	verinum pre_val_;
-	verinum cur_val_;
-}vcd_var;
+/* A struct stores the paths of a Cfg node. */
+struct PathNode{
+public:
+      PathNode(Cfg_Node* node) : node_(node){};
+      ~PathNode();
+      Cfg_Node* node_;
+      vector<string> paths_;
+};
 
-typedef map<string, vcd_var> vcd_vars;
->>>>>>> Stashed changes
+/* This scope represents a instantiation module by this module type.*/
+class VcdScope{
+public:
+      VcdScope(Module* module):module_(module){};
+      ~VcdScope();
+      void dump(ostream& o) const;
+      Module* module_;                    //Module type.
+      string name_;                       //Instatntiated name.
+      vcd_vars vars;                      //Variriables in this vcd scope.
+};
 
-/*
+
+/* 
  * A module is a named container and scope. A module holds a bunch of
  * semantic quantities such as wires and gates. The module is
  * therefore the handle for grasping the described circuit.
@@ -83,248 +88,188 @@ typedef map<string, vcd_var> vcd_vars;
  * much in common with modules, so the Module class is used to represent
  * these containers as well.
  */
-
 class Module : public PScopeExtra, public PNamedItem {
 
 	/* The module ports are in general a vector of port_t
 	   objects. Each port has a name and an ordered list of
 	   wires. The name is the means that the outside uses to
 	   access the port, the wires are the internal connections to
-<<<<<<< Updated upstream
-	   the port. In SystemVerilog, input ports may also have a
-	   default value. */
-    public:
-      struct port_t {
-	    perm_string name;
-	    std::vector<PEIdent*> expr;
-	    PExpr*default_value;
-=======
 	   the port. */
-    public:
-      struct port_t {
-	    perm_string name;
-	    vector<PEIdent*> expr;
->>>>>>> Stashed changes
-      };
+      public:
+            struct port_t {
+                  perm_string name;
+                  vector<PEIdent*> expr;
+            };
 
-    public:
-	/* The name passed here is the module name, not the instance
-	   name. This name must be a permallocated string. */
-      explicit Module(LexicalScope*parent, perm_string name);
-      ~Module();
+      public:
+            /* The name passed here is the module name, not the instance
+            name. This name must be a permallocated string. */
+            explicit Module(LexicalScope*parent, perm_string name);
+            ~Module();
 
-	/* Initially false. This is set to true if the module has been
-	   declared as a library module. This makes the module
-	   ineligible for being chosen as an implicit root. It has no
-	   other effect. */
-      bool library_flag;
+            /* Initially false. This is set to true if the module has been
+            declared as a library module. This makes the module
+            ineligible for being chosen as an implicit root. It has no
+            other effect. */
+            bool library_flag;
 
-      bool is_cell;
+            bool is_cell;
 
-	/* This is true if the module represents a program block
-	   instead of a module/cell. Program blocks have content
-	   restrictions and slightly modify scheduling semantics. */
-      bool program_block;
+            /* This is true if the module represents a program block
+            instead of a module/cell. Program blocks have content
+            restrictions and slightly modify scheduling semantics. */
+            bool program_block;
 
-	/* This is true if the module represents a interface
-	   instead of a module/cell. Interfaces have different
-	   content restrictions and some extra allowed items. */
-      bool is_interface;
+            /* This is true if the module represents a interface
+            instead of a module/cell. Interfaces have different
+            content restrictions and some extra allowed items. */
+            bool is_interface;
 
-      enum UCDriveType { UCD_NONE, UCD_PULL0, UCD_PULL1 };
-      UCDriveType uc_drive;
+            enum UCDriveType { UCD_NONE, UCD_PULL0, UCD_PULL1 };
+            UCDriveType uc_drive;
 
-	/* specparams are simpler than other parameters, in that they
-	   can have a range, but not an explicit type. The restrictions
-	   are enforced by the parser. */
-<<<<<<< Updated upstream
-      std::map<perm_string,param_expr_t*>specparams;
-=======
-      map<perm_string,param_expr_t*>specparams;
->>>>>>> Stashed changes
+            /* specparams are simpler than other parameters, in that they
+            can have a range, but not an explicit type. The restrictions
+            are enforced by the parser. */
+            map<perm_string,param_expr_t*>specparams;
 
-	/* The module also has defparam assignments which don't create
-	   new parameters within the module, but may be used to set
-	   values within this module (when instantiated) or in other
-	   instantiated modules. */
-<<<<<<< Updated upstream
-      typedef std::pair<pform_name_t,PExpr*> named_expr_t;
-      std::list<named_expr_t>defparms;
-      static std::list<named_expr_t>user_defparms;
-=======
-      typedef pair<pform_name_t,PExpr*> named_expr_t;
-      list<named_expr_t>defparms;
-      static list<named_expr_t>user_defparms;
->>>>>>> Stashed changes
+            /* The module also has defparam assignments which don't create
+            new parameters within the module, but may be used to set
+            values within this module (when instantiated) or in other
+            instantiated modules. */
+            typedef pair<pform_name_t,PExpr*> named_expr_t;
+            list<named_expr_t>defparms;
+            static list<named_expr_t>user_defparms;
 
-        /* Parameters may be overridden at instantiation time;
-           the overrides do not contain explicit parameter names,
-           but rather refer to parameters in the order they
-           appear in the instantiated module.  Therefore a
-           list of names in module-order is needed to pass from
-           a parameter-index to its name. */
-<<<<<<< Updated upstream
-      std::list<perm_string> param_names;
+            /* Parameters may be overridden at instantiation time;
+            the overrides do not contain explicit parameter names,
+            but rather refer to parameters in the order they
+            appear in the instantiated module.  Therefore a
+            list of names in module-order is needed to pass from
+            a parameter-index to its name. */
+            list<perm_string> param_names;
 
-	/* This is an array of port descriptors, which is in turn a
-	   named array of PEident pointers. */
-      std::vector<port_t*> ports;
+            /* This is an array of port descriptors, which is in turn a
+            named array of PEident pointers. */
+            vector<port_t*> ports;
 
-      std::map<perm_string,PExpr*> attributes;
+            map<perm_string,PExpr*> attributes;
 
-	/* The module has a list of generate schemes that appear in
-	   the module definition. These are used at elaboration time. */
-      std::list<PGenerate*> generate_schemes;
-=======
-      list<perm_string> param_names;
+            /* The module has a list of generate schemes that appear in
+            the module definition. These are used at elaboration time. */
+            list<PGenerate*> generate_schemes;
 
-	/* This is an array of port descriptors, which is in turn a
-	   named array of PEident pointers. */
-      vector<port_t*> ports;
+            /* Nested modules are placed here, and are not elaborated
+            unless they are instantiated, implicitly or explicitly. */
+            std::map<perm_string,Module*> nested_modules;
 
-      map<perm_string,PExpr*> attributes;
+            /* An interface can contain one or more named modport lists.
+            The parser will ensure these don't appear in modules or
+            program blocks. */
+            map<perm_string,PModport*> modports;
 
-	/* The module has a list of generate schemes that appear in
-	   the module definition. These are used at elaboration time. */
-      list<PGenerate*> generate_schemes;
->>>>>>> Stashed changes
+            list<PSpecPath*> specify_paths;
 
-	/* Nested modules are placed here, and are not elaborated
-	   unless they are instantiated, implicitly or explicitly. */
-      std::map<perm_string,Module*> nested_modules;
+            /* The mod_name() is the name of the module type.*/
+            perm_string mod_name() const { return pscope_name(); }
 
-	/* An interface can contain one or more named modport lists.
-           The parser will ensure these don't appear in modules or
-           program blocks. */
-<<<<<<< Updated upstream
-      std::map<perm_string,PModport*> modports;
+            void add_gate(PGate*gate);
 
-      std::list<PSpecPath*> specify_paths;
-=======
-      map<perm_string,PModport*> modports;
+            unsigned port_count() const;
+            const vector<PEIdent*>& get_port(unsigned idx) const;
+            unsigned find_port(const char*name) const;
 
-      list<PSpecPath*> specify_paths;
->>>>>>> Stashed changes
+            /* Return port name ("" for undeclared port)*/
+            perm_string get_port_name(unsigned idx) const;
 
-	// The mod_name() is the name of the module type.
-      perm_string mod_name() const { return pscope_name(); }
+            PGate* get_gate(perm_string name);
+            PTask* get_task(const string&name);
+            PTask* get_task(perm_string name);
+            PWire* get_wire(perm_string name);
 
-      void add_gate(PGate*gate);
+            const list<PGate*>& get_gates() const;
 
-      unsigned port_count() const;
-<<<<<<< Updated upstream
-      const std::vector<PEIdent*>& get_port(unsigned idx) const;
-=======
-      const vector<PEIdent*>& get_port(unsigned idx) const;
->>>>>>> Stashed changes
-      unsigned find_port(const char*name) const;
+            const map<perm_string, PWire*> get_wires() const;
 
-      // Return port name ("" for undeclared port)
-      perm_string get_port_name(unsigned idx) const;
+            void dump(ostream&out) const;
 
-<<<<<<< Updated upstream
-      PExpr* get_port_default_value(unsigned idx) const;
+            bool elaborate(Design*, NetScope*scope) const;
 
-      PGate* get_gate(perm_string name);
+            typedef map<perm_string,PExpr*> replace_t;
 
-      const std::list<PGate*>& get_gates() const;
+            bool elaborate_scope(Design*, NetScope*scope, const replace_t&rep);
 
-      void dump(std::ostream&out) const;
-      bool elaborate(Design*, NetScope*scope) const;
+            bool elaborate_sig(Design*, NetScope*scope) const;
 
-      typedef std::map<perm_string,PExpr*> replace_t;
-=======
-      PGate* get_gate(perm_string name);
-      PTask* get_task(const string&name);
-      PTask* get_task(perm_string name);
+            SymbolType symbol_type() const;
 
-      const list<PGate*>& get_gates() const;
+      public:
+            ModuleNode* build_node(PDesign& de);
 
-      void dump(ostream&out) const;
-      bool elaborate(Design*, NetScope*scope) const;
+            /* Build cfgs for processes in this module. */
+            void build_cfgs();           
 
-      typedef map<perm_string,PExpr*> replace_t;
->>>>>>> Stashed changes
-      bool elaborate_scope(Design*, NetScope*scope, const replace_t&rep);
+            /* Search the variables in condition expressions and record the process id. */
+            void build_var_cfgs();
 
-      bool elaborate_sig(Design*, NetScope*scope) const;
+            /* Build variable table*/
+            void build_vartable(Design*);
 
-      SymbolType symbol_type() const;
-<<<<<<< Updated upstream
+            /* Build cond expression table. */
+            void build_cetable();
 
-      bool can_be_toplevel() const;
+            /* Generate paths for every process. */
+            void build_paths();
 
-    private:
-      void dump_specparams_(std::ostream&out, unsigned indent) const;
-      std::list<PGate*> gates_;
-=======
-      //2021.2.24
-      PWire* get_wire(perm_string name) const;
-      const map<perm_string,PWire*>& get_wires() const;
-      void dump_slice(std::ostream&out, slicer* s) const;
-      ModuleNode* build_node(PDesign& de);
-      set<string>& get_funcs();
-      set<string>& get_mods();
-      void set_modulenode(ModuleNode* mn){mn_ = mn;};
-      ModuleNode* get_modulenode(){return mn_;};
-      
-      void set_cfg(Module_Cfgs* cfg){cfg_ = cfg;}
-      Module_Cfgs* get_cfg(){return cfg_;};
-      void build_cfgs();
-      ostream& dump_cfg(ostream&);
-      
-      void build_cetable();
-      list<cond_expr*>& get_cetable(){return cetab_;};
-      ostream& dump_cetable(ostream& o);
-      
-      void build_ddmodel();
-      list<dd_var*>& get_ddmodel(){return ddmodel_;}
-      ostream& dump_ddmodel(ostream& o);
-      
-      void build_exprtable();
-      list<assign_expr*>& get_exprtable(){return aetab_;};
-      ostream& dump_exprtable(ostream& o);
-      
-      void test(ostream& o);
-      
-      void coverage(Design*, const char* vcd_file);
+            /* Using DFS to generate paths for start node of a cfg.*/
+            PathNode* gen_path(Cfg_Node* node, svector<Cfg_Node*>* root, unsigned index);
 
-      void adjust_assigntype();
+            /* Write random paths acorrding to seeds.*/
+            void random_path(ostream& o, string seeds) const;
 
-      void find_all_path(const char*);
+            /* Dump the cfgnodes for every cfg. */
+            void dump_cfg(ostream& o) const; 
 
-    private:
-      void dump_specparams_(ostream&out, unsigned indent) const;
-      list<PGate*> gates_;
-      //2021.2.24
-      void vcd_parse_def_ignore( FILE* vcd );
-      void vcd_parse_def_var( FILE* vcd );
-      void vcd_parse_def_scope( FILE* vcd );
-      void vcd_parse_def( FILE* vcd );
-      //void vcd_parse_sim( Design* des, FILE* vcd );
-      void vcd_parse_sim_ignore( FILE* vcd );
-      void vcd_parse_sim_vector( FILE* vcd, char* value );
-      void set_symbol_char( char* sym, char value );
-      //void sim_timestep(Design* des);
-      //void dump_vcd_vars();
-      //int eval_cond_expr(Design* des, Cfg_Node* node);
+            /* Dump the condit variable and process id,then dump the vcd scopes instantiated of this module. */
+            void dump_vars(ostream& o) const;
 
-      ModuleNode* mn_;
-      Module_Cfgs* cfg_;
-      list<cond_expr*> cetab_;
-      list<assign_expr*> aetab_;
-      list<dd_var*> ddmodel_;
-      bool enter_scope;
-      int scope_count;
-      bool found_in_vcd;
-      int cur_sim_time;
+            /* Dump the variables of instatiated scopes during the simulation replay. */      
+            void dump_values(ostream& o)const; 
 
-      vcd_vars vcd_vars_;//var id in vcd, hierachy name of signal;
->>>>>>> Stashed changes
+            void dump_slice(std::ostream& out, slicer* s) const;
 
-    private: // Not implemented
-      Module(const Module&);
-      Module& operator= (const Module&);
+            void dump_paths(ostream& o)const;
+
+            inline void set_cfg(Module_Cfgs* cfg){cfg_ = cfg;}
+
+            inline void set_modulenode(ModuleNode* mn){mn_  = mn;}
+
+            inline Module_Cfgs* get_cfg(){return cfg_;};
+
+            inline list<cond_expr*>& get_cetable(){return cetab_;};
+
+            inline set<Var*>& get_vartable(){return vartab_;}
+
+            vector<VcdScope*> vcd_scopes;        /* Mutiple instantiated scopes of this module type. */
+            
+            map<string, set<unsigned>> var_cfgs; /* Save condit variable and process id, form as { var, set{ process id } }. */
+
+            map<Cfg_Node*, PathNode*> path_nodes_;
+
+            map<Cfg*, vector<set<unsigned> > > routes_;
+
+      private:
+            void dump_specparams_(ostream&out, unsigned indent) const;
+            list<PGate*>     gates_;                    /* Gates include assign lines and module instantiated. */
+            ModuleNode*      mn_;                       /* The cfgnode build by this module. */
+            Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
+            set<Var*>        vartab_;                   /* Defined variables. */
+		list<cond_expr*> cetab_;                    /* Condit expressions. */
+            map<unsigned, vector<string> > paths_;      /* All paths for every process. */
+
+      private: // Not implemented
+            Module(const Module&);
+            Module& operator= (const Module&);
 };
 
 #endif /* IVL_Module_H */

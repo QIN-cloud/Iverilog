@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2001-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2001-2010 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -36,11 +32,6 @@
 # include  <cassert>
 # include  "ivl_alloc.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * The module library items are maps of key names to file name within
  * the directory.

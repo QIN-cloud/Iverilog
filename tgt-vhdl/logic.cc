@@ -1,11 +1,7 @@
 /*
  *  VHDL code generation for logic devices.
  *
-<<<<<<< Updated upstream
- *  Copyright (C) 2008-2021  Nick Gasson (nick@nickg.me.uk)
-=======
  *  Copyright (C) 2008-2014  Nick Gasson (nick@nickg.me.uk)
->>>>>>> Stashed changes
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,11 +26,6 @@
 #include <sstream>
 #include <iostream>
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 /*
  * Convert the inputs of a logic gate to a binary expression.
  */

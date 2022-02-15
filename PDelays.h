@@ -1,11 +1,7 @@
 #ifndef IVL_PDelays_H
 #define IVL_PDelays_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 1999-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 1999-2014 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -24,18 +20,15 @@
  */
 
 # include  "svector.h"
-<<<<<<< Updated upstream
-=======
-# include  "PExpr.h"
->>>>>>> Stashed changes
 # include  <string>
 # include  <list>
 # include  <iostream>
 
-class Design;
-class NetScope;
-class NetExpr;
-class PExpr;
+#ifdef __GNUC__
+#if __GNUC__ > 2
+using namespace std;
+#endif
+#endif
 
 class Design;
 class NetScope;
@@ -56,11 +49,7 @@ class PDelays {
 	   this object takes ownership of the expressions, and will
 	   delete it in the destructor. */
       void set_delay(PExpr*);
-<<<<<<< Updated upstream
-      void set_delays(const std::list<PExpr*>*del, bool delete_flag=true);
-=======
       void set_delays(const list<PExpr*>*del, bool delete_flag=true);
->>>>>>> Stashed changes
 
       unsigned delay_count() const;
 
@@ -70,21 +59,9 @@ class PDelays {
 		       NetExpr*&decay_time,
 		       bool as_nets_flag =false) const;
 
-<<<<<<< Updated upstream
-      void dump_delays(std::ostream&out) const;
-=======
       void dump_delays(ostream&out) const;
-      svector<string>& get_vars()
-      {
-      	  svector<string>* tmp = new svector<string>(0);
-      	  for(unsigned idx = 0; idx < 3; ++idx)
-      	  {
-      	      if(delay_[idx] !=0)
-      	  	  tmp = new svector<string>(*tmp, delay_[idx]->get_vars());
-      	  }
-      	  return *tmp;
-      };
->>>>>>> Stashed changes
+      
+      svector<string>& get_vars();
 
     private:
       PExpr* delay_[3];

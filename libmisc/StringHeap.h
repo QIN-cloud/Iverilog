@@ -1,11 +1,7 @@
 #ifndef IVL_StringHeap_H
 #define IVL_StringHeap_H
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2002-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2002-2014 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  *    This source code is free software; you can redistribute it
  *    and/or modify it in source code form under the terms of the GNU
@@ -25,11 +21,8 @@
 
 # include  <string>
 
-<<<<<<< Updated upstream
-=======
 using namespace std;
 
->>>>>>> Stashed changes
 class perm_string {
 
     public:
@@ -49,19 +42,12 @@ class perm_string {
 	// literals. For example, perm_string::literal("Label"); Please
 	// do *not* cheat and pass arbitrary const char* items here.
       static perm_string literal(const char*t) { return perm_string(t); }
-<<<<<<< Updated upstream
-=======
       explicit perm_string(const char*t) : text_(t) { };
->>>>>>> Stashed changes
 
     private:
       friend class StringHeap;
       friend class StringHeapLex;
-<<<<<<< Updated upstream
-      explicit perm_string(const char*t) : text_(t) { };
-=======
       //explicit perm_string(const char*t) : text_(t) { };
->>>>>>> Stashed changes
 
     private:
       const char*text_;
@@ -76,11 +62,7 @@ extern bool operator >  (perm_string a, perm_string b);
 extern bool operator <  (perm_string a, perm_string b);
 extern bool operator >= (perm_string a, perm_string b);
 extern bool operator <= (perm_string a, perm_string b);
-<<<<<<< Updated upstream
-extern std::ostream& operator << (std::ostream&out, perm_string that);
-=======
 extern ostream& operator << (ostream&out, perm_string that);
->>>>>>> Stashed changes
 
 /*
  * The string heap is a way to permanently allocate strings
@@ -119,11 +101,7 @@ class StringHeapLex  : private StringHeap {
 
       const char*add(const char*);
       perm_string make(const char*);
-<<<<<<< Updated upstream
-      perm_string make(const std::string&);
-=======
       perm_string make(const string&);
->>>>>>> Stashed changes
 
       unsigned add_count() const;
       unsigned add_hit_count() const;

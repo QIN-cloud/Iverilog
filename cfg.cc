@@ -7,15 +7,14 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 	//new a CFG struct to store the CFG nodes
 	Cfg* cfg = new Cfg;
 	cfg->id = pn->get_id();
+	cfg->lineno = pn->get_lineno();
 	cfg->sync = pn->get_sync();
 	cfg->root = new svector<Cfg_Node*>(0);
 	
 	//generate all the nodes for current process
 	svector<Node*> nodes(pn->construct_node(2));
-	
 	//use this set to store the built node's line no, to avoid 
 	//duiplicate building the same node
-
 	unsigned count = 0;
 	//add start node of the cfg
 	Cfg_Node* start = new Cfg_Node;
@@ -89,24 +88,25 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 			}
 		}
 		*/
+		//find index in nodes
 		index = cfg->lineno_index.find(nodes[i]->lineno_);
 		if(index == cfg->lineno_index.end())
 		{
 			cerr<<"Error!"<<endl;
 			exit(1);
 		}
-		
-		//add direct succ
+		//the last line has none direct success
 		if(nodes[i]->dsuccs_.size() == 0)
 		{
 			directsucc* dsctmp = new directsucc;
 			dsctmp->index = cfg->root->count() - 1;
 			(*(cfg->root))[index->second]->dsuc = svector<directsucc*>((*(cfg->root))[index->second]->dsuc,dsctmp);
 		}
+		//match direct success and caseitem
 		else
 		{
-			count = 0;
-			unsigned itemcount = 0;
+			count = 0;//number of direct success 
+			unsigned itemcount = 0;// number of direct success caseitem
 			for(set<int, less<int> >::iterator ipos = nodes[i]->dsuccs_.begin();
 				ipos != nodes[i]->dsuccs_.end();
 				++ipos)
@@ -121,7 +121,7 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 					dsctmp2->index = index2->second + 1;
 				else 
 					dsctmp2->index = index2->second;
-				 
+				//there are two Cfg_Nodes next
 				if((nodes[i]->type == "ISCONTROL.CONDITION")||(nodes[i]->type == "ISCONTROL.LOOP")||(nodes[i]->type == "ISCONTROL.EVENT"))
 				{
 					if(count == 0)
@@ -129,6 +129,7 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 					else
 						dsctmp2->cond = false;
 				}
+				//there are more Cfg_Nodes next
 				else if((nodes[i]->type == "ISCONTROL.CASE") || (nodes[i]->type == "ISCONTROL.CASEX") || (nodes[i]->type == "ISCONTROL.CASEZ")) //is case statement
 				{
 					if(nodes[index2->second]->caseitem_.size() > 0)
@@ -146,6 +147,7 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 				
 				count = count + 1;
 			}
+			//Process line
 			if((nodes[i]->type.find("ISCONTROL") == 0)&& (nodes[i]->dsuccs_.size() == 1))
 			{
 				directsucc* dsctmp3 = new directsucc;
@@ -156,6 +158,12 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 		}
 	}
 
+	for(int index = 0; index < nodes.count(); index++)
+	{
+		delete nodes[index];
+	}
+
+	//add all variables to this cfg set
 	for(unsigned nidx = 0; nidx < cfg->root->count(); ++nidx)
 	{
 		for(set<string>::const_iterator spos = (*(cfg->root))[nidx]->defs.begin(); spos != (*(cfg->root))[nidx]->defs.end(); ++spos)
@@ -167,7 +175,6 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 			cfg->refs.insert(*spos);
 		}
 	}
-
 	return cfg;
 }
 
@@ -179,15 +186,18 @@ Module_Cfgs* ModuleNode::build_cfgs()
 	for(unsigned idx = 0; idx <procs_.count(); ++idx)
 	{
 		cfg = build_cfg(procs_[idx]);
+		cfg->id = idx;
 		mcs->cfgs = new svector<Cfg*>((*mcs->cfgs), cfg); 
 	}
 
 	return mcs;
 }
 
+//Dump every line(Cfg_Node) about direct success lines and conditions 
+//Conditions maybe singel or mutible,so use if-else to depart the situation
 std::ostream& operator << (std::ostream& o, const Cfg_Node& cn)
 {
-	o << "Line Number: " << cn.lineno;
+	o << cn.type<< " Line Number: " << cn.lineno<<",";
 	set<directsucc*>::const_iterator pos;
 	if(cn.dsuc.count() == 0)
 		o << ", This is the last line";
@@ -219,12 +229,4 @@ std::ostream& operator << (std::ostream& o, const Cfg_Node& cn)
 	o << endl;
 
 	return o;
-}
-
-bool operator == (const RefVar&left, const RefVar&right)
-{
-	if((left.name == right.name) && (left.time == right.time) && (left.space == right.space) )
-		return true;
-	else
-		return false;
 }

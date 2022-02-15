@@ -61,11 +61,6 @@ const char NOTICE[] =
 # include  "discipline.h"
 # include  "t-dll.h"
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 #if defined(__MINGW32__) && !defined(HAVE_GETOPT_H)
 extern "C" int getopt(int argc, char*argv[], const char*fmt);
 extern "C" int optind;
@@ -94,13 +89,11 @@ static void signals_handler(int sig)
 
 # include  "ivl_alloc.h"
 
-<<<<<<< Updated upstream
-=======
 # include  "PDesign.h"
 # include  "cfg.h"
 # include  "slice.h"
-
->>>>>>> Stashed changes
+# include "testpath.h"
+using namespace std;
 /* Count errors detected in flag processing. */
 unsigned flag_errors = 0;
 static unsigned long pre_process_fail_count = 0;
@@ -915,16 +908,15 @@ int main(int argc, char*argv[])
       bool help_flag = false;
       bool times_flag = false;
       bool version_flag = false;
+	  bool covered_flag = false;
+	  bool smt_flag = false;
 
-<<<<<<< Updated upstream
-=======
 	  const char* slice_module = 0;
 	  const char* slice_criterion = NULL;
 	  const char* target_file = 0; //target output file for slice or testgen;
-
->>>>>>> Stashed changes
-      const char* net_path = 0;
+	  const char* net_path = 0;
       const char* pf_path = 0;
+
       int opt;
 
       struct tms cycles[5];
@@ -949,17 +941,10 @@ int main(int argc, char*argv[])
       min_typ_max_flag = TYP;
       min_typ_max_warn = 10;
 
-<<<<<<< Updated upstream
-      while ((opt = getopt(argc, argv, "C:F:f:hN:P:p:Vv")) != EOF) switch (opt) {
-=======
 	  char *tmp0;
 	  //unsigned i;
 
-      while ((opt = getopt(argc, argv, "M:A:o:C:F:f:hN:P:p:Vv")) != EOF) switch (opt) {
-	  case 'M':
-	  	  printf("optarg:%s\n",optarg);
-		  slice_module = optarg;
-		  break;
+      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:SVv")) != EOF) switch (opt) {
 	  case 'A':
 	  	  printf("optarg:%s\n",optarg);
 		  /*tmp0 = strdup(optarg);
@@ -971,11 +956,18 @@ int main(int argc, char*argv[])
 		  tmp0[strlen(optarg)] = '\0';*/
 		  slice_criterion = optarg;
 		  break;
-
 	  case 'o':
-		  target_file = optarg;
->>>>>>> Stashed changes
-
+		  	target_file = optarg;
+			break;
+	  case 'c':
+			covered_flag = true;
+			for(int i = 0; i < argc; i++){
+				if(strcmp(argv[i], "@") == 0){
+					optind = i + 1;
+					break;
+				}
+			}
+			break;
 	  case 'C':
 	    read_iconfig_file(optarg);
 	    break;
@@ -997,6 +989,9 @@ int main(int argc, char*argv[])
 	  case 'p':
 	    parm_to_flagmap(optarg);
 	    break;
+	  case 'S':
+	  	smt_flag = true;
+		break;
 	  case 'v':
 	    verbose_flag = true;
 #          if defined(HAVE_TIMES)
@@ -1027,48 +1022,135 @@ int main(int argc, char*argv[])
 
 	    return 0;
       }
-<<<<<<< Updated upstream
 
       if (help_flag) {
 	    cout << "Icarus Verilog Parser/Elaborator version "
-		 << VERSION << " (" << VERSION_TAG << ")"  << endl <<
-"usage: ivl <options> <file>\n"
-"options:\n"
-"\t-C <name>        Config file from driver.\n"
-"\t-F <file>        List of source files from driver.\n"
-"\t-h               Print usage information, and exit.\n"
-"\t-N <file>        Dump the elaborated netlist to <file>.\n"
-"\t-P <file>        Write the parsed input to <file>.\n"
-"\t-p <assign>      Set a parameter value.\n"
-"\t-v               Print progress indications"
-=======
-      if (help_flag) {
-	    cout << "Icarus Verilog Parser/Elaborator version " << VERSION << " (" << VERSION_TAG << ")"  << endl <<
-				"usage: ivl <options> <file>\n"
-				"options:\n"
-				"\t-C <name>        Config file from driver.\n"
-				"\t-F <file>        List of source files from driver.\n"
-				"\t-h               Print usage information, and exit.\n"
-				"\t-N <file>        Dump the elaborated netlist to <file>.\n"
-				"\t-P <file>        Write the parsed input to <file>.\n"
-				"\t-p <assign>      Set a parameter value.\n"
-				"\t-v               Print progress indications"
->>>>>>> Stashed changes
+		 	<< VERSION << " (" << VERSION_TAG << ")"  << endl <<
+			"usage: ivl <options> <file>\n"
+			"options:\n"
+			"\t-c covered <options> @ <file>  Do coverage Report.\n"
+			"\t-C <name>                      Config file from driver.\n"
+			"\t-F <file>                      List of source files from driver.\n"
+			"\t-h                             Print usage information, and exit.\n"
+			"\t-N <file>                      Dump the elaborated netlist to <file>.\n"
+			"\t-P <file>                      Write the parsed input to <file>.\n"
+			"\t-p <assign>                    Set a parameter value.\n"
+			"\t-S                             Generate the SMT2 file.\n"
+			"\t-v                             Print progress indications.\n"
 #if defined(HAVE_TIMES)
-                                           " and execution times"
+            " and execution times.\n"
 #endif
-                                           ".\n"
-<<<<<<< Updated upstream
-"\t-V               Print version and copyright information, and exit.\n"
-=======
-				"\t-V               Print version and copyright information, and exit.\n"
->>>>>>> Stashed changes
-
-		  ;
+			"\t-V               Print version and copyright information, and exit.\n";
 	    return 0;
       }
 
       int arg = optind;
+
+	/*Make a new getopt to select function of covered*/
+	bool covered_help_flag = false;
+	bool toggle = false;
+	bool fsm = false;
+	bool combine = false;
+	bool path = false;
+	bool statement = false;
+	bool branch = false;
+	bool all = false;
+
+	const char* fsm_selects = 0;
+	const char* vcd_file = 0;
+	perm_string cover_module;
+
+	if(covered_flag){
+		int covered_argc = optind - 3;
+		char* covered_argv[covered_argc];
+		for(int i = 2; i < optind - 1; i++){
+			covered_argv[i-2] = argv[i]; 
+		}
+		optind = 0;
+		string covered_option = "covered";
+
+		if(covered_option.compare(covered_argv[optind]) != 0){
+			cerr<<"When using the coverage simulation analysis,you must use the option ""covered""! "<<endl;
+			return 1;
+		}
+
+		while ((opt = getopt(covered_argc, covered_argv, "AM:TFCPBSV:hs:o:v:")) != EOF) switch (opt) {
+		case 'A':
+			all = true;
+			break;
+		case 'M':
+			cover_module = perm_string(optarg);
+			break;
+		case 'T':
+			toggle = true;
+			break;
+		case 'F':
+			fsm = true;
+			break;
+		case 'C':
+			combine = true;
+			break;
+		case 'v':
+			fsm_selects = strdup(optarg);
+			break;
+		case 'h':
+			covered_help_flag = true;
+			break;
+		case 'P':
+			path = true;
+			break;
+		case 'B':
+			branch = true;
+			break;
+		case 'o':
+			target_file = optarg;
+			break;
+		case 's':
+			roots.push_back(perm_string(optarg));
+			break;
+		case 'S':
+			statement = true;
+			break;
+		case 'V':
+			vcd_file = optarg;
+			break;
+		default:
+			flag_errors += 1;
+			break;
+		}
+		if(all || fsm)
+		{
+			if(!fsm_selects)
+			{
+				cerr << "When using the -All or -Fsm option, you must specify the state register variable with -v option" << endl;
+				cerr << "Please use -Help option for usage" << endl;
+				return 1;
+			}
+		}
+
+		if (flag_errors || covered_help_flag) {
+			cout << "Simulation Coverage Analysis 1.0 " << endl <<
+				"usage: covered <options>\n"
+				"options:\n"
+				"\t-M<module type>	Indicate which module to be analysized.\n"
+				"\t-Toggle          Do Toggle coverage report for module.\n"
+				"\t-Combine         Do Combination coverage report for module.\n"
+				"\t-Fsm             Do FSM coverage report for module, must with -v option.\n"
+				"\t-Statement       Do Statement coverage report for module.\n"
+				"\t-Path            Do Path coverage report for module.\n"
+				"\t-Branch          Do Branch coverage report for module.\n"
+				"\t-All             Do All coverage report for module.\n"
+				"\t-help            Print usage information, and exit.\n"
+				"\t-v{v1,...vn}     Variables of FSM to be analysized\n"
+				"\t-o<file>         Write coverage analysis results output to <file>.\n"
+				"\t-s<module name>  Select the top-level module.\n"
+				"\t-V<file>         Read VCD file information from <file>.\n"
+				;
+			return 1;
+		}
+
+	}
+
       while (arg < argc) {
 	    perm_string path = filename_strings.make(argv[arg++]);
 	    source_files.push_back(path);
@@ -1224,147 +1306,32 @@ int main(int argc, char*argv[])
 	    return rc;
       }
 
-<<<<<<< Updated upstream
-=======
-	//perm_string perm_slice_module(slice_module);
-
+	/*Collect all pform modules and udps.*/
 	PDesign design;
 	design.set_modules(pform_modules);
 	design.set_udps(pform_primitives);
-	if(slice_module)
-	{
-		if(pform_modules.find(perm_string(slice_module)) == pform_modules.end())
-		{
-			cerr<<"Invalid top Module name for slicing!"<<endl;
-			exit(0);
-		}
-		cout<<"slice_module: "<<slice_module<<endl;
-
-		svector<ModuleNode*>* mns = design.build_nodes(design, slice_module);
-		
-		string module_name = slice_module;
-		string cfg_path = "/home/smc/Documents/testfile/cfg_out/" + module_name + ".cfg.v";
-		ofstream cfg_out(cfg_path);
-		for(unsigned idx = 0; idx < mns->count(); idx++)
-		{
-			Module_Cfgs* mcfgs = (*mns)[idx]->build_cfgs();
-			for(unsigned midx = 0; midx < mcfgs->cfgs->count(); midx++)
-			{
-				Cfg* scfg = (*(mcfgs->cfgs))[midx];
-				for(unsigned ridx = 0; ridx < scfg->root->count(); ridx++)
-				{
-					cfg_out << (*(*scfg->root)[ridx]);
-				}
-			}
-		}
-		if(slice_criterion != NULL)
-		{
-			cout<<"slice_criterion: "<<slice_criterion<<endl;
-			slicer slice ;
-			slice = program_slicing(mns, slice_criterion);
-			cout<<"slice finish"<<endl;
-			string slice_path = "/home/smc/Documents/testfile/slice_out/" + module_name + ".slice.v";
-			if(!target_file)
-			{
-				target_file = slice_path.c_str();
-			}
-			cout<<"target_file: ";
-			cout<<target_file<<endl;
-			ofstream slice_out(target_file);
-			/*
-			map<perm_string, Module*>::iterator itmodule = design.get_modules().find(perm_string(slice_module));
-
-			if(itmodule != design.get_modules().end())
-			{
-				cout<<"slice:"<<slice_module<<"<->"<<itmodule->second->mod_name()<<endl;;
-				slice_dump(slice_out, itmodule->second, &slice);
-			}
-			*/
-			map<perm_string, Module*>::iterator itmodule = pform_modules.find(perm_string(slice_module));
-
-			if(itmodule != pform_modules.end())
-			{
-				cout<<"slice:"<<slice_module<<"<->"<<itmodule->second->mod_name()<<endl;;
-				slice_dump(slice_out, itmodule->second, &slice);
-			}
-			std::set<std::string> tmp, tmp1;;
-			tmp = slice.mods;
-			std::set<std::string>::const_iterator pos;
-			map<perm_string, Module*> modules = design.get_modules();
-			for (map<perm_string,Module*>::iterator mod = modules.begin();
-			mod != modules.end();
-			mod ++ )
-			{
-				if(slice.mods.find((*mod).first.str()) != slice.mods.end())
-				{
-					tmp1 = (*mod).second->get_mods();
-					for(pos = tmp1.begin(); pos != tmp1.end(); ++pos)
-						tmp.insert(*pos);
-				}
-			}
-			for (map<perm_string,Module*>::iterator mod = modules.begin();
-			mod != modules.end();
-			mod ++ )
-			{
-				if(tmp.find((*mod).first.str()) != tmp.end())
-					pform_dump(slice_out, (*mod).second);
-			}
-			
-			for (map<perm_string,PUdp*>::iterator idx = pform_primitives.begin();
-			idx != pform_primitives.end();
-			idx ++ )
-			{
-				if(slice.mods.find((*idx).first.str()) != slice.mods.end())
-					(*idx).second->dump(slice_out);
-			}
-
-			slice_out.close();
+	if(smt_flag || covered_flag){
+		design.build_nodes();
+		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
+			module_->second->build_cfgs();
 		}
 	}
->>>>>>> Stashed changes
-      if (pre_process_fail_count) {
-	    cerr << "Preprocessor failed with " << pre_process_fail_count
-	         << " errors." << endl;
-	    return pre_process_fail_count;
-      }
+
+	if (pre_process_fail_count) {
+		cerr << "Preprocessor failed with " << pre_process_fail_count
+		<< " errors." << endl;
+		return pre_process_fail_count;
+	}
 
 
 	/* If the user did not give specific module(s) to start with,
 	   then look for modules that are not instantiated anywhere.  */
 
       if (roots.empty()) {
-	    map<perm_string,bool> mentioned_p;
-	    map<perm_string,Module*>::iterator mod;
-	    if (verbose_flag)
-		  cout << "LOCATING TOP-LEVEL MODULES" << endl << "  ";
-	    for (mod = pform_modules.begin()
-		       ; mod != pform_modules.end() ; ++ mod ) {
-		  find_module_mention(mentioned_p, mod->second);
-	    }
-
-	    for (mod = pform_modules.begin()
-		       ; mod != pform_modules.end() ; ++ mod ) {
-
-<<<<<<< Updated upstream
-		  if (!(*mod).second->can_be_toplevel())
-=======
-		    /* Don't choose library modules. */
-		  if ((*mod).second->library_flag)
->>>>>>> Stashed changes
-			continue;
-
-		    /* Don't choose modules instantiated in other
-		       modules. */
-		  if (mentioned_p[(*mod).second->mod_name()])
-			continue;
-
-		    /* What's left might as well be chosen as a root. */
-		  if (verbose_flag)
-			cout << " " << (*mod).second->mod_name();
-		  roots.push_back((*mod).second->mod_name());
-	    }
-	    if (verbose_flag)
-		  cout << endl;
+	    for(map<perm_string, Module*>::iterator pos = pform_modules.begin(); pos != pform_modules.end(); pos++)
+		{
+			roots.push_back(pos->first);
+		}
       }
 
 	/* If there is *still* no guess for the root module, then give
@@ -1374,7 +1341,6 @@ int main(int argc, char*argv[])
 	    cerr << "No top level modules, and no -s option." << endl;
 	    return ignore_missing_modules ? 0 : 1;
       }
-
 
       if (verbose_flag) {
 	    if (times_flag) {
@@ -1393,7 +1359,6 @@ int main(int argc, char*argv[])
 
 	/* On with the process of elaborating the module. */
       Design*des = elaborate(roots);
-
       if ((des == 0) || (des->errors > 0)) {
 	    if (des != 0) {
 		  cerr << des->errors
@@ -1424,6 +1389,48 @@ int main(int argc, char*argv[])
 	default:
 	    assert(0);
       }
+
+	design.set_design(des);
+	/*Generate SMT-LIB2.*/
+	if(smt_flag){
+		string test_path = "path.txt";
+		string seeds_path = "seeds.txt";
+		ofstream test_file(test_path);
+		ofstream head_out("head.smt2");
+		ofstream body_out("body.smt2");
+		ofstream tail_out("tail.smt2");
+		cout << "Build vartable and cetable..." << endl;
+		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
+			module_->second->build_vartable(des);
+			module_->second->build_cetable();
+			module_->second->build_paths();
+			module_->second->random_path(test_file, seeds_path);
+		}
+		cout << "Generate test paths randomly..." << endl;
+		TestGen smt_test(&design, des);
+		smt_test.gen_smt(test_path, head_out, body_out, tail_out);
+	}
+
+	/* Do Coverage Simulation Analysis. */
+	if(covered_flag){
+		assert(cover_module.str());
+		assert(vcd_file);
+		if(all || path){
+			for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
+				module_->second->build_paths();
+			}
+		}
+		if(!target_file){
+			target_file = "coverage.rep";
+		}
+		ofstream report(target_file);
+		if(all){
+			design.function_cover(cover_module, fsm_selects, vcd_file, report, true, true, true, true, true, true);
+		}
+		else{
+			design.function_cover(cover_module, fsm_selects, vcd_file, report, toggle, fsm, statement, path, branch, combine);
+		}
+	}
 
 	/* Done with all the pform data. Delete the modules. */
       for (map<perm_string,Module*>::iterator idx = pform_modules.begin()
@@ -1482,7 +1489,7 @@ int main(int argc, char*argv[])
 	    cout << "CODE GENERATION" << endl;
       }
 
-      if (int emit_rc = des->emit(&dll_target_obj)) {
+      /*if (int emit_rc = des->emit(&dll_target_obj)) {
 	    if (emit_rc > 0) {
 		  cerr << "error: Code generation had "
 		       << emit_rc << " error(s)."
@@ -1498,7 +1505,8 @@ int main(int argc, char*argv[])
 		  return -1;
 	    }
 	    assert(emit_rc);
-      }
+      }*/
+
 
       if (verbose_flag) {
 	    if (times_flag) {
@@ -1537,6 +1545,7 @@ int main(int argc, char*argv[])
       }
 
       int rtn = des? des->errors : 1;
+
       delete des;
       EOC_cleanup();
       return rtn;

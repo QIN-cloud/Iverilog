@@ -1,9 +1,5 @@
 /*
-<<<<<<< Updated upstream
- * Copyright (c) 2005-2021 Stephen Williams (steve@icarus.com)
-=======
  * Copyright (c) 2005-2019 Stephen Williams (steve@icarus.com)
->>>>>>> Stashed changes
  *
  * (This is a rewrite of code that was ...
  * Copyright (c) 2001 Stephan Boettcher <stephan@nevis.columbia.edu>)
@@ -39,11 +35,6 @@
 #include "ivl_alloc.h"
 #endif
 
-<<<<<<< Updated upstream
-using namespace std;
-
-=======
->>>>>>> Stashed changes
 // We may need these later when we build the VPI interface to
 // UDP definitions.
 #ifdef CHECK_WITH_VALGRIND

@@ -1,11 +1,7 @@
 /*
  *  VHDL code generation for expressions.
  *
-<<<<<<< Updated upstream
- *  Copyright (C) 2008-2021  Nick Gasson (nick@nickg.me.uk)
-=======
  *  Copyright (C) 2008-2013  Nick Gasson (nick@nickg.me.uk)
->>>>>>> Stashed changes
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,10 +26,6 @@
 #include <cassert>
 #include <cstring>
 
-<<<<<<< Updated upstream
-using namespace std;
-=======
->>>>>>> Stashed changes
 
 /*
  * Change the signedness of a vector.
