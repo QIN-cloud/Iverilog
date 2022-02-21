@@ -264,7 +264,7 @@ class Module : public PScopeExtra, public PNamedItem {
             ModuleNode*      mn_;                       /* The cfgnode build by this module. */
             Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
             set<Var*>        vartab_;                   /* Defined variables. */
-		list<cond_expr*> cetab_;                    /* Condit expressions. */
+		    list<cond_expr*> cetab_;                    /* Condit expressions. */
             map<unsigned, vector<string> > paths_;      /* All paths for every process. */
 
       private: // Not implemented
