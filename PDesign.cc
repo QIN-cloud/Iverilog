@@ -852,7 +852,7 @@ void PDesign::cfg_replay(Module* var_module, int idx, VcdScope* scope)
 
 bool PDesign::execute_process(Cfg_Node* node, VcdScope* vs)
 {
-	//return true;
+	return true;
 	//The type is always@(*) , return true because of condit expression has changeds.
 	if(node->expr.count() == 0)
 	{

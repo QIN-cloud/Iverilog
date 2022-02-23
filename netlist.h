@@ -4111,7 +4111,9 @@ class NetProcTop  : public LineInfo, public Attrib {
       virtual void gen_stats(smt_stats* proc_stats);
       bool emit(struct target_t*tgt) const;
       unsigned get_id();
+      bool get_sync();
       void set_id(unsigned id);
+      void set_sync(bool sync);
     private:
       bool tie_off_floating_inputs_(Design*des,
 				    NexusSet&nex_map, NetBus&nex_in,
@@ -4124,6 +4126,7 @@ class NetProcTop  : public LineInfo, public Attrib {
       NetScope*scope_;
       friend class Design;
       unsigned id_;
+      bool sync_;
       NetProcTop*next_;
 };
 

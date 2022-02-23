@@ -1418,6 +1418,9 @@ int main(int argc, char*argv[])
 		if(all || path){
 			for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
 				module_->second->build_paths();
+				cout << module_->second->pscope_name() << endl;
+				module_->second->parse_assigns();
+				module_->second->sort_assigns();
 			}
 		}
 		if(!target_file){

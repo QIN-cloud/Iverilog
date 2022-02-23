@@ -128,7 +128,6 @@ inline bool operator != (const smt_var&left, const smt_var&right)
 
 /*
 * TestGen is using for generate the SMT-LIB2 format file in netlist.
-* 
 */
 class TestGen{
 	public:

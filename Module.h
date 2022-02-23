@@ -39,9 +39,12 @@
 # include  "testpath.h"
 # include  <fstream>
 
+# define ASSIGN_NUMBER 2
+
 class PExpr;
 class PEIdent;
 class PGate;
+class PGAssign;
 class PGenerate;
 class PModport;
 class PSpecPath;
@@ -70,7 +73,7 @@ public:
 /* This scope represents a instantiation module by this module type.*/
 class VcdScope{
 public:
-      VcdScope(Module* module):module_(module){};
+      VcdScope(Module* module) : module_(module){};
       ~VcdScope();
       void dump(ostream& o) const;
       Module* module_;                    //Module type.
@@ -78,6 +81,23 @@ public:
       vcd_vars vars;                      //Variriables in this vcd scope.
 };
 
+/* This struct is used for assign sorting. */
+struct AssignNode{
+public:
+      AssignNode(string name) : name_(name), in_(0), out_(0){};
+      ~AssignNode();
+      list<PGAssign*> assign_;                    //Assign statements if this variable is used as lref. 
+      string name_;                               //Variable name.
+      unsigned in_;                               //Number of in-degree.
+      unsigned out_;                              //Number of out-degree.
+      map<string, list<PGAssign*> > next_;       //List of next nodes.
+};
+
+struct cmp{
+      bool operator() (AssignNode* l, AssignNode* r){
+            return l->in_ < r->in_;
+      }
+};
 
 /* 
  * A module is a named container and scope. A module holds a bunch of
@@ -227,6 +247,12 @@ class Module : public PScopeExtra, public PNamedItem {
             /* Write random paths acorrding to seeds.*/
             void random_path(ostream& o, string seeds) const;
 
+            /* Parse assigns and be ready for sorting them. */
+            void parse_assigns();
+
+            /* Sort assign statements. */
+            void sort_assigns();
+
             /* Dump the cfgnodes for every cfg. */
             void dump_cfg(ostream& o) const; 
 
@@ -250,13 +276,13 @@ class Module : public PScopeExtra, public PNamedItem {
 
             inline set<Var*>& get_vartable(){return vartab_;}
 
-            vector<VcdScope*> vcd_scopes;        /* Mutiple instantiated scopes of this module type. */
+            vector<VcdScope*> vcd_scopes;               /* Mutiple instantiated scopes of this module type. */
             
-            map<string, set<unsigned>> var_cfgs; /* Save condit variable and process id, form as { var, set{ process id } }. */
+            map<string, set<unsigned>> var_cfgs;        /* Save condit variable and process id, form as { var, set{ process id } }. */
 
-            map<Cfg_Node*, PathNode*> path_nodes_;
+            map<Cfg_Node*, PathNode*> path_nodes_;      /* Save path information for every node. */
 
-            map<Cfg*, vector<set<unsigned> > > routes_;
+            map<Cfg*, vector<set<unsigned> > > routes_; /* Save paths for every cfg. */
 
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
@@ -264,8 +290,11 @@ class Module : public PScopeExtra, public PNamedItem {
             ModuleNode*      mn_;                       /* The cfgnode build by this module. */
             Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
             set<Var*>        vartab_;                   /* Defined variables. */
-		    list<cond_expr*> cetab_;                    /* Condit expressions. */
+		list<cond_expr*> cetab_;                    /* Condit expressions. */
             map<unsigned, vector<string> > paths_;      /* All paths for every process. */
+            list<PGAssign*>  consts_;                   /* Assigns which link to a const number. */
+            list<PGAssign*> assigns_;                   /* Sorting assign statements. */
+            map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
 
       private: // Not implemented
             Module(const Module&);

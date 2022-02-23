@@ -5842,7 +5842,7 @@ bool PProcess::elaborate(Design*des, NetScope*scope) const
 	    return false;
       }
 
-      NetProcTop*top=new NetProcTop(scope, type(), cur);
+      NetProcTop *top=new NetProcTop(scope, type(), cur);
       ivl_assert(*this, top);
 
 	// Evaluate the attributes for this process, if there
@@ -5859,6 +5859,7 @@ bool PProcess::elaborate(Design*des, NetScope*scope) const
       delete[]attrib_list;
       top->set_line(*this);
 	  top->set_id(id_);
+	  top->set_sync(sync_);
       des->add_process(top);
 
 	/* Detect the special case that this is a combinational

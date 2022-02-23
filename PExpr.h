@@ -209,6 +209,8 @@ class PExpr : public LineInfo {
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
+      virtual set<string> get_var_names();
+
 
     protected:
       unsigned fix_width_(width_mode_t mode);
@@ -499,6 +501,8 @@ class PEIdent : public PExpr {
 
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
+
+      virtual set<string> get_var_names();
 
 
     private:
@@ -860,6 +864,8 @@ class PEUnary : public PExpr {
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
+      virtual set<string> get_var_names();
+
 
     public:
       inline char get_op() const { return op_; }
@@ -916,6 +922,8 @@ class PEBinary : public PExpr {
 
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
+
+      virtual set<string> get_var_names();
 
 
     protected:
@@ -1069,6 +1077,8 @@ class PETernary : public PExpr {
 
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
+
+      virtual set<string> get_var_names();
 
 
     private:

@@ -26,6 +26,7 @@
 # include  <cassert>
 # include  "string.h"
 # include  <stack>
+# include  <queue>
 
 using namespace std;
 
@@ -327,6 +328,11 @@ void VcdScope::dump(ostream& o) const
 	o << "}" << endl;
 }
 
+AssignNode::~AssignNode()
+{
+
+}
+
 void Module::build_paths()
 {
 	//generate paths for every process
@@ -419,4 +425,63 @@ void Module::random_path(ostream& o, string seeds) const
 		o << pscope_name() << " " << pos->first << " " << pos->second[seed%(pos->second.size()-1)] << endl;
 	}
 	in.close();
+}
+
+void Module::parse_assigns()
+{
+	//Build the Directed Graph by assign statements.
+	list<PGate*>::iterator gate = gates_.begin();
+	for(gate; gate != gates_.end(); gate++){
+
+		if(PGAssign* assign = dynamic_cast<PGAssign*>(*gate)){
+
+			//Assign is link to a const number, such as assign a = 4'b0000;
+			if(PEConcat* c = dynamic_cast<PEConcat*>(assign->pin(1))){
+				consts_.push_back(assign);
+			}
+
+			//Assign has both left ref and right ref.
+			else{
+
+				//Parsing the string names for every variable in assign statement.
+				set<string> lnames = assign->pin(0)->get_var_names();
+				assert(lnames.size() == 1);
+				set<string> rnames = assign->pin(1)->get_var_names();
+
+				//Build node for lref.
+				string lname = *(lnames.begin());
+				if(assign_pos_.find(lname) == assign_pos_.end()){
+					AssignNode* node = new AssignNode(lname);
+					assign_pos_[lname] = node;
+				}
+				AssignNode* l_node = assign_pos_[lname];
+				l_node->in_ += rnames.size();
+				l_node->assign_.push_back(assign);
+
+				//Build node for rref.
+				for(string rname : rnames){
+					if(assign_pos_.find(rname) == assign_pos_.end()){
+						AssignNode* node = new AssignNode(rname);
+						assign_pos_[rname] = node;
+					}
+					AssignNode* r_node = assign_pos_[rname];
+					r_node->out_ += 1;
+					r_node->next_[lname].push_back(assign);
+				}
+			}
+		}
+	}
+}
+
+void Module::sort_assigns()
+{
+	priority_queue<AssignNode*, vector<AssignNode*>, cmp> var_queue;
+	map<string, AssignNode*>::iterator node = assign_pos_.begin();
+	for(node; node != assign_pos_.end(); node++){
+		var_queue.push(node->second);
+	}
+	while(!var_queue.empty()){
+		cout << var_queue.top()->name_ << endl;
+		var_queue.pop();
+	}
 }

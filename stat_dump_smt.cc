@@ -56,6 +56,16 @@ unsigned NetProcTop::get_id()
 	return id_;
 }
 
+void NetProcTop::set_sync(bool sync)
+{
+	sync_ = sync;
+}
+
+bool NetProcTop::get_sync()
+{
+	return sync_;
+}
+
 /*
 * Traverse the netlist and record the statements which can be generated to SMT-LIB2 format. 
 */

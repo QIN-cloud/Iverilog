@@ -387,8 +387,8 @@ CfgNode* PWhile::build_node(PDesign& de)
 
 ProcessNode* PProcess::build_node(PDesign& de)
 {
-	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	set_synchronous();
+	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	ProcessNode* pn = new ProcessNode(get_lineno());
 	pn->set_id(id_);
 	pn->set_sync(is_synchronous());
@@ -401,7 +401,6 @@ ProcessNode* PProcess::build_node(PDesign& de)
 	//root->add_refs(node->get_refs());
 	//root->add_defs(node->get_defs());
 	pn->add_node(root, 0);
-	
 	//pn->dump(cerr);
 	return pn;
 }
