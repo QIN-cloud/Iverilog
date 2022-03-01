@@ -1,10 +1,6 @@
 #ifndef __Testpath_H
 #define __Testpath_H
-#define SMT_INT 0
-#define SMT_BOOL -1
-#define SMT_NULL -2
-#define SMT_WRONG -3
-#define SMT_MAX 64
+
 #include <string>
 #include <map>
 #include <set>
@@ -12,7 +8,15 @@
 #include <ostream>
 #include <fstream>
 #include <unordered_map>
+#include "cfg.h"
 #include "svector.h"
+#include "StringHeap.h"
+
+#define SMT_INT 0
+#define SMT_BOOL -1
+#define SMT_NULL -2
+#define SMT_WRONG -3
+#define SMT_MAX 64
 
 using namespace std;
 
@@ -30,58 +34,36 @@ class Design;
 class PExpr;
 class perm_string;
 class NetProc;
-struct Var;
+class Module;
 struct RefVar;
-struct cond_expr;
-struct Module_Cfgs;
+struct TestPath;
+struct SmtVar;
+struct Cfg;
+struct Cfg_Node;
 
-typedef map<int, set<NetProc*> > smt_stats;
+typedef map<int, set<NetProc*> > NetStats;
+typedef map<string, RefVar*> VarTable;
+typedef set<SmtVar*> SVTable;
 
-typedef struct cond_time_expr{
-	unsigned procid;
-	unsigned condid;
-	set<RefVar*> refs;
-	bool result;
-	int itemindex;
-}cond_time_expr;
 
-typedef struct cond_expr{
-	unsigned procid;
-	unsigned condid;
-	unsigned lineno;
-	set<RefVar*> refs;
-	svector<PExpr*> expr;
-}cond_expr;
-
-typedef struct ct_result{
-	bool result;
-	int itemindex;
-}ct_result;
-
-typedef struct tpnode{
-	int nodeid;
-	string type;
-	bool usewhich;//false for use cond, true for caseitem;
-	set<string> refs, defs;
+typedef struct TPNode{
+	bool usewhich;         //false for use cond, true for caseitem;
 	bool cond;
 	int condid;
-	set<PExpr*> caseitem;
 	int itemindex;
-	int lineno;
-}tpnode;
+	unsigned nodeid;
+	Cfg_Node* node;
+}TPNode;
 
-typedef struct testpath
+typedef struct TestPath
 {
-	string modulename;
-	int procid;
-	int preproc;
-	set<string> refs, defs;
-	svector<tpnode> nodes;
-	bool gened;
-	bool sync;				//true for clock driven, false for combination driven
-}testpath;
+	Module* md;
+	Cfg* cfg;
+	svector<TPNode*> nodes;
 
-typedef struct smt_var{
+}TestPath;
+
+typedef struct SmtVar{
 	string basename;
 	string smtname;
 	string parentname;
@@ -90,40 +72,33 @@ typedef struct smt_var{
 	int msb, lsb;
 	string type;
 	bool temp_flag;
-}smt_var;
+}SmtVar;
 
 typedef struct RefVar{
 	string name;
-	unsigned space, time;
-	int width;
-	int lsb, msb;
-	string ptype;
-	bool assigntype;//0 for blocking, 1 for non-blocking;
-}RefVar;
-
-typedef struct Var{
-	string name;
+	int space, time;
 	unsigned width;
 	int lsb, msb;
-	unsigned space, time;
 	string ptype;
-	int varidx;
-	bool assigntype;
-	bool changed;
-	int change_count;
-}Var;
+}RefVar;
 
-extern bool operator == (const smt_var&left, const smt_var&right);
-extern bool operator <= (const smt_var&left, const smt_var&right);
-extern bool operator <  (const smt_var&left, const smt_var&right);
+extern void bv_to_int(ostringstream& expr, ostringstream& target);
+extern void int_to_bv(ostringstream& expr, int width, ostringstream& target);
+extern void bv_int_bv(ostringstream& expr, int width, ostringstream& target);
+extern void extract(ostringstream& expr, int msi, int lsi, ostringstream& target);
+extern void bv_compare_zero(ostringstream& expr, string op, int width, ostringstream& target);
 
-inline bool operator > (const smt_var&left, const smt_var&right)
+extern bool operator == (const SmtVar&left, const SmtVar&right);
+extern bool operator <= (const SmtVar&left, const SmtVar&right);
+extern bool operator <  (const SmtVar&left, const SmtVar&right);
+
+inline bool operator > (const SmtVar&left, const SmtVar&right)
 { return right < left; }
 
-inline bool operator >= (const smt_var&left, const smt_var&right)
+inline bool operator >= (const SmtVar&left, const SmtVar&right)
 { return right <= left; }
 
-inline bool operator != (const smt_var&left, const smt_var&right)
+inline bool operator != (const SmtVar&left, const SmtVar&right)
 { return (left == right)? false : true; }
 
 /*
@@ -133,32 +108,36 @@ class TestGen{
 	public:
 		TestGen(PDesign*, Design*);
 		~TestGen();
-		void gen_smt(string, ofstream&, ofstream&, ofstream&);
-		ostream& dump(ostream&);
+		void gen_smt(Module* module_, string file, ofstream& o1, ofstream& o2, ofstream& o3);  /* Generate SMT-LIB2 for a module. */
 	private:
 		Design*      design_;
 		PDesign*     pdesign_;
-		set<smt_var> smt_vars_;
-		map<perm_string, set<Var*> >                 vartab_;
-		map<perm_string, Module_Cfgs*>               cfgs_;
-		map<perm_string, list<cond_expr*> >          cetab_;
-		map<perm_string, map<int, smt_stats> >       stats_;
-		map<int, map<perm_string, list<testpath> > > testpath_;
+		Module*      module_;
+		map<Module*, SVTable>                     smttabs_;              	/* Variables builded in smt generator. */
+		map<Module*, VarTable>                    vartabs_;              	/* Variables defined in every module. */
+		map<Module*, map<int, NetStats> >         stats_;                	/* Netlist statements located in evert module. */
+		map<int, map<Module*, list<TestPath*> > > testpath_;             	/* Record time and paths for every module.*/
 
 	private:
-		void initilize();
-		void build_testpath(string);
-		void read_testpath(string);
-		void arrange_testpath();
-		void gen_ref_def();
-		void sort_testpath();
-		void gen_stats();
-		void gen_smt_testpath(int, perm_string, list<testpath>&, const set<int>&, ofstream&);
-		void gen_body(ofstream&);
-		void gen_head(ofstream&);
-		void gen_tail(ofstream&);
-		void dump_vartab();
-		void dump_cond_smt(ofstream&, cond_time_expr, const perm_string);
+		void initilize(string file);                                      	/* Collect statements and variables for a module */
+		void get_stats();                                                 	/* Get netlist statements. */
+		void get_vartab();                                                	/* Get var table for a module. */
+		void get_refs_defs();                                             	/* Get refs and defs for a process. */
+		void read_testpath(string file);                                  	/* Collect testpath information from a file. */
+		void arrange_testpath();                                          	/* Build node for testpath. */
+ 
+		void gen_body(ofstream& o);                                       	/* Generate assert lines. */
+		void gen_head(ofstream& o);                                       	/* Generate define lines. */
+		void gen_tail(ofstream& o);                                       	/* Generate get-value lines. */
+		
+		void select_sync_proc(set<TestPath*> procs, int cycle);				/* Select synchorous processes. */
+		void select_combine_proc(int cycle, list<TestPath*>& procs,         /* Select combine processes. */
+		set<string>& refs, map<TestPath*, unsigned>& excute_procs);         
+		void add_refs(TestPath* tp, set<string>& refs);                     /* Add refs after excute a process. */
+		void update_refs(set<string>& refs);                                /* Update the space after excuting a synchorous process. */
+
+		void gen_proc_smt(TestPath* tp, ofstream& o);  	                    /* Generate smt for a process. */
+
 };
 
 #endif

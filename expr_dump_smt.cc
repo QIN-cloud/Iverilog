@@ -8,63 +8,17 @@
 #include <sstream>
 #include <iomanip>
 #include <math.h>
+#include "Module.h"
 #include "netlist.h"
 #include "cfg.h"
 #include "testpath.h"
-
-/* 
-* Convert a BitVec to a Int.
-* The format is ( (_ bv2int) BitVec ).
-*/
-void NetExpr::bv_to_int(ostringstream& expr, ostringstream& target) const
-{
-	target << "((_ bv2int)" << expr.str() << ")";
-}
-
-/* 
-* Convert a Int to a BitVec.
-* Request a width of BitVec.
-* The format is ( (_ int2bv width) Int ).
-*/
-void NetExpr::int_to_bv(ostringstream& expr, int width, ostringstream& target) const
-{
-	target << "((_ int2bv " << width << ")" << expr.str() << ")";
-}
-
-/*
-* Convert a BitVec to a BitVec for changing the width of the BitVec.
-* The format is ( (_ int2bv width ) ( (_ bv2int ) BitVec ) ).
-*/
-void NetExpr::bv_int_bv(ostringstream& expr, int width, ostringstream& target) const
-{
-	target << "((_ int2bv " << width << ")" << "((_ bv2int)" << expr.str() << "))";
-}
-
-/*
-* Bit or part selection for a BitVec.
-* The format is ( (_ extract msi lsi ) BitVec ).
-*/
-void NetExpr::extract(ostringstream& expr, int msi, int lsi, ostringstream& target) const
-{
-	target << "((_ extract " << msi << " " << lsi << ")" << expr.str() << ")" ;
-}
-
-/*
-* Compare a BitVec with #b0 which need to expand the number of "0" bits.
-*/
-void NetExpr::bv_compare_zero(ostringstream& expr, string op_, int width, ostringstream& target) const
-{
-	target << "(" << op_ << " " << expr.str() << " " << "#b";
-	for(int i = 0; i < width; i++){target << "0";}
-	target << ")";
-}
 
 /*
 * Generate the SMT-LIB2 for a netlist expression.
 * Return the type of expression, including Int, Bool, BitVec or Wrong number.
 * If the expression is a BitVec, return the width.
 */
-int NetExpr::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetExpr::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	expr << get_fileline() << "(?" << typeid(*this).name() << "?)";
 	return SMT_NULL;
@@ -74,7 +28,7 @@ int NetExpr::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& ex
 * Generate a const variable, usually a exact number or parameter.
 * Return Int type.
 */
-int NetEConst::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEConst::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	if (value_.is_string()){
 		cerr << get_fileline() << " String in expression is unpported for test generation!" << endl;
@@ -90,56 +44,54 @@ int NetEConst::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& 
 * The format is modname_varname_time_space.
 * Return the width of selection part.
 */
-int NetESelect::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetESelect::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
-	bool find = false;
 	int width = expr_width();
 
 	if(const NetESignal* signal = dynamic_cast<const NetESignal*>(expr_)){
-
-		for(set<RefVar*>::iterator rvpos = refs.begin(); rvpos != refs.end(); rvpos++){
+		
+		if(vars.find(signal->name().str()) != vars.end()){
 
 			//Search the variable and make a SMT name
-			if(signal->name() == perm_string((*rvpos)->name.c_str())){
-				ostringstream name;
-				find = true;
-				smt_var sv;
-				name << modname << "_" << (*rvpos)->name << "_" << (*rvpos)->time << "_" << (*rvpos)->space;
-				sv.smtname = name.str();
-				sv.basename = (*rvpos)->name;
-				sv.lsb = (*rvpos)->lsb;
-				sv.msb = (*rvpos)->msb;
-				sv.width = (*rvpos)->width;
-				sv.type = (*rvpos)->ptype;
-				sv.temp_flag = false;
-				used.insert(sv);
+			RefVar* var = vars[signal->name().str()];
+			ostringstream name;
+			SmtVar* sv = new SmtVar;
+			name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
+			sv->smtname = name.str();
+			sv->basename = var->name;
+			sv->lsb = var->lsb;
+			sv->msb = var->msb;
+			sv->width = var->width;
+			sv->type = var->ptype;
+			sv->temp_flag = false;
+			used.insert(sv);
 
-				//Bit or part selection of variable.
-				if(base_){
+			//Bit or part selection of variable.
+			if(base_){
 
-					if(const NetEConst* lsi_ = dynamic_cast<const NetEConst*>(base_)){
-						unsigned long lsi = lsi_->value().as_unsigned();
-						extract(name, lsi+width-1, lsi, expr);
-					}
-					else{
-						cerr << get_fileline() << " Memory unsupported!" << endl;
-						exit(1);
-					}
+				if(const NetEConst* lsi_ = dynamic_cast<const NetEConst*>(base_)){
+					unsigned long lsi = lsi_->value().as_unsigned();
+					extract(name, lsi+width-1, lsi, expr);
 				}
-
-				//Whole selection of variable.
-				else 
-					expr << name.str();
-
-				break;
+				else{
+					cerr << get_fileline() << " Memory unsupported!" << endl;
+					exit(1);
+				}
 			}
-		}
-	}
 
-	if(!find){
-		cerr << get_fileline() << " Can't find expression in reference set!" << endl;
-		exit(1);
-	}
+			//Whole selection of variable.
+			else
+				expr << name.str();
+
+			}
+
+			else{
+				cerr << get_fileline() << " Can't find expression in reference set!" << endl;
+				exit(1);
+			}
+
+		}
+
 	return width;
 }
 
@@ -148,34 +100,31 @@ int NetESelect::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream&
 * The format is modname_varname_time_space.
 * Return the width of variable.
 */
-int NetESignal::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetESignal::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	bool find = false;
 	int width;
 
-	for(set<RefVar*>::iterator rvpos = refs.begin(); rvpos != refs.end(); rvpos++){
+	if(vars.find(name().str()) != vars.end()){
 
-		//Search the variable and make a SMT name
-		if(name() == perm_string((*rvpos)->name.c_str())){
-			find = true;
-			ostringstream name;
-			smt_var sv;
-			name << modname << "_" << (*rvpos)->name << "_" << (*rvpos)->time << "_" << (*rvpos)->space;
-			sv.smtname = name.str();
-			sv.basename = (*rvpos)->name;
-			sv.lsb = (*rvpos)->lsb;
-			sv.msb = (*rvpos)->msb;
-			sv.width = (*rvpos)->width;
-			sv.type = (*rvpos)->ptype;
-			sv.temp_flag = false;
-			used.insert(sv);
-			expr << name.str();
-			width = sv.width;
-			break;
+		RefVar* var = vars[name().str()];
+		ostringstream name;
+		SmtVar* sv = new SmtVar;
+		name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
+		sv->smtname = name.str();
+		sv->basename = var->name;
+		sv->lsb = var->lsb;
+		sv->msb = var->msb;
+		sv->width = var->width;
+		sv->type = var->ptype;
+		sv->temp_flag = false;
+		used.insert(sv);
+		expr << name.str();
+		width = sv->width;
+
 		}
-	}
 
-	if(!find){
+	else{
 		cerr << get_fileline() << " Can't find " << name() << " in reference set!" << endl;
 		exit(1);
 	}
@@ -185,16 +134,16 @@ int NetESignal::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream&
 /*
 * Generate a SMT-LIB2 statement for a ternary expression (if ? true_expr : expr_expr).
 */
-int NetETernary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetETernary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	//Using ite(if true_expr else_expr) form to generate the smt
 	ostringstream i_expr, t_expr, e_expr;
 	int i_width, t_width, e_width;
 	int width;
 
-	i_width = cond_->dump_smt(refs, used, i_expr, modname);
-	t_width = true_val_->dump_smt(refs, used, t_expr, modname);
-	e_width = false_val_->dump_smt(refs, used, e_expr, modname);
+	i_width = cond_->dump_smt(vars, used, i_expr, md);
+	t_width = true_val_->dump_smt(vars, used, t_expr, md);
+	e_width = false_val_->dump_smt(vars, used, e_expr, md);
 
 	assert(i_width != SMT_NULL);
 	assert(t_width != SMT_NULL);
@@ -259,11 +208,11 @@ int NetETernary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream
 /*
 * Generate a SMT-LIB2 statement for a unary expression.
 */
-int NetEUnary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEUnary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	ostringstream u_expr;
 
-	int width = expr_->dump_smt(refs, used, u_expr, modname);
+	int width = expr_->dump_smt(vars, used, u_expr, md);
 
 	assert(width != SMT_NULL);
 
@@ -315,13 +264,13 @@ int NetEUnary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& 
 /*
   Generate a SMT-LIB2 statement for a binary expression.
 */
-int NetEBinary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEBinary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 
-	l_width = left_->dump_smt(refs, used, l_expr, modname);
-	r_width = right_->dump_smt(refs, used, r_expr, modname);
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
 
 	assert(l_width != SMT_NULL);
 	assert(r_width != SMT_NULL);
@@ -499,105 +448,105 @@ int NetEBinary::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream&
 	}
 }
 
-int NetEArrayPattern::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEArrayPattern::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : Array pattern unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetELast::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetELast::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetELast unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEAccess::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEAccess::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetEAccess unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEEvent::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEEvent::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetEvent unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetENetenum::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetENetenum::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetENetenum unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetENew::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetENew::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetENew unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetENull::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetENull::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetENull unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEProperty::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEProperty::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetEProperty unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEShallowCopy::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEShallowCopy::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : NetEShallowCopy unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetECString::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetECString::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << "Const string is unsupported now!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetECReal::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetECReal::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : Real number is unsupported now!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEScope::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEScope::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : Scope name unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetESFunc::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetESFunc::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << get_fileline() << " : System function call unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEConcat::dump_smt(std::set<RefVar*>& refs, std::set<smt_var>& used, ostringstream& expr) const
+int NetEConcat::dump_smt(map<string, RefVar*>& vars, std::set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << "Concatation operator is unsupported now!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEUFunc::dump_smt(set<RefVar*>& refs,  set<smt_var>& used, ostringstream& expr, const char* modname) const
+int NetEUFunc::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
 	cerr << "Function call is unsupported now!" << endl;
 	exit(1);

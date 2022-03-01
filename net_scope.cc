@@ -30,6 +30,7 @@
 # include  <cstdlib>
 # include  <sstream>
 # include  "ivl_assert.h"
+# include  "testpath.h"
 
 class PExpr;
 
@@ -875,14 +876,14 @@ void NetScope::add_tie_lo(Design*des)
       }
 }
 
-Var* NetScope::build_var(perm_string& s, int index)
+RefVar* NetScope::build_var(perm_string s)
 {
-	Var* tmp = new Var;
+	RefVar* tmp = new RefVar;
       NetNet* net = find_signal(s);
       assert(net);
       if(net->packed_dims().size() <= 1)
       {
-            Var* tmp = new Var;
+            RefVar* tmp = new RefVar;
             tmp->name = s;
             switch (net->port_type())
             {
@@ -903,7 +904,6 @@ Var* NetScope::build_var(perm_string& s, int index)
             }
             tmp->time = 0;
             tmp->space = 0;
-            tmp->varidx = index;
             if(net->packed_dims().size())
             {
                   tmp->lsb = net->packed_dims().front().get_lsb();

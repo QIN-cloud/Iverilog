@@ -1568,7 +1568,6 @@ void LexicalScope::dump_wires_(ostream&out, unsigned indent) const
 	// Iterate through and display all the wires.
       for (map<perm_string,PWire*>::const_iterator wire = wires.begin()
 		 ; wire != wires.end() ; ++ wire ) {
-
 	    (*wire).second->dump(out, indent);
       }
 }

@@ -210,6 +210,7 @@ class PExpr : public LineInfo {
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
       virtual set<string> get_var_names();
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     protected:
@@ -313,6 +314,8 @@ class PEConcat : public PExpr {
 
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
+
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     private:
@@ -503,6 +506,7 @@ class PEIdent : public PExpr {
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
       virtual set<string> get_var_names();
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     private:
@@ -765,6 +769,7 @@ class PENumber : public PExpr {
 
       virtual verinum* evaluate(Design*des, NetScope*scope, vcd_vars& vv, 
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     private:
@@ -865,6 +870,7 @@ class PEUnary : public PExpr {
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
       virtual set<string> get_var_names();
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     public:
@@ -924,6 +930,7 @@ class PEBinary : public PExpr {
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
       virtual set<string> get_var_names();
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     protected:
@@ -1079,6 +1086,7 @@ class PETernary : public PExpr {
       bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items);
 
       virtual set<string> get_var_names();
+      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
 
 
     private:

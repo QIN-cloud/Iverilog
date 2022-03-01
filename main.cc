@@ -1393,6 +1393,8 @@ int main(int argc, char*argv[])
 	design.set_design(des);
 	/*Generate SMT-LIB2.*/
 	if(smt_flag){
+		/*
+		Module* select_md;
 		string test_path = "path.txt";
 		string seeds_path = "seeds.txt";
 		ofstream test_file(test_path);
@@ -1401,14 +1403,23 @@ int main(int argc, char*argv[])
 		ofstream tail_out("tail.smt2");
 		cout << "Build vartable and cetable..." << endl;
 		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
-			module_->second->build_vartable(des);
-			module_->second->build_cetable();
+			module_->second->build_vartab(des);
 			module_->second->build_paths();
 			module_->second->random_path(test_file, seeds_path);
+			if(module_->first.str() == "compare"){
+				select_md = module_->second;
+			}
 		}
 		cout << "Generate test paths randomly..." << endl;
 		TestGen smt_test(&design, des);
-		smt_test.gen_smt(test_path, head_out, body_out, tail_out);
+		smt_test.gen_smt(select_md, test_path, head_out, body_out, tail_out);
+		*/
+		ofstream out("assign.smt2");
+		set<string> vars;
+		vars.insert("a");
+		vars.insert("b");
+
+
 	}
 
 	/* Do Coverage Simulation Analysis. */
@@ -1418,7 +1429,6 @@ int main(int argc, char*argv[])
 		if(all || path){
 			for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
 				module_->second->build_paths();
-				cout << module_->second->pscope_name() << endl;
 				module_->second->parse_assigns();
 				module_->second->sort_assigns();
 			}

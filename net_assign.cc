@@ -284,6 +284,11 @@ const NetExpr* NetAssignBase::rval() const
       return rval_;
 }
 
+const NetAssign_* NetAssignBase::lval() const
+{
+      return lval_;
+}
+
 void NetAssignBase::set_rval(NetExpr*r)
 {
       delete rval_;

@@ -57,7 +57,7 @@ class Design;
 class NetScope;
 class PData;
 class VcdVar;
-struct cond_expr;
+
 
 typedef map<string, VcdVar*> vcd_vars;
 
@@ -84,19 +84,14 @@ public:
 /* This struct is used for assign sorting. */
 struct AssignNode{
 public:
-      AssignNode(string name) : name_(name), in_(0), out_(0){};
+      AssignNode(string name) : name_(name), in_(0), out_(0), assign_(nullptr){};
       ~AssignNode();
-      list<PGAssign*> assign_;                    //Assign statements if this variable is used as lref. 
+      void dump(ostream& o);
       string name_;                               //Variable name.
       unsigned in_;                               //Number of in-degree.
       unsigned out_;                              //Number of out-degree.
-      map<string, list<PGAssign*> > next_;       //List of next nodes.
-};
-
-struct cmp{
-      bool operator() (AssignNode* l, AssignNode* r){
-            return l->in_ < r->in_;
-      }
+      PGAssign* assign_;                          //Assign statement if this variable is used as lref. 
+      list<string> next_;                         //List of next nodes.
 };
 
 /* 
@@ -233,10 +228,7 @@ class Module : public PScopeExtra, public PNamedItem {
             void build_var_cfgs();
 
             /* Build variable table*/
-            void build_vartable(Design*);
-
-            /* Build cond expression table. */
-            void build_cetable();
+            void build_vartab(Design*);
 
             /* Generate paths for every process. */
             void build_paths();
@@ -252,6 +244,15 @@ class Module : public PScopeExtra, public PNamedItem {
 
             /* Sort assign statements. */
             void sort_assigns();
+
+            /* Search lrefs in assign statements from wires. */
+            void parse_wires(map<string, RefVar*>& vars);
+
+            /* Find assign by var in graph. */
+            void find_assign(string var, map<PGAssign*, string>& assigns);
+
+            /* Generate smt-lib2 for assign statements, type will be true if generate all assigns at beginning. */
+            void gen_assign_smt(set<string>& refs, bool type, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used);
 
             /* Dump the cfgnodes for every cfg. */
             void dump_cfg(ostream& o) const; 
@@ -270,11 +271,11 @@ class Module : public PScopeExtra, public PNamedItem {
 
             inline void set_modulenode(ModuleNode* mn){mn_  = mn;}
 
+            inline void set_design(Design* design){design_ = design;}
+
             inline Module_Cfgs* get_cfg(){return cfg_;};
 
-            inline list<cond_expr*>& get_cetable(){return cetab_;};
-
-            inline set<Var*>& get_vartable(){return vartab_;}
+            inline set<RefVar*>& get_vartable(){return vartab_;}
 
             vector<VcdScope*> vcd_scopes;               /* Mutiple instantiated scopes of this module type. */
             
@@ -286,13 +287,12 @@ class Module : public PScopeExtra, public PNamedItem {
 
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
+            Design*          design_;                   
             list<PGate*>     gates_;                    /* Gates include assign lines and module instantiated. */
             ModuleNode*      mn_;                       /* The cfgnode build by this module. */
             Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
-            set<Var*>        vartab_;                   /* Defined variables. */
-		list<cond_expr*> cetab_;                    /* Condit expressions. */
+            set<RefVar*>     vartab_;                   /* Defined variables. */
             map<unsigned, vector<string> > paths_;      /* All paths for every process. */
-            list<PGAssign*>  consts_;                   /* Assigns which link to a const number. */
             list<PGAssign*> assigns_;                   /* Sorting assign statements. */
             map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
 

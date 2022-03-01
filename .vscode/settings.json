@@ -33,7 +33,8 @@
         "set": "cpp",
         "cstring": "cpp",
         "type_traits": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "algorithm": "cpp"
     },
     "git.ignoreLimitWarning": true
 }

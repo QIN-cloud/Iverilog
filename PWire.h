@@ -96,6 +96,8 @@ class PWire : public PNamedItem {
 
       SymbolType symbol_type() const;
 
+      inline list<pform_range_t> get_net() const{return net_;}
+
     private:
       perm_string name_;
       NetNet::Type type_;

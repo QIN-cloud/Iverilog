@@ -26,7 +26,7 @@
 # include  <cassert>
 # include  "string.h"
 # include  <stack>
-# include  <queue>
+# include <unordered_map>
 
 using namespace std;
 
@@ -249,10 +249,9 @@ void Module::dump_values(ostream& o) const
 	}
 }
 
-void Module::build_vartable(Design* d)
+void Module::build_vartab(Design* d)
 {
 	NetScope* scope;
-	Var* var;
 	perm_string s = pscope_name();
 	list<NetScope*> scopes = d->find_root_scopes();
 	for(list<NetScope*>::const_iterator pos = scopes.begin();
@@ -265,40 +264,9 @@ void Module::build_vartable(Design* d)
 	int count = 0;
 	for(map<perm_string,PWire*>::const_iterator spos = wires.begin(); spos != wires.end(); ++spos){
 		perm_string o = spos->first;
-		var = scope->build_var(o, count);
+		RefVar* var = scope->build_var(o);
 		if(var) vartab_.insert(var);
 		count += 1;
-	}
-}
-
-void Module::build_cetable()
-{
-	for(unsigned idx = 0; idx < cfg_->cfgs->count(); ++idx){
-		unsigned curprocid = (*(cfg_->cfgs))[idx]->id;
-		unsigned count = 0;
-		for(unsigned z = 0; z < (*(cfg_->cfgs))[idx]->root->count(); ++z){
-			if((*((*(cfg_->cfgs))[idx]->root))[z]->type.find("ISCONTROL") == 0){
-				cond_expr* ce = new cond_expr;
-				ce->procid = curprocid;
-				ce->condid = count;
-				ce->lineno = (*((*(cfg_->cfgs))[idx]->root))[z]->lineno;
-				(*((*(cfg_->cfgs))[idx]->root))[z]->condid = count;
-				svector<string> sset;
-				for(unsigned x = 0;	x < (*((*(cfg_->cfgs))[idx]->root))[z]->expr.count(); ++x){
-					sset = svector<string>(sset, (*((*(cfg_->cfgs))[idx]->root))[z]->expr[x]->get_vars());
-				}
-				for(unsigned y = 0; y < sset.count(); ++y){
-					RefVar* rv = new RefVar;
-					rv->name = sset[y];
-					rv->time = 0;
-					rv->space = 0;
-					ce->refs.insert(rv);
-				}
-				ce->expr = (*((*(cfg_->cfgs))[idx]->root))[z]->expr;
-				cetab_.push_back(ce);
-				count = count + 1;
-			}
-		}
 	}
 }
 
@@ -331,6 +299,20 @@ void VcdScope::dump(ostream& o) const
 AssignNode::~AssignNode()
 {
 
+}
+
+void AssignNode::dump(ostream& o)
+{
+	o << "{" << endl;
+	o << name_ << " indegree : " << in_ << " outdegree : " << out_ << endl;
+	if(assign_) assign_->dump(cout);
+	o << "next : ";
+	list<string>::iterator next = next_.begin();
+	for(next; next != next_.end(); next++){
+		o << (*next) << " ";
+	}
+	o << endl;
+	o << "}" << endl;
 }
 
 void Module::build_paths()
@@ -435,39 +417,31 @@ void Module::parse_assigns()
 
 		if(PGAssign* assign = dynamic_cast<PGAssign*>(*gate)){
 
-			//Assign is link to a const number, such as assign a = 4'b0000;
-			if(PEConcat* c = dynamic_cast<PEConcat*>(assign->pin(1))){
-				consts_.push_back(assign);
+			//Parsing the string names for every variable in assign statement.
+			set<string> lnames = assign->pin(0)->get_var_names();
+			assert(lnames.size() == 1);
+			set<string> rnames = assign->pin(1)->get_var_names();
+
+			//Build node for lref.
+			string lname = *(lnames.begin());
+			if(assign_pos_.find(lname) == assign_pos_.end()){
+				AssignNode* node = new AssignNode(lname);
+				assign_pos_[lname] = node;
 			}
+			AssignNode* l_node = assign_pos_[lname];
+			l_node->in_ += rnames.size();
+			l_node->assign_= assign;
 
-			//Assign has both left ref and right ref.
-			else{
-
-				//Parsing the string names for every variable in assign statement.
-				set<string> lnames = assign->pin(0)->get_var_names();
-				assert(lnames.size() == 1);
-				set<string> rnames = assign->pin(1)->get_var_names();
-
-				//Build node for lref.
-				string lname = *(lnames.begin());
-				if(assign_pos_.find(lname) == assign_pos_.end()){
-					AssignNode* node = new AssignNode(lname);
-					assign_pos_[lname] = node;
+			//Build node for rref.
+			for(string rname : rnames){
+				if(assign_pos_.find(rname) == assign_pos_.end()){
+					AssignNode* node = new AssignNode(rname);
+					assign_pos_[rname] = node;
 				}
-				AssignNode* l_node = assign_pos_[lname];
-				l_node->in_ += rnames.size();
-				l_node->assign_.push_back(assign);
-
-				//Build node for rref.
-				for(string rname : rnames){
-					if(assign_pos_.find(rname) == assign_pos_.end()){
-						AssignNode* node = new AssignNode(rname);
-						assign_pos_[rname] = node;
-					}
-					AssignNode* r_node = assign_pos_[rname];
-					r_node->out_ += 1;
-					r_node->next_[lname].push_back(assign);
-				}
+				AssignNode* r_node = assign_pos_[rname];
+				r_node->out_ += 1;
+				r_node->next_.push_back(lname);
+				
 			}
 		}
 	}
@@ -475,13 +449,75 @@ void Module::parse_assigns()
 
 void Module::sort_assigns()
 {
-	priority_queue<AssignNode*, vector<AssignNode*>, cmp> var_queue;
+	//Build a unordered map for sorting the assign statements.
+	unordered_map<string, AssignNode*> node_map;
+	map<string, AssignNode*>::iterator pos = assign_pos_.begin();
+	for(pos; pos != assign_pos_.end(); pos++){
+		node_map[pos->first] = pos->second;
+	}
+	//Get the 0 indegree node and delete it's link until map is empty.
+	while(!node_map.empty()){
+		unordered_map<string, AssignNode*>::iterator m_pos = node_map.begin();
+		for(m_pos; m_pos != node_map.end(); m_pos++){
+			if(!m_pos->second->in_){
+				if(m_pos->second->assign_){
+					assigns_.push_back(m_pos->second->assign_);
+				}
+				for(string next : m_pos->second->next_){
+					assign_pos_[next]->in_ -= 1;
+				}
+				node_map.erase(m_pos->first);
+				break;
+			}
+		}
+	}
+}
+
+void Module::parse_wires(map<string, RefVar*>& vars)
+{
 	map<string, AssignNode*>::iterator node = assign_pos_.begin();
 	for(node; node != assign_pos_.end(); node++){
-		var_queue.push(node->second);
+		if(vars.find(node->first) != vars.end()){
+			if(node->second->assign_){
+				vars[node->first]->ptype = "Assign";
+			}
+		}
 	}
-	while(!var_queue.empty()){
-		cout << var_queue.top()->name_ << endl;
-		var_queue.pop();
+}
+
+void Module::find_assign(string var, map<PGAssign*, string>& assigns)
+{
+	if(assign_pos_[var]->assign_){
+		assigns[assign_pos_[var]->assign_] = var;
 	}
+
+	list<string>::iterator next = assign_pos_[var]->next_.begin();
+	for(next; next != assign_pos_[var]->next_.end(); next++){
+		find_assign(*next, assigns);
+	}
+}
+
+void Module::gen_assign_smt(set<string>& refs, bool type, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used)
+{
+	map<PGAssign*, string> select_assigns;
+	for(string var : refs){
+		if(assign_pos_.find(var) != assign_pos_.end()){
+			if(assign_pos_[var]->assign_){
+				find_assign(var, select_assigns);
+			}
+		}
+	}
+
+	list<PGAssign*>::iterator assign = assigns_.begin();
+	for(assign; assign != assigns_.end(); assign++){
+		if(type || select_assigns.find(*assign) != select_assigns.end()){
+			(*assign)->dump_smt(design_, o, vars, used, this);
+		}
+	}
+
+	map<PGAssign*, string>::iterator pos = select_assigns.begin();
+	for(pos; pos != select_assigns.end(); pos++){
+		refs.insert(pos->second);
+	}
+
 }

@@ -143,6 +143,7 @@ class PGAssign  : public PGate {
       ~PGAssign();
 
       void dump(ostream&out, unsigned ind =4) const;
+      
       virtual void elaborate(Design*des, NetScope*scope) const;
       virtual bool elaborate_sig(Design*des, NetScope*scope) const;
       //2021.2.24
@@ -153,6 +154,7 @@ class PGAssign  : public PGate {
             set<string>* tmp = new set<string>;
             return *tmp;
       };
+      void dump_smt(Design* design, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const;
 
     private:
       void elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval) const;
