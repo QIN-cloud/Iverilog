@@ -392,6 +392,7 @@ ProcessNode* PProcess::build_node(PDesign& de)
 	ProcessNode* pn = new ProcessNode(get_lineno());
 	pn->set_id(id_);
 	pn->set_sync(is_synchronous());
+	pn->set_always(type() == IVL_PR_ALWAYS);
 	CfgNode* root = new CfgNode(get_lineno());
 	//root->add_infl(statement_->get_linenos());
 	if(statement_){

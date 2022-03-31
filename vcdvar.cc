@@ -1,6 +1,10 @@
 #include "vcdvar.h"
 #include <iomanip>
 
+unsigned time_ = 0;
+int smt_time = 0;
+ofstream new_path;
+
 CoverNum::~CoverNum()
 {
 
@@ -31,6 +35,8 @@ void VcdVar::dump(ostream& o)
 	cur_val.dump(o);
 	o << " pre_val = ";
 	pre_val.dump(o);
+	o << " sim_val = ";
+	sim_val.dump(o);
 	o << endl; 
 }
 
@@ -291,6 +297,7 @@ bool ProcessRep::equal(const set<unsigned>& p1, const set<unsigned>& p2)
 
 void ProcessRep::add(unsigned time, const set<unsigned>& path)
 {
+	bool found = false;
 	vector<set<unsigned> >& routes = module_->routes_[cfg_];
 	for(unsigned i = 0; i < routes.size(); i++){
 		set<unsigned>& route = routes[i];
@@ -301,8 +308,34 @@ void ProcessRep::add(unsigned time, const set<unsigned>& path)
 				num_->miss_ -= 1;
 			}
 			paths_[i] += 1;
+			
+			if(smt_time <= 100)
+			{
+				if(time_ < time)
+				{
+					time_ = time;
+					if(smt_time != 0)
+						new_path << "end" << endl;
+					new_path << "cycle: " << smt_time << endl;
+					new_path << "path" << " ";
+					smt_time++;
+				}
+				new_path << "[" << cfg_->id << "," << i << "] ";
+			}
+			found = true;
 			break;
 		}
+	}
+	if(!found)
+	{
+		cerr << "Can't find path in process " << cfg_->id << endl;
+		cerr << "Path ";
+		for(unsigned line : path)
+		{
+			cerr << line << " ";
+		}
+		cerr << endl;
+		exit(1);
 	}
 	num_->active_ += 1;
 }
@@ -765,6 +798,7 @@ FinalRep::FinalRep(bool t, bool f, bool s, bool p, bool b, bool c)
 	path_flag_ = p;
 	branch_flag_ = b;
 	combine_flag_ = c;
+	new_path = ofstream("../datas/cover-comb/cov_comb.txt");
 }
 
 FinalRep::~FinalRep()

@@ -40,6 +40,9 @@
 # include  <fstream>
 
 # define ASSIGN_NUMBER 2
+# define CFG_REF 0
+# define CFG_DEF 1
+# define DELETE_INDEGREE 0
 
 class PExpr;
 class PEIdent;
@@ -59,7 +62,7 @@ class PData;
 class VcdVar;
 
 
-typedef map<string, VcdVar*> vcd_vars;
+typedef map<string, VcdVar*> vcd_vars;    //{symbol, var}.
 
 /* A struct stores the paths of a Cfg node. */
 struct PathNode{
@@ -76,9 +79,12 @@ public:
       VcdScope(Module* module) : module_(module){};
       ~VcdScope();
       void dump(ostream& o) const;
+      void initialize(map<string, verinum>& variety_symbols, ostream& o);
+      void update(set<string>& changed, ostream& o);
       Module* module_;                    //Module type.
-      string name_;                       //Instatntiated name.
-      vcd_vars vars;                      //Variriables in this vcd scope.
+      string name_;                       //Instantiated name.
+      vcd_vars vars_;                     //Variriables in this vcd scope.
+      bool toggle_;                       //True if the scope is toggled at a time.
 };
 
 /* This struct is used for assign sorting. */
@@ -93,6 +99,19 @@ public:
       PGAssign* assign_;                          //Assign statement if this variable is used as lref. 
       list<string> next_;                         //List of next nodes.
 };
+
+/* This struct is built for top-logical sorting of combine cfgs. */
+struct CfgTPNode{
+public:
+      CfgTPNode(Cfg* cfg) : cfg_(cfg), in_(0), out_(0){};
+      ~CfgTPNode();
+      Cfg* cfg_;
+      unsigned in_;
+      unsigned out_;
+      list<Cfg*> next_;
+};
+
+vector<unsigned> split_path(string path);
 
 /* 
  * A module is a named container and scope. A module holds a bunch of
@@ -233,11 +252,12 @@ class Module : public PScopeExtra, public PNamedItem {
             /* Generate paths for every process. */
             void build_paths();
 
-            /* Using DFS to generate paths for start node of a cfg.*/
+            /* Using DFS to generate paths for start node of a cfg. */
             PathNode* gen_path(Cfg_Node* node, svector<Cfg_Node*>* root, unsigned index);
 
-            /* Write random paths acorrding to seeds.*/
-            void random_path(ostream& o, string seeds) const;
+            /* Generate all paths at a clock. */
+            void enumrate(ostream& enums, ostream& paths, ostream& report);
+            set<string> enumrate_id(set<string> enums, unsigned index);
 
             /* Parse assigns and be ready for sorting them. */
             void parse_assigns();
@@ -246,13 +266,34 @@ class Module : public PScopeExtra, public PNamedItem {
             void sort_assigns();
 
             /* Search lrefs in assign statements from wires. */
-            void parse_wires(map<string, RefVar*>& vars);
+            void parse_wires();
 
             /* Find assign by var in graph. */
             void find_assign(string var, map<PGAssign*, string>& assigns);
 
             /* Generate smt-lib2 for assign statements, type will be true if generate all assigns at beginning. */
-            void gen_assign_smt(set<string>& refs, bool type, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used);
+            void gen_assign_smt(set<string>& refs, bool type, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, unsigned cur_time);
+
+            /* Get the assign value by sim_vars. */
+            void assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostream& o);
+
+            /* Select synchrous cfgs and sort combine cfgs. */
+            void sort_cfgs();
+
+            /* Get the assign defs influenced by a combine cfg. */
+            void complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, bool> >& used);
+
+            /* Compare two combine cfgs, return the cfg which should be excuted first. */
+            Cfg* compare_cfgs(Cfg* lcfg, Cfg* rcfg, unordered_map<Cfg*, unordered_map<string, bool> >& used); 
+
+            /* Transfer the string path to vector<unsigned>. */
+            void tran_nodes();
+            
+            /* Dump all the path combinations. */
+            void dfs_paths(ostream& o, list<unsigned>& path, unsigned index);
+            
+            /* Work ready for coverage and smt generator. */
+            void initialize();
 
             /* Dump the cfgnodes for every cfg. */
             void dump_cfg(ostream& o) const; 
@@ -267,6 +308,12 @@ class Module : public PScopeExtra, public PNamedItem {
 
             void dump_paths(ostream& o)const;
 
+            void dump_vartab(ostream& o)const;
+
+            void dump_sort_cfg(ostream& o) const;
+
+            void dump_sort_assign(ostream& o) const;
+
             inline void set_cfg(Module_Cfgs* cfg){cfg_ = cfg;}
 
             inline void set_modulenode(ModuleNode* mn){mn_  = mn;}
@@ -274,8 +321,6 @@ class Module : public PScopeExtra, public PNamedItem {
             inline void set_design(Design* design){design_ = design;}
 
             inline Module_Cfgs* get_cfg(){return cfg_;};
-
-            inline set<RefVar*>& get_vartable(){return vartab_;}
 
             vector<VcdScope*> vcd_scopes;               /* Mutiple instantiated scopes of this module type. */
             
@@ -285,15 +330,22 @@ class Module : public PScopeExtra, public PNamedItem {
 
             map<Cfg*, vector<set<unsigned> > > routes_; /* Save paths for every cfg. */
 
+            map<string, RefVar*> vartab_;               /* Defined variables. */
+
+            list<Cfg*> sync_cfgs_;                      /* Synchoronous process. */
+
+            list<Cfg*> combine_cfgs_;                   /* Combination process sorted by refs and defs. */ 
+
+            map<unsigned, vector<vector<unsigned> > > nodes_; 
+
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
             Design*          design_;                   
             list<PGate*>     gates_;                    /* Gates include assign lines and module instantiated. */
             ModuleNode*      mn_;                       /* The cfgnode build by this module. */
             Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
-            set<RefVar*>     vartab_;                   /* Defined variables. */
-            map<unsigned, vector<string> > paths_;      /* All paths for every process. */
             list<PGAssign*> assigns_;                   /* Sorting assign statements. */
+            map<unsigned, vector<string> > paths_;      /* All paths for every process. */
             map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
 
       private: // Not implemented

@@ -43,11 +43,13 @@ public:
 	void dump(ostream& o);
 	VcdScope* scope; 				//The instantiated module where this variable is located in.
 	string name;      				//Variable name.
+	string symbol;					//Symbol in VCD file.
 	bool little_endia; 				//True as var[3:0], false as var[0:3].
 	unsigned width;   		    	//Bit width.
 	long lsb, msb;     				//Least and most size of bits.
-	verinum cur_val;  				//Value at current time.
-	verinum pre_val;   				//Value at last time.
+	verinum cur_val;  				//Final Value at current time.
+	verinum pre_val;   				//Final Value at last change time.
+	verinum sim_val;                //Real value in simulation replay.
 };
 
 /*

@@ -1,25 +1,56 @@
 
 #include "PExpr.h"
+#include "PGate.h"
 #include  "ivl_assert.h"
 
-verinum* PExpr::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+VcdVar* PGAssign::evaluate(Design* des, NetScope* scope, VcdScope* instan)
+{
+	map<PExpr*, verinum> items;
+	verinum* v = pin(1)->evaluate(des, scope, instan, false, items);
+	set<string> lnames = pin(0)->get_var_names();
+	assert(lnames.size() == 1);
+	string name = *(lnames.begin());
+	bool found = false;
+	VcdVar* res = nullptr;
+	map<string, VcdVar*>::iterator var = instan->vars_.begin();
+	for(; var != instan->vars_.end(); var++)
+	{
+		if(var->second->name == name)
+		{
+			res = var->second;
+			var->second->sim_val = verinum(*v);
+			found = true;
+			break;
+		}
+	}
+	if(!found)
+	{
+		dump(cerr);
+		cerr << "Def " << name << " can't found in vcd scope." << endl;
+		exit(1);
+	}
+	delete v;
+	return res;
+}
+
+verinum* PExpr::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	return 0;
 }
 
-verinum* PEConcat::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEConcat::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	long rep = 1;
 	svector<verinum*> vn;
 	if(repeat_)
 	{
-		verinum* vn = repeat_->evaluate(des, scope, vv, combine, cfgnode, items);
+		verinum* vn = repeat_->evaluate(des, scope, instan, combine, items);
 		rep = vn->as_ulong();
 	}
 	unsigned width = 0;
 	for(unsigned idx = 0; idx < parms_.size(); ++idx)
 	{
-		verinum* v = parms_[idx]->evaluate(des, scope, vv, combine, cfgnode, items);
+		verinum* v = parms_[idx]->evaluate(des, scope, instan, combine, items);
 		width = width + v->len();
 		vn = svector<verinum*>(vn, v);
 	}
@@ -44,12 +75,12 @@ verinum* PEConcat::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combi
 	return v;
 }
 
-verinum* PEEvent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEEvent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	return 0;
 }
 
-verinum* PEFNumber::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEFNumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	long val = value_->as_long();
 	verinum* v = new verinum(val);
@@ -60,7 +91,7 @@ verinum* PEFNumber::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool comb
 	return v;
 }
 
-verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	//NetScope*found_in;
 	assert(scope);
@@ -141,7 +172,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 			//Msb only, we select the bit in msb.
 			else if(msb_)
 			{
-				verinum* vn = msb_->evaluate(des, scope, vv, combine, cfgnode, items);
+				verinum* vn = msb_->evaluate(des, scope, instan, combine, items);
 				NetEConst* le = dynamic_cast<NetEConst*>(expr);
 
 				if (le) 
@@ -191,14 +222,17 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 	//The expr is a variable, we need to get the value from vcd var.
 	else
 	{
-		bool found = false;
 		verinum vn;
-		map<string, VcdVar*>::const_iterator pos;
-		for(pos = vv.begin(); pos != vv.end(); pos++)
+		VcdVar* var;
+		bool found = false;
+
+		map<string, VcdVar*>::iterator pos = instan->vars_.begin();
+		for(pos; pos != instan->vars_.end(); pos++)
 		{
-			if(pos->second->name.compare(cond_str.str()) == 0)
+			if(pos->second->name == cond_str.str())
 			{
-				vn = pos->second->cur_val;
+				var = pos->second;
+				vn = var->sim_val;
 				found = true;
 				break;
 			}
@@ -210,6 +244,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 			"The signal used in condition expression are not dumped : " << path_ << endl;
 			exit(1);
 		}
+
 		//Lsb or msb exit.
 		if(bits_width.size())
 		{
@@ -244,14 +279,14 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 			else if (msb_ && (msn_ = msb_->eval_const(des, scope))) 
 			{
 				unsigned long msv = msn_->as_ulong();
-				unsigned idx = msv - pos->second->lsb;
+				unsigned idx = msv - var->lsb;
 				v = new verinum(vn[idx], 1);
 			}
 			//Msb is a expr, we need to evaluate this expr.
 			else if (msb_) 
 			{
-				verinum* t = msb_->evaluate(des, scope, vv, combine, cfgnode, items);
-				unsigned idx = t->as_ulong() - pos->second->lsb;
+				verinum* t = msb_->evaluate(des, scope, instan, combine, items);
+				unsigned idx = t->as_ulong() - var->lsb;
 				v = new verinum(vn[idx], 1);
 				delete t;
 			}
@@ -260,23 +295,25 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 		//Use the current value directly.
 		else
 		{
-			v = new verinum(pos->second->cur_val);
+			v = new verinum(vn);
 		}
 
 	}
+
 	if(combine)
 	{
 		items.insert(make_pair(this, verinum(*v)));
 	}
+
 	return v;
 }
 
-verinum* PENumber::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PENumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	return new verinum(value());
 }
 
-verinum* PEString::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEString::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	verinum* v = new verinum(string(text_));
 	if(combine)
@@ -286,9 +323,9 @@ verinum* PEString::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combi
 	return v;
 }
 
-verinum* PEUnary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEUnary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
-	verinum* val = expr_->evaluate(des, scope, vv, combine, cfgnode, items);
+	verinum* val = expr_->evaluate(des, scope, instan, combine, items);
 	verinum* v; 
 	switch(op_)
 	{
@@ -338,10 +375,10 @@ verinum* PEUnary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combin
 	return v;
 }
 
-verinum* PEBinary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PEBinary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
-	verinum*l = left_->evaluate(des, scope, vv, combine, cfgnode, items);
-	verinum*r = right_->evaluate(des, scope, vv, combine, cfgnode, items);
+	verinum*l = left_->evaluate(des, scope, instan, combine, items);
+	verinum*r = right_->evaluate(des, scope, instan, combine, items);
 
 	verinum* v;
 
@@ -474,14 +511,14 @@ verinum* PEBinary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combi
 	return v;
 }
 
-verinum* PETernary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PETernary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
-	verinum* vn = expr_->evaluate(des, scope, vv, combine, cfgnode, items);
+	verinum* vn = expr_->evaluate(des, scope, instan, combine, items);
 	verinum* v;
 	if((*vn)[0] == verinum::V1)
-		v = tru_->evaluate(des, scope, vv, combine, cfgnode, items);
+		v = tru_->evaluate(des, scope, instan, combine, items);
 	else
-		v = fal_->evaluate(des, scope, vv, combine, cfgnode, items);
+		v = fal_->evaluate(des, scope, instan, combine, items);
 	if(combine)
 	{
 		items.insert(make_pair(this, verinum(*v)));
@@ -490,7 +527,7 @@ verinum* PETernary::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool comb
 	return v;
 }
 
-verinum* PECallFunction::evaluate(Design*des, NetScope*scope, vcd_vars& vv, bool combine, Cfg_Node* cfgnode, map<PExpr*, verinum>& items)
+verinum* PECallFunction::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
 {
 	cerr << "Unsupported function call in expression!" << endl;
 	exit(1);

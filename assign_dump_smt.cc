@@ -5,7 +5,10 @@
 # include <sstream>
 # include "Module.h"
 
-void PGAssign::dump_smt(Design* design, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const
+# define RIGHT true
+# define LEFT false
+
+void PGAssign::dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned cur_time) const
 {
     //We can't generate the expression like " assign {a[1:0], b[1:0]} = 4'b0000" temporarily.
 	if(pin(0)->get_var_names().size() > 1)
@@ -17,16 +20,21 @@ void PGAssign::dump_smt(Design* design, ofstream& o, map<string, RefVar*>& vars,
 	//Generate the respective SMT formats for left and right expressions.
 	//Then verify the formats of expressions are correctly.
 	ostringstream l_expr, r_expr;
-	NetScope* scope = design->find_scope(hname_t(md->pscope_name()));
-    int r_width = pin(1)->dump_smt(design, scope, vars, used, r_expr, md);
-	int l_width = pin(0)->dump_smt(design, scope, vars, used, l_expr, md);
+	hname_t name(md->pscope_name());
+	NetScope* scope = design->find_scope(name);
+	assert(scope);
+
+    int r_width = pin(1)->dump_smt(design, scope, vars, used, r_expr, md, RIGHT, cur_time);
+
+	int l_width = pin(0)->dump_smt(design, scope, vars, used, l_expr, md, LEFT, cur_time);
 
 	if(l_width == SMT_WRONG)
 	{
 		cerr << get_fileline() << " Can't find left variable in lrefences." << endl;
 		exit(0);
 	}
-	assert(r_width != SMT_NULL && r_width != SMT_BOOL);
+
+	assert(r_width != SMT_NULL);
 	assert(l_width != SMT_INT && l_width != SMT_NULL && l_width != SMT_BOOL);
 
 	//Establish an equality relationship between the left and right expressions.
@@ -37,31 +45,34 @@ void PGAssign::dump_smt(Design* design, ofstream& o, map<string, RefVar*>& vars,
 	else
 	{
 		//Right expression is a int number, then convert it to a bitvec.
-		//For example, "a = 3" or "a = 2'b11(Convert to Int)".
+		//For example, "assign a = 3" or "assign a = 2'b11 (Convert to Int)".
 		if(r_width == SMT_INT) int_to_bv(r_expr, l_width, r_equal);
+		//Right expression is one bit but bool type
+		//For example "assign a = b == c "
+		else if(r_width == SMT_BOOL) bool_to_bv(r_expr, r_equal); 
 		//The width of right is unequal to left, convert to fit the left width.
-		//For example, "a = b" with a.width = 3 and b.width = 4.
+		//For example, "assign a = b" with a.width = 3 and b.width = 4.
 		else bv_int_bv(r_expr, l_width, r_equal);
 	}
-	o << "(assert" << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;;
+	o << "(assert" << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;
 
 }
 
-int PExpr::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PExpr::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
     return SMT_NULL;
 }
 
-int PENumber::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PENumber::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
     expr << value_->as_unsigned();
 	return SMT_INT;
 }
 
-int PEIdent::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PEIdent::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
 	int width;
-	string name =  path_.back().name.str();
+	string vn =  path_.back().name.str();
 	list<index_component_t> bits_width = path_.back().index;
 
 	//variable expression is a memory
@@ -72,60 +83,109 @@ int PEIdent::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& var
 		exit(1);
 	}
 
-	if(vars.find(name) != vars.end())
+	NetScope::param_ref_t expr_pos;
+	
+	//The expr is a parameter.
+	if(scope->find_parameter(perm_string(vn.c_str()), expr_pos))
 	{
-		RefVar* var = vars[name];
-		var->space += 1;
-		ostringstream name;
-		SmtVar* sv = new SmtVar;
-		name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
-		sv->smtname = name.str();
-		sv->basename = var->name;
-		sv->lsb = var->lsb;
-		sv->msb = var->msb;
-		sv->width = var->width;
-		sv->type = var->ptype;
-		sv->temp_flag = false;
-		used.insert(sv);
-		expr << name.str();
+		verinum* v =0;
+		//No lsb and msb means that we can use the value of parameter from where it defined.
+		NetExpr* tmp = expr_pos->second.val;
+		NetEConst*ctmp = dynamic_cast<NetEConst*>(tmp);
+		if (ctmp == 0) {
+			cerr << get_lineno() << ": internal error: Unable to evaluate "
+				<< "unconstant expression (parameter=" << path_
+				<< "): " << *ctmp << endl;
+			exit(1);
+		}
+		v = new verinum(ctmp->value());
+		unsigned value = v->as_unsigned();
+		expr << value; 
+		width = SMT_INT;
+	}
 
-		PExpr* lsb_ = bits_width.back().lsb;
-		PExpr* msb_ = bits_width.back().msb;
-		
-		if(lsb_ && msb_)
+	else if(vars.find(vn) != vars.end())
+	{
+		RefVar* var = vars[vn];
+
+		if(!type)
 		{
-			long lsb = lsb_->eval_const(design, scope)->as_long();
-			long msb = msb_->eval_const(design, scope)->as_long();
-			extract(name, msb, lsb, expr);
-			width = msb - lsb + 1;
+			var->space = var->time == cur_time ? var->space + 1 : 0;
+			var->time = cur_time;
 		}
-		else if(msb_)
+
+		ostringstream name;
+
+		name << var->name << "_" << var->time << "_" << var->space;
+
+		if(!var->record || !type)
 		{
-			long msb = msb_->eval_const(design, scope)->as_long();
-			extract(name, msb, msb, expr);
-			width = 1;
+			SmtVar* sv = new SmtVar;
+			sv->smtname = name.str();
+			sv->basename = var->name;
+			sv->lsb = var->lsb;
+			sv->msb = var->msb;
+			sv->width = var->width;
+			sv->type = var->ptype;
+			var->record = true;
+			sv->temp_flag = false;
+			used.insert(sv);
 		}
+
+		if(!bits_width.empty())
+		{
+
+			PExpr* lsb_ = bits_width.back().lsb;
+			PExpr* msb_ = bits_width.back().msb;
+			
+			if(lsb_ && msb_)
+			{
+				verinum* lsn = lsb_->eval_const(design, scope);
+				verinum* msn = msb_->eval_const(design, scope);
+
+				long lsb = lsn->as_long();
+				long msb = msn->as_long();
+
+				extract(name, msb, lsb, expr);
+				width = msb - lsb + 1;
+			}
+
+			else if(msb_)
+			{
+				long msb = msb_->eval_const(design, scope)->as_long();
+				extract(name, msb, msb, expr);
+				width = 1;
+			}
+
+			else
+			{
+				expr << name.str();
+				width = var->width;
+			}
+		}
+
 		else
 		{
 			expr << name.str();
-			width = sv->width;
+			width = var->width;
 		}
+			
 	}
 
 	else
 	{
-		cerr << get_fileline() << " Can't find " << name << " in reference set!" << endl;
+		cerr << get_fileline() << " Can't find " << vn << " in reference set!" << endl;
 		exit(1);
 	}
 
 	return width;
 }
 
-int PEUnary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PEUnary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
 	ostringstream u_expr;
 
-	int width = expr_->dump_smt(design, scope, vars, used, u_expr, md);
+	int width = expr_->dump_smt(design, scope, vars, used, u_expr, md, type, cur_time);
 
 	assert(width != SMT_NULL);
 
@@ -134,14 +194,17 @@ int PEUnary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& var
 		ostringstream u_bool;
 
 		if(width == SMT_BOOL) 
-			expr << u_expr.str();
-		else if(width == SMT_INT) 
-			expr << "(distinct " << u_expr.str() << " 0)"; 
-		else 
-			bv_compare_zero(u_expr, "distinct", width, u_bool);
+			u_bool << "(= " << u_expr.str() << " " << "false" << ")";
 
-		expr << "(not " << u_bool.str() << ")";  
-		return SMT_BOOL;
+		else if(width == SMT_INT) 
+			u_bool << "(= " << u_expr.str() << " " << "0" << ")";
+
+		else 
+			bv_compare_zero(u_expr, "=", width, u_bool);
+
+		expr << "(ite " << u_bool.str() << " " << "1" << " " << "0" << ")";  
+
+		return SMT_INT;
 	}
 
 	//Form as +V, -V, ~V, the type is BitVec, others is unsupported now.
@@ -160,8 +223,8 @@ int PEUnary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& var
 	}
 
 	//Form as |V, ~|V and so on, the type of V is BitVec, and it returns only one bit.
-	else if(bv_logic[op_]){
-		expr << "(" << bv_logic[op_];
+	else if(SMT_Vec_Bits[op_]){
+		expr << "(" << SMT_Vec_Bits[op_];
 		for(int i = width-1; i >= 0; i--){
 			expr << " " << "((_ extract " << i << " " << i << ")" << u_expr.str() << ")";
 		}
@@ -175,132 +238,199 @@ int PEUnary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& var
 	}
 }
 
-int PEBinary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PEBinary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
+	int width;
 
-	l_width = left_->dump_smt(design, scope, vars, used, l_expr, md);
-	r_width = right_->dump_smt(design, scope, vars, used, r_expr, md);
+	l_width = left_->dump_smt(design, scope, vars, used, l_expr, md, type, cur_time);
+	r_width = right_->dump_smt(design, scope, vars, used, r_expr, md, type, cur_time);
 
-	assert(l_width != SMT_NULL);
-	assert(r_width != SMT_NULL);
-	
-	//Arithmetic oprator, exchange the BitVec into int type, then calculate and return Int num.
-	if(bv_arith[op_]){
+	if(SMT_Vec_Add[op_])
+	{
+		assert(l_width >= SMT_INT);
+		assert(r_width >= SMT_INT);
 
-		assert(l_width != SMT_BOOL);
-		assert(r_width != SMT_BOOL);
+		if(l_width == r_width && l_width != SMT_INT)
+		{
+			expr << "(" << SMT_Vec_Add[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
 
-		ostringstream l_int, r_int;
+			width = l_width;
+		}
+		
+		else
+		{
+			ostringstream l_int, r_int;
 
-		if(l_width != SMT_INT) 
-			bv_to_int(l_expr, l_int);
-		else 
-			l_int << l_expr.str();
+			if(l_width != SMT_INT) 
+				bv_to_int(l_expr, l_int);
+			else 
+				l_int << l_expr.str();
 
-		if(r_width != SMT_INT) 
-			bv_to_int(r_expr, r_int);
-		else 
-			r_int << r_expr.str();
+			if(r_width != SMT_INT) 
+				bv_to_int(r_expr, r_int);
+			else 
+				r_int << r_expr.str();
 
-		expr << "(" << op_ << " " << l_int.str() << " " << r_int.str() << ")";
-		return SMT_INT;
+			expr << "(" << op_ << " " << l_int.str() << " " << r_int.str() << ")";
+
+			width = SMT_INT;
+		}
+
+		return width;
 	}
 
-	//Bitwise operator, exchange the int into BitVec type, then calculate and return BitVec or bool.
-	else if(bv_logic[op_])
+	if(SMT_Vec_Bits[op_])
 	{
-		if(l_width == SMT_BOOL || r_width == SMT_BOOL)
+		ostringstream l_expr, r_expr;
+		int l_width, r_width;
+		int width;
+
+		l_width = left_->dump_smt(design, scope, vars, used, r_expr, md, type, cur_time);
+		r_width = right_->dump_smt(design, scope, vars, used, r_expr, md, type, cur_time);
+
+		assert(l_width >= SMT_INT);
+		assert(r_width >= SMT_INT);
+
+		if(l_width == r_width && l_width != SMT_INT)
+		{
+			expr << "(" << SMT_Vec_Bits[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
+
+			width = l_width;
+		}
+
+		else
+		{
+			ostringstream l_max, r_max;
+
+			assert(l_width < SMT_MAX && r_width < SMT_MAX);
+			
+			if(l_width == SMT_INT)
+				int_to_bv(l_expr, SMT_MAX, l_max);
+			else
+				bv_int_bv(l_expr, SMT_MAX, l_max);
+
+			if(r_width == SMT_INT)
+				int_to_bv(r_expr, SMT_MAX, r_max);
+			else
+				bv_int_bv(r_expr, SMT_MAX, r_max);
+
+			expr << "(" << SMT_Vec_Bits[op_] << " " << l_max.str() << " " << r_max.str() << ")";
+			
+			width = SMT_MAX;
+		}
+
+		return width;
+	}
+
+	if(SMT_Vec_Comp[op_])
+	{
+		assert(l_width >= SMT_INT);
+		assert(r_width >= SMT_INT);
+
+		if(l_width == r_width && l_width != SMT_INT)
+		{
+			expr << "(" << SMT_Vec_Comp[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
+		}
+
+		else
+		{
+			ostringstream l_int, r_int;
+
+			if(l_width != SMT_INT)
+				bv_to_int(l_expr, l_int);
+			else
+				l_int << l_expr.str();
+
+			if(r_width != SMT_INT)
+				bv_to_int(r_expr, r_int);
+			else
+				r_int << r_expr.str();
+			
+			expr << "(" << SMT_Int_Comp[op_] << " " << l_int.str() << " " << r_int.str() << ")";
+		}
+
+		width = SMT_BOOL;
+
+		return width;
+	}
+
+	if(SMT_Vec_Div[op_])
+	{
+		assert(l_width >= SMT_INT);
+		assert(r_width >= SMT_INT);
+
+		if(l_width == r_width && l_width != SMT_INT)
+		{
+			expr << "(" << SMT_Vec_Div[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
+
+			width = l_width;
+		}
+		
+		else
+		{
+			ostringstream l_int, r_int;
+
+			if(l_width != SMT_INT) 
+				bv_to_int(l_expr, l_int);
+			else 
+				l_int << l_expr.str();
+
+			if(r_width != SMT_INT) 
+				bv_to_int(r_expr, r_int);
+			else 
+				r_int << r_expr.str();
+
+			expr << "(" << op_ << " " << l_int.str() << " " << r_int.str() << ")";
+
+			width = SMT_INT;
+		}
+
+		return width;
+	}
+
+	if(SMT_Vec_Logic[op_])
+	{
+		if(l_width == r_width && l_width == SMT_BOOL)
+		{
+			expr << "(" << SMT_Vec_Logic[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
+		}
+
+		else
 		{
 			ostringstream l_bool, r_bool;
-			bool not_flag = op_ == 'O' || op_ == 'X' || op_ == 'A';
 
-			if(l_width != SMT_BOOL){
+			if(l_width != SMT_INT)
+				bv_compare_zero(l_expr, "distinct", l_width, l_bool);
+			else
+				int_compare_zero(l_expr, "distinct", l_bool);
 
-				if(l_width == SMT_INT) 
-					l_bool << "(distinct " << l_expr.str() << " 0)";
-				else 
-					bv_compare_zero(l_expr, "distinct", l_width, l_bool);
-
-			}
-			else 
-				l_bool << l_expr.str();
-
-			if(r_width != SMT_BOOL){
-
-				if(r_width == SMT_INT) 
-					r_bool << "(distinct " << r_expr.str() << " 0)";
-				else 
-					bv_compare_zero(r_expr, "distinct", r_width, r_bool);
-
-			}
-			else 
-				r_bool << r_expr.str();
-
-			if(not_flag) expr << "(not";
-			expr << "(" << bv_logic[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
-			if(not_flag) expr << ")";
-			return SMT_BOOL;
+			if(r_width != SMT_INT)
+				bv_compare_zero(r_expr, "distinct", r_width, r_bool);
+			else
+				int_compare_zero(r_expr, "distinct", r_bool);
+			
+			expr << "(" << SMT_Bool_Logic[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
 		}
-		else
-		{
-			int width = !(l_width == SMT_INT && r_width == SMT_INT) ? max(l_width, r_width) : SMT_MAX;
-			ostringstream l_bv, r_bv;
 
-			if(width != SMT_MAX){
+		width = SMT_BOOL;
 
-				if(l_width == SMT_INT) 
-					int_to_bv(l_expr, width, l_bv);
-				else 
-					l_bv << l_expr.str();
-
-				if(r_width == SMT_INT) 
-					int_to_bv(r_expr, width, r_bv);
-				else 
-					r_bv << r_expr.str();
-
-			}
-			else{
-				int_to_bv(l_expr, width, l_bv);
-				int_to_bv(r_expr, width, r_bv);
-			}
-			expr << "(" << bv_logic[op_] << " " << l_bv.str() << " " << r_bv.str() << ")";
-			return width;
-		}
+		return width;
 	}
 
-	//Logic operator, exchange the int or BitVec into bool type, then calculate and return bool.
-	else if(logic_binary[op_])
+	if(SMT_Vec_Mult[op_])
 	{
-		ostringstream l_bool, r_bool;
-		if(l_width != SMT_BOOL)
-		{
-			if(l_width == SMT_INT) l_bool << "(distinct " << l_expr.str() << " 0)";
-			else bv_compare_zero(l_expr, "distinct", l_width, l_bool);
-		}
-		else l_bool << l_expr.str();
-		if(r_width != SMT_BOOL)
-		{
-			if(r_width == SMT_INT) r_bool << "(distinct " << r_expr.str() << " 0)";
-			else bv_compare_zero(r_expr, "distinct", r_width, r_bool);
-		}
-		else r_bool << r_expr.str();
-		expr << "(" << logic_binary[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
-		return SMT_BOOL; 
-	}
+		assert(l_width >= SMT_INT);
+		assert(r_width >= SMT_INT);
 
-	//Num compare opetator, exchange the BitVec into int type, then calculate and return bool.
-	else if(bv_compare[op_])
-	{
-		assert(l_width != SMT_BOOL);
-		assert(r_width != SMT_BOOL);
+		if(l_width == r_width && l_width != SMT_INT)
+		{
+			expr << "(" << SMT_Vec_Mult[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
 
-		if(l_width == r_width){
-			const char* option;
-			option = l_width == SMT_INT ? int_compare[op_] : bv_compare[op_];
-			expr << "(" << option << " " << l_expr.str() << " " << r_expr.str() << ")";
+			width = l_width;
 		}
+		
 		else
 		{
 			ostringstream l_int, r_int;
@@ -315,60 +445,30 @@ int PEBinary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& va
 			else 
 				r_int << r_expr.str();
 
-			expr << "(" << int_compare[op_] << " " << l_int.str() << " " << r_int.str() << ")";
+			expr << "(" << op_ << " " << l_int.str() << " " << r_int.str() << ")";
+
+			width = SMT_INT;
 		}
 
-		return SMT_BOOL;
+		return width;
 	}
 
-	//Num and logic compare, calculate by types and return bool.
-	else if(int_compare[op_])
-	{
-		if(op_ == 'E' || op_ == 'N'){
-			cerr << get_fileline() << " : case equality unspported!" << endl;
-			exit(1);
-		}
+	cerr << get_fileline() << " : Pow operator is unspported!" << endl;
+	exit(1);
+	return SMT_NULL;
 
-		assert(!(l_width == SMT_BOOL ^ r_width == SMT_BOOL));
-
-		if(l_width == r_width){
-			expr << "(" << int_compare[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
-		}
-		else{
-			ostringstream l_int, r_int;
-
-			if(l_width != SMT_INT) 
-				bv_to_int(l_expr, l_int);
-			else 
-				l_int << l_expr.str();
-
-			if(r_width != SMT_INT) 
-				bv_to_int(r_expr, r_int);
-			else 
-				r_int << r_expr.str();
-
-			expr << "(" << int_compare[op_] << " " << l_int.str() << " " << r_int.str() << ")";
-		}
-		return SMT_BOOL;
-	}
-	
-	else
-	{
-		cerr << get_fileline() << " : NetEBinary operator " << op_ << " unspported!" << endl;
-		exit(1);
-	}
 }
 
-int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
-	//Using ite(if true_expr else_expr) form to generate the smt
-	ostringstream i_expr, t_expr, e_expr;
 	int i_width, t_width, e_width;
 	int width;
 
-	i_width = expr_->dump_smt(design, scope, vars, used, i_expr, md);
-	t_width = tru_->dump_smt(design, scope, vars, used, t_expr, md);
-	e_width = fal_->dump_smt(design, scope, vars, used, e_expr, md);
+	ostringstream i_expr, t_expr, e_expr;
+
+	i_width = expr_->dump_smt(design, scope, vars, used, i_expr, md, type, cur_time);
+	t_width = tru_->dump_smt(design, scope, vars, used, t_expr, md, type, cur_time);
+	e_width = fal_->dump_smt(design, scope, vars, used, e_expr, md, type, cur_time);
 
 	assert(i_width != SMT_NULL);
 	assert(t_width != SMT_NULL);
@@ -431,7 +531,7 @@ int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& v
 	return width;
 }
 
-int PEConcat::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+int PEConcat::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
 	cerr << "PEConcat is unsupported now!" << endl;
 	exit(1);

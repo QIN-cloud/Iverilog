@@ -38,7 +38,7 @@ bool NetProcTop::get_sync()
 */
 void NetProc::gen_stats(NetStats* proc_stats)
 {
-	cout << get_fileline() << "Unsupport now!" << endl;
+
 }
 
 
@@ -153,7 +153,7 @@ void NetUTask::gen_stats(NetStats* proc_stats)
 /*
 * Generate SMT-LIB2 statement for control statement type.
 */
-void NetProc::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md) const
+void NetProc::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
 {
 
 }
@@ -161,7 +161,7 @@ void NetProc::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& us
 /*
 * Generate SMT-LIB2 statement for a assign statement type in always.
 */
-void NetProc::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const
+void NetProc::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
 {
 	
 }
@@ -170,7 +170,7 @@ void NetProc::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& us
 * Generate SMT-LIB2 statement for a base assign statement in always.
 * For example, "a[1] = 0" or "a[1:0] = 2'b00" or "a = 0".
 */
-void NetAssignBase::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const
+void NetAssignBase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
 {
 	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
 	if(l_val_count() > 1)
@@ -184,7 +184,7 @@ void NetAssignBase::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar
 	ostringstream r_expr;
 	ostringstream l_expr;
 	int r_width = rval_->dump_smt(vars, used, r_expr, md);
-	int l_width = lval_->dump_smt(vars, used, l_expr, md, true);
+	int l_width = lval_->dump_smt(vars, used, l_expr, md, true, refs, cur_time);
 	if(l_width == SMT_WRONG)
 	{
 		cerr << get_fileline() << " Can't find left variable in lrefences." << endl;
@@ -210,7 +210,7 @@ void NetAssignBase::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar
 	o << "(assert" << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;;
 }
 
-void NetAssignNB::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const
+void NetAssignNB::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
 {
 	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
 	if(l_val_count() > 1)
@@ -224,7 +224,7 @@ void NetAssignNB::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>
 	ostringstream r_expr;
 	ostringstream l_expr;
 	int r_width = rval()->dump_smt(vars, used, r_expr, md);
-	int l_width = lval()->dump_smt(vars, used, l_expr, md, false);
+	int l_width = lval()->dump_smt(vars, used, l_expr, md, false, refs, cur_time);
 	if(l_width == SMT_WRONG)
 	{
 		cerr << get_fileline() << " Can't find left variable in lrefences." << endl;
@@ -253,7 +253,7 @@ void NetAssignNB::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>
 /*
 * Generate SMT-LIB2 statement for left expression of assign statement.
 */
-int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool base_type) const
+int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool base_type, set<string>& refs, unsigned cur_time) const
 {
 	if(sig_)
 	{
@@ -262,13 +262,17 @@ int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 		if(vars.find(sig_->name().str()) != vars.end())
 		{
 			ostringstream name;
+			unsigned temp_space, temp_time;
+
 			RefVar* var = vars[sig_->name().str()];
-			if(base_type)
-				var->space += 1;
 			SmtVar* sv = new SmtVar;
+			
 			width = lwid_;
 
-			name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
+			temp_space = var->time == cur_time ? temp_space + 1 : 1;
+			temp_time = cur_time;
+
+			name << var->name << "_" << temp_time << "_" << temp_space;
 			sv->smtname = name.str();
 			sv->basename = var->name;
 			sv->lsb = var->lsb;
@@ -276,8 +280,16 @@ int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 			sv->width = var->width;
 			sv->type = var->ptype;
 			sv->temp_flag = false;
+			var->record = true;
 
+			if(base_type)
+			{
+				var->space = temp_space;
+				var->time = temp_time;
+			}
+				
 			used.insert(sv);
+			refs.insert(sv->basename);
 			//
 			if(width != sv->width)
 			{
@@ -317,7 +329,7 @@ int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 /*
   Generate SMT-LIB2 statement for a if-else cond expression.
 */
-void NetCondit::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md) const
+void NetCondit::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
 {
 	ostringstream expr;
 	int width = expr_->dump_smt(vars, used, expr, md);
@@ -342,7 +354,7 @@ void NetCondit::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& 
 /*
   Generate SMT-LIB2 statement for a while cond expression.
 */
-void NetWhile::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md) const
+void NetWhile::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
 {
 	ostringstream expr;
 	int width = cond_->dump_smt(vars, used, expr, md);
@@ -367,7 +379,7 @@ void NetWhile::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& u
 /*
   Generate SMT-LIB2 statement for a repeat cond expression.
 */
-void NetRepeat::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md) const
+void NetRepeat::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
 {
 	ostringstream expr;
 	int width = expr_->dump_smt(vars, used, expr, md);
@@ -392,7 +404,7 @@ void NetRepeat::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& 
 /*
   Generate SMT-LIB2 statement for a case cond expression.
 */
-void NetCase::dump_smt(ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md) const
+void NetCase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
 {
 	ostringstream  c_expr;
 	int c_width;

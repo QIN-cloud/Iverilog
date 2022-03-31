@@ -199,7 +199,7 @@ NetScope* Design::find_scope(const std::list<hname_t>&path) const
  * fails.
  */
 NetScope* Design::find_scope(const hname_t&path) const
-{
+{	
       for (list<NetScope*>::const_iterator scope = root_scopes_.begin()
 		 ; scope != root_scopes_.end(); ++ scope ) {
 

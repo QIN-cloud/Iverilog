@@ -25,6 +25,8 @@
 # include  "PNamedItem.h"
 # include  "PDelays.h"
 # include  "netlist.h"
+# include  "Module.h"
+# include  "vcdvar.h"
 # include  <map>
 # include  <list>
 # include  <vector>
@@ -35,6 +37,8 @@ class Module;
 class CfgNode;
 class PDelays;
 class PDesign;
+class VcdScope;
+class VcdVar;
 
 /*
  * A PGate represents a Verilog gate. The gate has a name and other
@@ -154,7 +158,8 @@ class PGAssign  : public PGate {
             set<string>* tmp = new set<string>;
             return *tmp;
       };
-      void dump_smt(Design* design, ofstream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md) const;
+      void dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned time) const;
+      VcdVar* evaluate(Design* des, NetScope* scope, VcdScope* instan);
 
     private:
       void elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval) const;

@@ -914,6 +914,7 @@ int main(int argc, char*argv[])
 	  const char* slice_module = 0;
 	  const char* slice_criterion = NULL;
 	  const char* target_file = 0; //target output file for slice or testgen;
+	  const char* smt_time = 0;
 	  const char* net_path = 0;
       const char* pf_path = 0;
 
@@ -944,7 +945,7 @@ int main(int argc, char*argv[])
 	  char *tmp0;
 	  //unsigned i;
 
-      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:SVv")) != EOF) switch (opt) {
+      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:S:Vv")) != EOF) switch (opt) {
 	  case 'A':
 	  	  printf("optarg:%s\n",optarg);
 		  /*tmp0 = strdup(optarg);
@@ -991,6 +992,7 @@ int main(int argc, char*argv[])
 	    break;
 	  case 'S':
 	  	smt_flag = true;
+		smt_time = optarg;
 		break;
 	  case 'v':
 	    verbose_flag = true;
@@ -1035,7 +1037,7 @@ int main(int argc, char*argv[])
 			"\t-N <file>                      Dump the elaborated netlist to <file>.\n"
 			"\t-P <file>                      Write the parsed input to <file>.\n"
 			"\t-p <assign>                    Set a parameter value.\n"
-			"\t-S                             Generate the SMT2 file.\n"
+			"\t-S <time>                      Generate the SMT2 file.\n"
 			"\t-v                             Print progress indications.\n"
 #if defined(HAVE_TIMES)
             " and execution times.\n"
@@ -1058,7 +1060,9 @@ int main(int argc, char*argv[])
 
 	const char* fsm_selects = 0;
 	const char* vcd_file = 0;
-	perm_string cover_module;
+
+	perm_string top_module;
+	perm_string select_module;
 
 	if(covered_flag){
 		int covered_argc = optind - 3;
@@ -1074,12 +1078,12 @@ int main(int argc, char*argv[])
 			return 1;
 		}
 
-		while ((opt = getopt(covered_argc, covered_argv, "AM:TFCPBSV:hs:o:v:")) != EOF) switch (opt) {
+		while ((opt = getopt(covered_argc, covered_argv, "AM:TFCPBSV:ht:o:v:")) != EOF) switch (opt) {
 		case 'A':
 			all = true;
 			break;
 		case 'M':
-			cover_module = perm_string(optarg);
+			select_module = perm_string(optarg);
 			break;
 		case 'T':
 			toggle = true;
@@ -1105,8 +1109,8 @@ int main(int argc, char*argv[])
 		case 'o':
 			target_file = optarg;
 			break;
-		case 's':
-			roots.push_back(perm_string(optarg));
+		case 't':
+			top_module = perm_string(optarg);
 			break;
 		case 'S':
 			statement = true;
@@ -1118,6 +1122,7 @@ int main(int argc, char*argv[])
 			flag_errors += 1;
 			break;
 		}
+
 		if(all || fsm)
 		{
 			if(!fsm_selects)
@@ -1132,19 +1137,20 @@ int main(int argc, char*argv[])
 			cout << "Simulation Coverage Analysis 1.0 " << endl <<
 				"usage: covered <options>\n"
 				"options:\n"
-				"\t-M<module type>	Indicate which module to be analysized.\n"
-				"\t-Toggle          Do Toggle coverage report for module.\n"
-				"\t-Combine         Do Combination coverage report for module.\n"
-				"\t-Fsm             Do FSM coverage report for module, must with -v option.\n"
-				"\t-Statement       Do Statement coverage report for module.\n"
-				"\t-Path            Do Path coverage report for module.\n"
-				"\t-Branch          Do Branch coverage report for module.\n"
-				"\t-All             Do All coverage report for module.\n"
-				"\t-help            Print usage information, and exit.\n"
+				"\t-M<module>	    Indicate which module to be analysized.\n"
+				"\t-Toggle          Do Toggle coverage report.\n"
+				"\t-Combine         Do Combination coverage report.\n"
+				"\t-Fsm             Do FSM coverage report, must with -v option.\n"
+				"\t-Statement       Do Statement coverage report.\n"
+				"\t-Path            Do Path coverage report.\n"
+				"\t-Branch          Do Branch coverage report.\n"
+				"\t-All             Do All coverage report.\n"
+				"\t-help            Print usage information.\n"
 				"\t-v{v1,...vn}     Variables of FSM to be analysized\n"
 				"\t-o<file>         Write coverage analysis results output to <file>.\n"
-				"\t-s<module name>  Select the top-level module.\n"
+				"\t-t<module>       Select the top-level module.\n"
 				"\t-V<file>         Read VCD file information from <file>.\n"
+				"\t-s{s1,...sn}     Select the simulation time to be analysized.\n"
 				;
 			return 1;
 		}
@@ -1391,58 +1397,70 @@ int main(int argc, char*argv[])
       }
 
 	design.set_design(des);
+
 	/*Generate SMT-LIB2.*/
 	if(smt_flag){
-		/*
-		Module* select_md;
-		string test_path = "path.txt";
-		string seeds_path = "seeds.txt";
-		ofstream test_file(test_path);
-		ofstream head_out("head.smt2");
-		ofstream body_out("body.smt2");
-		ofstream tail_out("tail.smt2");
-		cout << "Build vartable and cetable..." << endl;
-		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
-			module_->second->build_vartab(des);
-			module_->second->build_paths();
-			module_->second->random_path(test_file, seeds_path);
-			if(module_->first.str() == "compare"){
-				select_md = module_->second;
-			}
+		
+		if(pform_modules.size() > 1){
+			cerr << "If you use the Smt-Generator, there must be only one Verilog Module." << endl;
+			exit(1);
 		}
-		cout << "Generate test paths randomly..." << endl;
-		TestGen smt_test(&design, des);
-		smt_test.gen_smt(select_md, test_path, head_out, body_out, tail_out);
-		*/
-		ofstream out("assign.smt2");
-		set<string> vars;
-		vars.insert("a");
-		vars.insert("b");
 
+		Module* select_md = pform_modules.begin()->second;
 
+		cout << "Analysis all kinds of excuting path..." << endl;
+ 
+		select_md->build_paths();
+
+		if(atoi(smt_time) == 0){
+			ofstream enums("../verilog-files/dump/combs.txt");
+			ofstream paths("../verilog-files/dump/paths.txt");
+			ofstream report("../verilog-files/dump/report.txt");
+			ofstream assigns("../verilog-files/dump/assigns.txt");
+			ofstream procs("../verilog-files/dump/procs.txt");
+			cout << "Initialize..." << endl;
+			select_md->initialize();
+			select_md->dump_sort_cfg(procs);
+			select_md->dump_sort_assign(assigns);
+			cout << "Enumrate..." << endl;
+			select_md->enumrate(enums, paths, report);
+			enums.close();
+			paths.close();
+			report.close();
+			assigns.close();
+			procs.close();
+		}
+
+		else{
+			cout << "Start Smt-Lib2 Generator..." << endl;
+			string test_path = "../verilog-files/temp/comb.txt";
+			TestGen smt_test(&design, des, select_md);
+			ofstream head_out("../verilog-files/temp/head.smt2");
+			ofstream body_out("../verilog-files/temp/body.smt2");
+			ofstream tail_out("../verilog-files/temp/tail.smt2");
+			smt_test.gen_smt(test_path, head_out, body_out, tail_out);
+		}
 	}
 
 	/* Do Coverage Simulation Analysis. */
 	if(covered_flag){
-		assert(cover_module.str());
+
+		assert(top_module);
 		assert(vcd_file);
-		if(all || path){
-			for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
-				module_->second->build_paths();
-				module_->second->parse_assigns();
-				module_->second->sort_assigns();
-			}
-		}
-		if(!target_file){
-			target_file = "coverage.rep";
-		}
+
+		if(!target_file)
+			target_file = "dump/coverage.txt";
+		
 		ofstream report(target_file);
+
 		if(all){
-			design.function_cover(cover_module, fsm_selects, vcd_file, report, true, true, true, true, true, true);
+			design.function_cover(top_module, select_module, fsm_selects, vcd_file, report, true, true, true, true, true, true);
 		}
+		
 		else{
-			design.function_cover(cover_module, fsm_selects, vcd_file, report, toggle, fsm, statement, path, branch, combine);
+			design.function_cover(top_module, select_module, fsm_selects, vcd_file, report, toggle, fsm, statement, path, branch, combine);
 		}
+
 	}
 
 	/* Done with all the pform data. Delete the modules. */
@@ -1519,7 +1537,6 @@ int main(int argc, char*argv[])
 	    }
 	    assert(emit_rc);
       }*/
-
 
       if (verbose_flag) {
 	    if (times_flag) {

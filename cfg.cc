@@ -10,6 +10,7 @@ Cfg* ModuleNode::build_cfg(ProcessNode* pn)
 	cfg->lineno = pn->get_lineno();
 	cfg->sync = pn->get_sync();
 	cfg->root = new svector<Cfg_Node*>(0);
+	cfg->always = pn->get_always();
 	
 	//generate all the nodes for current process
 	svector<Node*> nodes(pn->construct_node(2));

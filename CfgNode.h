@@ -289,12 +289,16 @@ class ProcessNode : public CfgNode {
 
   	void set_sync(bool sync){sync_ = sync;}
 	  bool get_sync(){return sync_;}
+
+    void set_always(bool always){always_ = always;}
+    bool get_always(){return always_;}
     
   private:
     CfgNode* root_;
     CfgNode* st_;
 	  unsigned id_;
 	  bool sync_;
+    bool always_;
 };
 
 class GenerateNode : public CfgNode {

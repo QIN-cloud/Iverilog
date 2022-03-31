@@ -57,12 +57,13 @@ typedef struct Cfg{
 	unsigned lineno;					//Line number of the first line in CFG's process.
 	unsigned id;						//Locatiion of CFG's process in module.  
 	bool sync;							//1 for clock driven, 0 for combination driven;
+	bool always;                        //1 for always, 0 for others.
 }Cfg;
 
 /*A collection of CFG in a module.*/
 typedef struct Module_Cfgs
 {
-		svector<Cfg*>* cfgs;
+	svector<Cfg*>* cfgs;
 }Module_Cfgs;
 
 #endif

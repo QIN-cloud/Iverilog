@@ -6,10 +6,13 @@
 #include <iostream>
 #include <string.h>
 #include <iomanip>
+
 using namespace std;
 
 PDesign::PDesign()
 {
+	evaluate_out = ofstream("dump/evaluate.txt");
+	control_out = ofstream("dump/control.txt");
 }
 
 PDesign:: ~PDesign()
@@ -28,6 +31,8 @@ PDesign:: ~PDesign()
 		cout << "Delete the report strctures..." << endl;
 		delete report;
 	}
+	evaluate_out.close();
+	control_out.close();
 }
 
 void PDesign::set_modules(map<perm_string, Module*> modules)
@@ -43,6 +48,11 @@ void PDesign::set_udps(map<perm_string, PUdp*>& udps)
 void PDesign::set_design(Design* design)
 {
 	des = design;
+	map<perm_string, Module*>::iterator md = modules_.begin();
+	for(md; md != modules_.end(); md++)
+	{
+		md->second->set_design(design);
+	}
 }
 
 map<perm_string, Module*> PDesign::get_modules()
@@ -74,7 +84,7 @@ void PDesign::dump_module_tree(ostream& o)
 		map<perm_string, ModuleTreeNode*>::iterator module_gate;
 		for(module_gate = mt_node->second->next_.begin(); module_gate != mt_node->second->next_.end(); module_gate++)
 		{
-			o << module_gate->second->get_type() << " " << module_gate->first << endl;
+			o << module_gate->second->get_module()->pscope_name() << " " << module_gate->first << endl;
 		}
 		o<< "}" << endl;
 	}
@@ -125,7 +135,7 @@ void PDesign::dump_everytime_vars(ostream& o)
 		variety_symbol->second.dump(o);
 		o << endl;
 	 }
-
+	 o << endl;
 }
 
 void PDesign::dump_def_information()
@@ -159,60 +169,47 @@ void PDesign::dump_def_information()
 
 }
 
-void PDesign::build_before_cover(perm_string cover_module, const char* fsm_selects)
+void PDesign::build_before_cover(const char* fsm_selects)
 {
 
-	cover_out = ofstream("cover_paths.rep");
+	cout << "Build module instantiated tree." << endl;
 
-	cout << "Build module tree and relationship of cond expr with process..." << endl;
-
-	build_var_cfgs();
+	build_module_tree(top_);
 
 	if(fsm_)
 	{
 		fsm_var_parse(fsm_selects);
 	}
 
+	cout << "Build paths and sort cfgs for select modules." << endl;
+
+	map<Module*, bool>::iterator md = select_mod.begin();
+	for(md; md != select_mod.end(); md++)
+	{
+		md->first->initialize();
+		if(path_)
+			md->first->build_paths();
+	}
+
 	report = new FinalRep(toggle_, fsm_, statement_, path_, branch_, combine_);
-
-	Module* top_module = modules_[cover_module];
-
-	if(top_module)
-		top_node = build_module_tree(cover_module, top_module);
-
-	else
-	{
-		cerr << "Invalid module or instance name for coverage report: " << cover_module << endl;
-		exit(1);
-	}
-
-	while(!enter_scopes.empty()){
-		enter_scopes.pop();
-	}
+	
 }
 
-void PDesign::build_var_cfgs()
+ModuleTreeNode* PDesign::build_module_tree(Module* module_)
 {
-	map<perm_string, Module*>::iterator module_;
-	for(module_ = modules_.begin(); module_ != modules_.end(); module_++)
-	{
-		module_->second->build_var_cfgs();
-	}
-}
-
-ModuleTreeNode* PDesign::build_module_tree(perm_string cover_module, Module* top_module)
-{
-	ModuleTreeNode * top = new ModuleTreeNode(cover_module, top_module);
-	mt_nodes[cover_module] = top;
+	ModuleTreeNode * top = new ModuleTreeNode(module_);
+	mt_nodes[module_->pscope_name()] = top;
 
 	/*Use DFS to search and build a module tree.*/
-	if(top){
+	if(top)
+	{
 		/*Search the instantiations in this module.*/
-		list<PGate*> inst_modules = top_module->get_gates();
+		list<PGate*> inst_modules = module_->get_gates();
 
-		for(PGate* inst_module : inst_modules){
-
-			if(inst_module->ty != PGate::MODULE){
+		for(PGate* inst_module : inst_modules)
+		{
+			if(inst_module->ty != PGate::MODULE)
+			{
 				continue;
 			}
 
@@ -224,12 +221,13 @@ ModuleTreeNode* PDesign::build_module_tree(perm_string cover_module, Module* top
 
 			Module* son_module = modules_[module_type];
 			
-			if(son_module){
-
+			if(son_module)
+			{
 				ModuleTreeNode* son = mt_nodes[module_type];
 
-				if(!son){
-					son = build_module_tree(module_type, son_module);
+				if(!son)
+				{
+					son = build_module_tree(son_module);
 				}
 
 				top->next_[module_name] = son;
@@ -240,7 +238,6 @@ ModuleTreeNode* PDesign::build_module_tree(perm_string cover_module, Module* top
 				cerr << "Question in module tree building." << endl;
 				exit(1);
 			}
-
 		}
 	}
 	return top;
@@ -279,7 +276,7 @@ void PDesign::fsm_var_parse(const char* fsm_selects)
 	cout << endl;
 }
 
-void PDesign::function_cover(perm_string cover_module, const char* fsm_selects, const char* vcd_file, ostream& target_file, 
+void PDesign::function_cover(perm_string top_module, perm_string select_module, const char* fsm_selects, const char* vcd_file, ostream& target_file, 
 bool toggle, bool fsm, bool statement, bool path, bool branch, bool combine)
 {
 	toggle_ = toggle;
@@ -289,16 +286,61 @@ bool toggle, bool fsm, bool statement, bool path, bool branch, bool combine)
 	branch_ = branch;
 	combine_ = combine;
 
-	build_before_cover(cover_module, fsm_selects);
+	if(modules_.find(top_module) != modules_.end())
+	{
+		top_ = modules_[top_module];
+	}
+
+	else
+	{
+		cerr << "The top module " << top_module << " can not be found in Verilog file." << endl;
+		exit(1);
+	}
+
+	if(select_module)
+	{
+		if(modules_.find(select_module) != modules_.end())
+		{
+			select_mod[modules_[select_module]] = true;
+		}
+		else
+		{
+			cerr << "The select module " << select_module << " can not be found in Verilog file." << endl;
+			exit(1);
+		}
+	}
+
+	else
+	{
+		map<perm_string, Module*>::iterator md = modules_.begin();
+		for(md; md != modules_.end(); md++)
+		{
+			if(md->second != top_)
+				select_mod[md->second] = true;
+		}
+	}
+
+	cout << "Initializing for modules before coverage analysis." << endl;
+
+	build_before_cover(fsm_selects);
 
 	FILE* vcd_handle;        /* Pointer to opened VCD file */
 
 	if( (vcd_handle = fopen( vcd_file, "r" )) != NULL ) 
 	{
+		cout << "Parsing the definition lines in vcd file..." << endl;
+
 		vcd_parse_def(vcd_handle);
+
+		cout << "Parsing the variables part in vcd file..." << endl;
+		
 		vcd_parse_sim(vcd_handle);
+
+		cout << "Generate the coverage report..." << endl;
+		
 		report_coverage(target_file);
 	} 
+
 	else 
 	{
 		cerr << "Unable to open specified VCD file" << endl;
@@ -308,9 +350,6 @@ bool toggle, bool fsm, bool statement, bool path, bool branch, bool combine)
 
 void PDesign::vcd_parse_def( FILE* vcd ) 
 {
-
-	cout << "Parsing the definition lines in vcd file..." << endl;
-
 	bool enddef_found = false;  /* If set to true, definition section is finished */
 	char keyword[256];          /* Holds keyword value                            */
 	int  chars_read;            /* Number of characters scanned in                */
@@ -324,7 +363,6 @@ void PDesign::vcd_parse_def( FILE* vcd )
 		
 		if( keyword[0] == '$' ) 
 		{
-			
 			if( strncmp( "var", (keyword + 1), 3 ) == 0 ) 
 			{
 				if(!enter_scopes.empty())
@@ -393,7 +431,8 @@ void PDesign::vcd_parse_def_ignore( FILE* vcd )
 	while( !end_seen && ((tokval = fscanf( vcd, "%s%n", token, &chars_read )) == 1) ) 
 	{
 		assert( chars_read <= 256 );
-		if( strncmp( "$end", token, 4 ) == 0 ) {
+		if( strncmp( "$end", token, 4 ) == 0 ) 
+		{
 			end_seen = true;
 		}
 	}
@@ -445,23 +484,28 @@ void PDesign::vcd_parse_def_var( FILE* vcd )
 			msb = size - 1;
 			lsb = 0;
 		}
-		
-		//Initial varialble
-		VcdVar* vv = new VcdVar;
-		vv->name = ref;
-		vv->scope = current_scope;
-		vv->little_endia = msb >= lsb ? true : false;
-		verinum vn(verinum::Vx, size);
-		vv->cur_val = vn;
-		vv->pre_val = vn;
-		vv->width = size;
-		vv->lsb = lsb;
-		vv->msb = msb;
-		current_scope->vars[string(id_code)] = vv;
-		symbol_vars[string(id_code)].push_back(make_pair(vv->name, current_scope));
-		if(fsm_names.find(vv->name) != fsm_names.end())
+
+		if(select_mod.find(current_scope->module_) != select_mod.end())
 		{
-			fsm_vars[vv] = true;
+			//Initial varialble
+			VcdVar* vv = new VcdVar;
+			vv->name = ref;
+			vv->scope = current_scope;
+			vv->little_endia = msb >= lsb ? true : false;
+			assert(vv->little_endia);
+			verinum vn(verinum::Vx, size);
+			vv->cur_val = vn;
+			vv->pre_val = vn;
+			vv->width = size;
+			vv->lsb = lsb;
+			vv->msb = msb;
+			vv->symbol = string(id_code);
+			current_scope->vars_[string(id_code)] = vv;
+			symbol_vars[string(id_code)].push_back(make_pair(vv->name, current_scope));
+			if(fsm_names.find(vv->name) != fsm_names.end())
+			{
+				fsm_vars[vv] = true;
+			}
 		}
 	} 
 	else 
@@ -471,7 +515,7 @@ void PDesign::vcd_parse_def_var( FILE* vcd )
     }
 }
 
-void PDesign::vcd_parse_def_scope( FILE* vcd) 
+void PDesign:: vcd_parse_def_scope( FILE* vcd) 
 {
 	char type[256];     /* Scope type                 */
 	char id[256];       /* Name of scope to change to */
@@ -489,15 +533,14 @@ void PDesign::vcd_parse_def_scope( FILE* vcd)
 			perm_string module_name = perm_string(id);
 			if(enter_scopes.empty())
 			{
-				if(module_name == top_node->get_type())
+				if(module_name == top_->pscope_name())
 				{
-					enter_scopes.push(top_node);
+					enter_scopes.push(mt_nodes[top_->pscope_name()]);
 				}
 				else
 				{
-					cout << id << endl;
-					cerr << "Problem of top module in vcd_parse_def_scope." << endl;
-					exit( 1 );
+					cerr << "Top module in vcd file is " << module_name << ", but your input is " << top_->pscope_name() << endl;
+					exit(1);
 				}
 			}
 			else
@@ -514,12 +557,13 @@ void PDesign::vcd_parse_def_scope( FILE* vcd)
 					exit( 1 );
 				}
 			}
+
 			Module* current_module = enter_scopes.top()->get_module();
 			VcdScope* new_scope = new VcdScope(current_module);
 			new_scope->name_ = string(id);
 			current_scope = new_scope;
 			current_module->vcd_scopes.push_back(new_scope);
-			
+
 		}
 		/*Format of $scope (begin, task , fork , others...))*/
 		else
@@ -540,18 +584,17 @@ void PDesign::vcd_parse_sim(FILE* vcd)
 	char token[4100];         /* Current token from VCD file       */
 	int  chars_read;          /* Number of characters scanned in   */
 
-	cout << "Parsing the variables part in vcd file..." << endl;
-
-	/*if(statement_ || path_ || branch_ || combine_)
+	
+	if(statement_ || path_ || branch_ || combine_)
 	{
-		cout << left << setw(10) << "Time";
-		cout << left << setw(15) << "File";
-		cout << left << setw(15) << "Module";
-		cout << left << setw(10) << "Line";
-		cout << left << setw(25) << "Node";
-		cout << left << setw(10) << "Jump Line";
-		cout << "Cond Expr Value" << endl;
-	}*/
+		evaluate_out << left << setw(10) << "Time";
+		evaluate_out << left << setw(40) << "File";
+		evaluate_out << left << setw(15) << "Module";
+		evaluate_out << left << setw(10) << "Line";
+		evaluate_out << left << setw(25) << "Node";
+		evaluate_out << left << setw(10) << "Jump Line";
+		evaluate_out << "Cond Expr Value" << endl;
+	}
 
 	cur_sim_time = -1;
 
@@ -573,15 +616,6 @@ void PDesign::vcd_parse_sim(FILE* vcd)
 		} 
 		else if( token[0] == '#' ) 
 		{
-			if(cur_sim_time>=0)
-			{
-				cover_out << endl;
-				cover_out << "#" << cur_sim_time << endl;
-			}
-			else
-			{
-				cover_out << "Paths" << endl;
-			}
 			if( cur_sim_time >= 0 ) 
 			{
 				update_vcd_vars();
@@ -591,7 +625,6 @@ void PDesign::vcd_parse_sim(FILE* vcd)
 			}
 			cur_sim_time = atol( token + 1 );
 			variety_symbols.clear();
-			cfg_records.clear();
 		} 
 		else if( (token[0] == '0') ||
 			(token[0] == '1') ||
@@ -628,55 +661,59 @@ void PDesign::vcd_parse_sim_vector( FILE* vcd, char* value )
 	char sym[256];    /* String value of signal symbol   */
 	int  chars_read;  /* Number of characters scanned in */
 	
-	if( fscanf( vcd, "%s%n", sym, &chars_read ) == 1 ) {
+	if( fscanf( vcd, "%s%n", sym, &chars_read ) == 1 ) 
+	{
 		assert( chars_read <= 256 );
-
 		string symbol = string(sym);
-		pair<string, VcdScope*> var = symbol_vars[symbol].front();
-		VcdVar* vv = var.second->vars[symbol];
-		assert(vv);
-		assert(strlen(value) <= vv->width);
-		verinum var_value(uint64_t(0),vv->width);
 
-		int index = 0;
-		for(int idx = strlen(value)-1; idx >= 0; idx--)
+		if(symbol_vars.find(symbol) != symbol_vars.end())
 		{
-			switch(value[idx])
+			pair<string, VcdScope*> var = symbol_vars[symbol].front();
+			VcdVar* vv = var.second->vars_[symbol];
+
+			assert(vv);
+			assert(strlen(value) <= vv->width);
+
+			verinum var_value(uint64_t(0),vv->width);
+
+			int index = 0;
+			for(int idx = strlen(value)-1; idx >= 0; idx--)
 			{
-			case '0':
-				var_value.set(index, verinum::V0);
-				break;
-			case '1':
-				var_value.set(index, verinum::V1);
-				break;
-			case 'x':
-			case 'X':
-				var_value.set(index, verinum::Vx);
-				break;
-			case 'z':
-			case 'Z':
-				var_value.set(index, verinum::Vz);
-				break;
-			default :
-				cerr << "Question in vcd vector parse." << endl;
-				exit(1);
-				break;
+				switch(value[idx])
+				{
+				case '0':
+					var_value.set(index, verinum::V0);
+					break;
+				case '1':
+					var_value.set(index, verinum::V1);
+					break;
+				case 'x':
+				case 'X':
+					var_value.set(index, verinum::Vx);
+					break;
+				case 'z':
+				case 'Z':
+					var_value.set(index, verinum::Vz);
+					break;
+				default :
+					cerr << "Question in vcd vector parse." << endl;
+					exit(1);
+					break;
+				}
+				index = index + 1;
 			}
-			index = index + 1;
-		}
 
-		if(var_value.get(0) == verinum::Vx || var_value[0] == verinum::Vz)
-		{
-			for(unsigned i = 1; i < var_value.len(); i++)
+			if(var_value.get(0) == verinum::Vx || var_value[0] == verinum::Vz)
 			{
-				var_value.set(i, var_value[0]);
+				for(unsigned i = 1; i < var_value.len(); i++)
+				{
+					var_value.set(i, var_value[0]);
+				}
 			}
+			variety_symbols[symbol] = (var_value);
 		}
-
-
-		variety_symbols[symbol] = (var_value);
-
 	} 
+
 	else 
 	{
 		cerr << "Bad file format!" << endl;
@@ -687,30 +724,36 @@ void PDesign::vcd_parse_sim_vector( FILE* vcd, char* value )
 void PDesign::set_symbol_char( char* sym, char value ) 
 {
 	string symbol = string(sym);
-	pair<string, VcdScope*> var = symbol_vars[symbol].front();
-	VcdVar* vv = var.second->vars[symbol];
-	assert(vv);
-	assert(1 <= vv->width);
-	verinum var_value = vv->cur_val;
-
-	switch(value)
+	if(symbol_vars.find(symbol) != symbol_vars.end())
 	{
-	case '0' :
-		var_value.set(0, verinum::V0);
-		break;
-	case '1':
-		var_value.set(0, verinum::V1);
-		break;
-	case 'x':
-	case 'X':
-		var_value.set(0, verinum::Vx);
-		break;
-	case 'z':
-	case 'Z':
-		var_value.set(0, verinum::Vz);
-		break;
+		pair<string, VcdScope*> var = symbol_vars[symbol].front();
+		VcdVar* vv = var.second->vars_[symbol];
+
+		assert(vv);
+		assert(1 <= vv->width);
+
+		verinum var_value = vv->cur_val;
+
+		switch(value)
+		{
+		case '0' :
+			var_value.set(0, verinum::V0);
+			break;
+		case '1':
+			var_value.set(0, verinum::V1);
+			break;
+		case 'x':
+		case 'X':
+			var_value.set(0, verinum::Vx);
+			break;
+		case 'z':
+		case 'Z':
+			var_value.set(0, verinum::Vz);
+			break;
+		}
+
+		variety_symbols[symbol] = (var_value);
 	}
-	variety_symbols[symbol] = (var_value);
 }
 
 void PDesign::update_vcd_vars()
@@ -722,7 +765,7 @@ void PDesign::update_vcd_vars()
 		for(pair<string, VcdScope*> var_pos : vars)
 		{
 			VcdVar* var = 0;
-			for(map<string, VcdVar*>::iterator pos = var_pos.second->vars.begin(); pos != var_pos.second->vars.end(); pos++)
+			for(map<string, VcdVar*>::iterator pos = var_pos.second->vars_.begin(); pos != var_pos.second->vars_.end(); pos++)
 			{
 				if(pos->second->name == var_pos.first)
 				{
@@ -747,7 +790,7 @@ void PDesign::toggle_timestep()
 			vector<pair<string, VcdScope*> > var_locates = symbol_vars[variety_symbol->first];
 			for(pair<string, VcdScope*> var_locate : var_locates)
 			{
-				VcdVar* var= var_locate.second->vars[variety_symbol->first];
+				VcdVar* var= var_locate.second->vars_[variety_symbol->first];
 				report->add_toggle(var_locate.second->module_, var);
 			}
 		}
@@ -764,7 +807,7 @@ void PDesign::fsm_timestep()
 			vector<pair<string, VcdScope*> > var_locates = symbol_vars[variety_symbol->first];
 			for(pair<string, VcdScope*> var_locate : var_locates)
 			{
-				VcdVar* var= var_locate.second->vars[variety_symbol->first];
+				VcdVar* var= var_locate.second->vars_[variety_symbol->first];
 				if(fsm_vars.find(var) != fsm_vars.end())
 				{
 					report->add_fsm(var_locate.second->module_, var);
@@ -778,167 +821,234 @@ void PDesign::sim_timestep()
 {
 	if(statement_ || path_ || branch_ || combine_)
 	{
-		//For each changed symbol recording in last time.
-		map<string, verinum>::iterator variety_symbol;
-		for(variety_symbol = variety_symbols.begin() ; variety_symbol != variety_symbols.end(); variety_symbol++)
+		map<Module*, bool>::iterator md = select_mod.begin();
+		for(md; md != select_mod.end(); md++)
 		{
-			//Find the varibles the symbol representing.
-			vector<pair<string, VcdScope*>> vars = symbol_vars[variety_symbol->first];
-			for(pair<string, VcdScope*> var : vars)
+			for(VcdScope* scope : md->first->vcd_scopes)
 			{
-				Module* var_module = var.second->module_;
-				set<unsigned> process_ids = var_module->var_cfgs[var.first];
-
-				//Find the cfg need to be replayed.
-				if(!process_ids.empty())
+				control_out << "Time#" << cur_sim_time << " " << scope->module_->pscope_name() << " " << scope->name_ << endl;
+				control_out << "---------------------------------------------------------------------------------" << endl;
+				scope->initialize(variety_symbols, control_out);
+				list<Cfg*>::iterator pos1 = md->first->sync_cfgs_.begin();
+				set<string> defs;
+				for(pos1; pos1 != md->first->sync_cfgs_.end(); pos1++)
 				{
-					for(unsigned idx : process_ids)
+					cfg_replay(*pos1, scope, defs);
+				}
+				if(scope->toggle_)
+				{
+					list<Cfg*>::iterator pos2 = md->first->combine_cfgs_.begin();
+					for(pos2; pos2 != md->first->combine_cfgs_.end(); pos2++)
 					{
-						//Avoid to replay a cfg again at a moment.
-						if(cfg_records.find(var.second) != cfg_records.end())
-						{
-							if(cfg_records[var.second].find(idx) != cfg_records[var.second].end())
-							{
-								continue;
-							}
-						}
-						cfg_replay(var_module, idx, var.second);
-						cfg_records[var.second][idx] = true;
+						scope->update(defs, control_out);
+						cfg_replay(*pos2, scope, defs);
 					}
+				}
+				if(!defs.empty())
+					scope->update(defs, control_out);
+				control_out << "---------------------------------------------------------------------------------" << endl << endl;
+				defs.clear();
+			}
+		}
+	}
+}
+
+void PDesign::cfg_replay(Cfg* cfg, VcdScope* scope, set<string>& defs)
+{
+	set<unsigned, less<unsigned> > path;
+	int index = 1;
+
+	//Start replay for selected cfg
+	while((index > 0) && (index <= int(cfg->root->count() - 2)))
+	{
+		Cfg_Node* node = (*(cfg->root))[index];
+
+		//For the process event node, we need to judge whether this process is executing at this time.
+		if(node->type == "ISCONTROL.EVENT")
+		{
+			if(!execute_process(node, scope, cfg))
+				return;
+			index = index + 1;
+			path.insert(node->lineno);
+		}
+
+		//For a not-control node, record defs and jump to the next node. 
+		else if(node->type.find("ISCONTROL") != 0)
+		{
+			path.insert(node->lineno);
+			index = node->dsuc[0]->index;
+			for(string def : node->defs)
+			{
+				defs.insert(def);
+			}
+		}
+
+		//For a control node, evaluate the condit expression and get the next node, then record.
+		else
+		{
+			index = eval_cond_expr(node, scope, cfg, combine_);
+			path.insert(node->lineno);
+		}
+		
+		//The value of cond expression is uncertained.
+		if(index < 0)
+		{
+			return;
+		}
+	}
+	string s = cfg->sync ? "$Synchorous Process$ " : "$Combine Process ";
+	control_out << s;
+	control_out << "(Process" << cfg->id << ") ";
+	for(set<unsigned>::iterator pos = path.begin(); pos != path.end(); pos++)
+	{
+		control_out << *pos << " -> ";
+	}
+	control_out << "end" << endl;
+	add_path(scope->module_, cfg, path);
+}
+
+bool PDesign::execute_process(Cfg_Node* node, VcdScope* vs, Cfg* cfg)
+{
+	bool res = false;
+	//Always like always@(posedge clk or negedge rst).
+	if(cfg->sync)
+	{
+		for(unsigned i = 0; i < node->expr.count(); i++)
+		{
+			PEEvent* event = dynamic_cast<PEEvent*>(node->expr[i]);
+			perm_string name = dynamic_cast<PEIdent*>(event->expr())->path().front().name;
+			PEEvent::edge_t tp= event->type();
+
+			//Identify whether this variable has changed in the last time.
+			map<string, VcdVar*>::iterator var;
+			for(var = vs->vars_.begin(); var != vs->vars_.end(); var++)
+			{
+				if(var->second->name == string(name.str())) break;
+			}
+
+			if(var == vs->vars_.end()) continue;
+
+			if(variety_symbols.find(var->second->symbol) == variety_symbols.end()) continue;
+
+			assert(var->second->cur_val.get_nbits()==1);
+			verinum::V pre_val = var->second->pre_val[0];
+			verinum::V cur_val = var->second->cur_val[0];
+
+			if(tp == PEEvent::edge_t::POSEDGE)
+			{
+				if(pre_val == verinum::V0 && cur_val == verinum::V1
+				|| pre_val == verinum::Vx && cur_val == verinum::V1)
+				{
+					res = true;
+					break;
+				}
+			}
+			else if(tp == PEEvent::edge_t::NEGEDGE)
+			{
+				if(pre_val == verinum::V1 && cur_val == verinum::V0
+				|| pre_val == verinum::Vx && cur_val == verinum::V0)
+				{
+					res = true;
+					break;
+				}
+			}
+			else if(tp == PEEvent::edge_t::EDGE)
+			{
+				if(pre_val == verinum::V0 && cur_val == verinum::V1
+				|| pre_val == verinum::Vx && cur_val == verinum::V1
+				|| pre_val == verinum::V1 && cur_val == verinum::V0
+				|| pre_val == verinum::Vx && cur_val == verinum::V0
+				)
+				{
+					res = true;
+					break;
+				}
+			}
+			else
+			{
+				res = true;
+				break;
+			}
+		}
+		vs->toggle_ = res;
+	}
+	//Always like always@(a or b) or always@(*)
+	else
+	{
+		//The type is always@(*), get refs from the Cfg.
+		if(node->expr.count() == 0)
+		{
+			for(string ref : cfg->refs)
+			{
+				//Identify whether this variable has changed in the last time.
+				map<string, VcdVar*>::iterator var;
+				for(var = vs->vars_.begin(); var != vs->vars_.end(); var++)
+				{
+					if(var->second->name == ref) break;
+				}
+
+				if(var == vs->vars_.end()) continue;
+
+				if(variety_symbols.find(var->second->symbol) == variety_symbols.end()) continue;
+
+				//If a variable, compare the last value and current value.
+				long pre_val = var->second->pre_val.as_long();
+				long cur_val = var->second->cur_val.as_long();
+				if(pre_val != cur_val)
+				{
+					res = true;
+					break;
+				}
+				continue;
+			}
+		}
+		else
+		{
+			//The event of process is a combination of variables.
+			for(unsigned i = 0; i < node->expr.count(); i++)
+			{
+				PEEvent* event = dynamic_cast<PEEvent*>(node->expr[i]);
+				perm_string name = dynamic_cast<PEIdent*>(event->expr())->path().front().name;
+				PEEvent::edge_t tp= event->type();
+
+				//Identify whether this variable has changed in the last time.
+				map<string, VcdVar*>::iterator var;
+				for(var = vs->vars_.begin(); var != vs->vars_.end(); var++)
+				{
+					if(var->second->name == string(name.str())) break;
+				}
+
+				if(var == vs->vars_.end()) continue;
+
+				if(variety_symbols.find(var->second->symbol) == variety_symbols.end()) continue;
+
+				//If a variable, compare the last value and current value.
+				if(tp == PEEvent::edge_t::ANYEDGE)
+				{
+					long pre_val = var->second->pre_val.as_long();
+					long cur_val = var->second->cur_val.as_long();
+					if(pre_val != cur_val)
+					{
+						res = true;
+						break;
+					}
+					continue;
+				}
+				else
+				{
+					cerr << "Format error in event " << node->lineno << endl;
+					exit(1);
 				}
 			}
 		}
 	}
-}
-
-void PDesign::cfg_replay(Module* var_module, int idx, VcdScope* scope)
-{
-	set<unsigned, less<unsigned> > path;
-	int index = 1;
-	Module_Cfgs* cfg = var_module->get_cfg();
-
-	//Start replay for selected cfg
-	while((index > 0) && (index <= int((*(cfg->cfgs))[idx]->root->count() - 2)))
-	{
-		Cfg_Node* cur_node = (*(*(cfg->cfgs))[idx]->root)[index];
-
-		//For the process event node, we need to judge whether this process is executing at this time.
-		if(cur_node->type == "ISCONTROL.EVENT")
-		{
-			if(!execute_process(cur_node, scope))
-				break;
-			index = index + 1;
-			path.insert(cur_node->lineno);
-			continue;
-		}
-
-		//For a not-control node, record and jump to the next node. 
-		if(cur_node->type.find("ISCONTROL") != 0)
-		{
-			path.insert(cur_node->lineno);
-			index = cur_node->dsuc[0]->index;
-			continue;
-		}
-
-		//For a control node, evaluate the condit expression and get the next node, then record.
-		index = eval_cond_expr(cur_node, scope, (*(cfg->cfgs))[idx], combine_);
-		path.insert(cur_node->lineno);
-		
-		//The value of cond expression is uncertained.
-		if(index < 0)	return;
-	}
-	add_path(var_module, (*(cfg->cfgs))[idx], path);
-}
-
-bool PDesign::execute_process(Cfg_Node* node, VcdScope* vs)
-{
-	return true;
-	//The type is always@(*) , return true because of condit expression has changeds.
-	if(node->expr.count() == 0)
-	{
-		return true;
-	}
-	//The event of process is a combination of variables.
-	for(unsigned i = 0; i < node->expr.count(); i++)
-	{
-		PEEvent* event = dynamic_cast<PEEvent*>(node->expr[i]);
-		perm_string name = dynamic_cast<PEIdent*>(event->expr())->path().front().name;
-		PEEvent::edge_t tp= event->type();
-
-		//Identify whether this variable has changed in the last time.
-		map<string, VcdVar*>::iterator var;
-		for(var = vs->vars.begin(); var != vs->vars.end(); var++)
-		{
-			if(var->second->name == string(name.str()))
-			{
-				break;
-			}
-		}
-		if(var == vs->vars.end())
-		{
-			continue;
-		}
-
-		//If a variable, compare the last value and current value.
-		if(tp == PEEvent::edge_t::ANYEDGE)
-		{
-			long pre_val = var->second->pre_val.as_long();
-			long cur_val = var->second->cur_val.as_long();
-			if(pre_val != cur_val)
-			{
-				return true;
-			}
-			continue;
-		}
-
-		//This signal is a clock.
-		assert(var->second->cur_val.get_nbits()==1);
-		verinum::V pre_val = var->second->pre_val[0];
-		verinum::V cur_val = var->second->cur_val[0];
-
-
-		if(tp == PEEvent::edge_t::POSEDGE)
-		{
-			if(pre_val == verinum::V0 && cur_val == verinum::V1)
-			{
-				return true;
-			}
-		}
-
-		else if(tp == PEEvent::edge_t::NEGEDGE)
-		{
-			if(pre_val == verinum::V1 && cur_val == verinum::V0)
-			{
-				return true;
-			}
-		}
-
-		else if(tp == PEEvent::edge_t::EDGE)
-		{
-			if((pre_val == verinum::V0 && cur_val == verinum::V1)
-		    || (pre_val == verinum::V1 && cur_val == verinum::V0))
-			{
-				return true;
-			}
-		}
-
-		else
-		{
-			return true;
-		}
-	}
-	return false;
+	return res;
 }
 
 void PDesign::add_path(Module* var_module, Cfg* cfg, const set<unsigned>& path)
 {
 	if(cur_sim_time > 0 && path.size())
 	{
-		for(unsigned lineno : path)
-		{
-			cover_out << lineno << " ";
-		}
-		cover_out << endl;
 		if(statement_)
 		{
 			report->add_stat(var_module, path);
@@ -947,13 +1057,14 @@ void PDesign::add_path(Module* var_module, Cfg* cfg, const set<unsigned>& path)
 		{
 			report->add_path(var_module, path, cur_sim_time, cfg);
 		}
-		if(branch_){
+		if(branch_)
+		{
 			report->add_branch(var_module, path);
 		}
 	}
 }
 
-int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg_, bool combine)
+int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, bool combine)
 {	
 	int index = -1;
 	hname_t name(vs->module_->pscope_name());
@@ -962,7 +1073,8 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg_, bool combin
 
 	//Evaluate the conditional expression and collect the result of combine coverage.
 	map<PExpr*, verinum> items;
-	verinum* vn = node->expr[0]->evaluate(des, scope, vs->vars, combine, node, items);
+	verinum* vn = node->expr[0]->evaluate(des, scope, vs, combine, items);
+
 	if(combine)
 	{
 		report->add_combine(vs->module_, node, *vn, items);
@@ -1011,7 +1123,7 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg_, bool combin
 				break;
 			for(set<PExpr*>::const_iterator pos = node->dsuc[idx]->caseitem.begin(); pos != node->dsuc[idx]->caseitem.end(); ++pos)
 			{
-				verinum* ci = (*pos)->evaluate(des, scope, vs->vars, combine, node, items);
+				verinum* ci = (*pos)->evaluate(des, scope, vs, combine, items);
 				if(node->type == "ISCONTROL.CASE")
 				{
 					if(*vn == *ci)
@@ -1031,32 +1143,31 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg_, bool combin
 		}
 	}
 
-	/*
-	int lineno = index >= 0 && index < cfg_->root->count() ? (*(cfg_->root))[index]->lineno : -1;
-	cout << left << setw(10);
-	cout << "#" + to_string(cur_sim_time);
-	cout << left << setw(15);
-	cout << vs->module_->get_file();
-	cout << left << setw(15);
-	cout << vs->module_->pscope_name();
-	cout << left << setw(10);
-	cout << node->lineno;
-	cout << left << setw(25);
-	cout << node->type;
-	cout << left << setw(10);
-	cout << lineno;
-	node->expr[0]->dump(cout);
-	cout << " = ";
-	vn->dump(cout);
-	cout << endl;
-	*/
-
+	
+	int lineno = index >= 0 && index < cfg->root->count() ? (*(cfg->root))[index]->lineno : -1;
+	evaluate_out << left << setw(10);
+	evaluate_out << "#" + to_string(cur_sim_time);
+	evaluate_out << left << setw(40);
+	evaluate_out << vs->module_->get_file();
+	evaluate_out << left << setw(15);
+	evaluate_out << vs->module_->pscope_name();
+	evaluate_out << left << setw(10);
+	evaluate_out << node->lineno;
+	evaluate_out << left << setw(25);
+	evaluate_out << node->type;
+	evaluate_out << left << setw(10);
+	evaluate_out << lineno;
+	node->expr[0]->dump(evaluate_out);
+	evaluate_out << " = ";
+	vn->dump(evaluate_out);
+	evaluate_out << endl;
+	
 	delete vn;
 	return index;
 }
 
 void PDesign::report_coverage(ostream& o)
 {
-	cout << "Generate the coverage report..." << endl;
 	report->dump(o);
 }
+

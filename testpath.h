@@ -20,15 +20,6 @@
 
 using namespace std;
 
-static unordered_map<char, const char*> bv_arith = {{'+', "bvadd"}, {'-', "bvsub"}, {'*', "bvmul"}, {'/', "bvudiv"}, {'%', "bvurem"}};
-static unordered_map<char, const char*> bv_logic = {{'^', "bvxor"}, {'|', "bvor"}, {'&', "bvand"}, {'O', "bvnor"}, {'A', "bvnand"}, {'X', "bvxor"}};
-static unordered_map<char, const char*> logic_unary = {{'^', "xor"}, {'|', "or"}, {'&', "and"}, {'O', "or"}, {'A', "and"}, {'X', "xor"}};
-static unordered_map<char, const char*> logic_binary = {{'o', "or"}, {'a', "and"}};
-static unordered_map<char, const char*> compare = {{'e', "="}, {'E', "==="}, {'n', "distinct"}, {'N', "!=="}};
-static unordered_map<char, const char*> bv_compare = {{'>', "bvugt"}, {'<', "bvult"}, {'L', "bvule"}, {'G', "bvuge"}};
-static unordered_map<char, const char*> int_compare = {{'>', ">"}, {'<', "<"}, {'L', "<="}, {'G', ">="}};
-static unordered_map<char, const char*> others = {{'p', "**"}, {'l', "<<"}, {'r', ">>"}, {'R', ">>>"}, {'m', "min"}, {'M', "max"}};
-
 class PDesign;
 class Design;
 class PExpr;
@@ -44,6 +35,15 @@ struct Cfg_Node;
 typedef map<int, set<NetProc*> > NetStats;
 typedef map<string, RefVar*> VarTable;
 typedef set<SmtVar*> SVTable;
+
+static unordered_map<char, const char*> SMT_Vec_Add = {{'+', "bvadd"}, {'-', "bvsub"}};
+static unordered_map<char, const char*> SMT_Vec_Div = {{'/', "bvudiv"}, {'%', "bvurem"}};
+static unordered_map<char, const char*> SMT_Vec_Bits = {{'^', "bvxor"}, {'|', "bvor"}, {'&', "bvand"}, {'O', "bvnor"}, {'A', "bvnand"}, {'X', "bvxor"}};
+static unordered_map<char, const char*> SMT_Vec_Comp = {{'>', "bvugt"}, {'<', "bvult"}, {'L', "bvule"}, {'G', "bvuge"}, {'e', "="}, {'n', "distinct"}};
+static unordered_map<char, const char*> SMT_Int_Comp = {{'>', ">"}, {'<', "<"}, {'L', "<="}, {'G', ">="}, {'e', "="}, {'n', "distinct"}};
+static unordered_map<char, const char*> SMT_Vec_Logic = {{'a', "bvand"}, {'o', "bvor"}};
+static unordered_map<char, const char*> SMT_Bool_Logic = {{'a', "and"}, {'o', "or"}};
+static unordered_map<char, const char*> SMT_Vec_Mult = {{'*', "bvmul"}};
 
 
 typedef struct TPNode{
@@ -67,8 +67,7 @@ typedef struct SmtVar{
 	string basename;
 	string smtname;
 	string parentname;
-	int index;
-	int width;
+	unsigned width;
 	int msb, lsb;
 	string type;
 	bool temp_flag;
@@ -76,17 +75,21 @@ typedef struct SmtVar{
 
 typedef struct RefVar{
 	string name;
-	int space, time;
+	unsigned space, time;
 	unsigned width;
 	int lsb, msb;
 	string ptype;
+	bool record;
+	void dump(ostream& o);
 }RefVar;
 
 extern void bv_to_int(ostringstream& expr, ostringstream& target);
-extern void int_to_bv(ostringstream& expr, int width, ostringstream& target);
-extern void bv_int_bv(ostringstream& expr, int width, ostringstream& target);
+extern void int_to_bv(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bool_to_bv(ostringstream& expr, ostringstream& target);
 extern void extract(ostringstream& expr, int msi, int lsi, ostringstream& target);
-extern void bv_compare_zero(ostringstream& expr, string op, int width, ostringstream& target);
+extern void bv_compare_zero(ostringstream& expr, string op, unsigned width, ostringstream& target);
+extern void int_compare_zero(ostringstream& expr, string op, ostringstream& target);
 
 extern bool operator == (const SmtVar&left, const SmtVar&right);
 extern bool operator <= (const SmtVar&left, const SmtVar&right);
@@ -106,37 +109,35 @@ inline bool operator != (const SmtVar&left, const SmtVar&right)
 */
 class TestGen{
 	public:
-		TestGen(PDesign*, Design*);
+		TestGen(PDesign*, Design*, Module*);
 		~TestGen();
-		void gen_smt(Module* module_, string file, ofstream& o1, ofstream& o2, ofstream& o3);  /* Generate SMT-LIB2 for a module. */
+		void gen_smt(string file, ostream& o1, ostream& o2, ostream& o3);  /* Generate SMT-LIB2 for a module. */
 	private:
 		Design*      design_;
 		PDesign*     pdesign_;
 		Module*      module_;
 		map<Module*, SVTable>                     smttabs_;              	/* Variables builded in smt generator. */
 		map<Module*, VarTable>                    vartabs_;              	/* Variables defined in every module. */
-		map<Module*, map<int, NetStats> >         stats_;                	/* Netlist statements located in evert module. */
-		map<int, map<Module*, list<TestPath*> > > testpath_;             	/* Record time and paths for every module.*/
+		map<Module*, map<unsigned, NetStats> >         stats_;              /* Netlist statements located in evert module. */
+		map<unsigned, map<Module*, list<TestPath*> > > testpath_;           /* Record time and paths for every module.*/
 
 	private:
 		void initilize(string file);                                      	/* Collect statements and variables for a module */
 		void get_stats();                                                 	/* Get netlist statements. */
 		void get_vartab();                                                	/* Get var table for a module. */
-		void get_refs_defs();                                             	/* Get refs and defs for a process. */
 		void read_testpath(string file);                                  	/* Collect testpath information from a file. */
 		void arrange_testpath();                                          	/* Build node for testpath. */
  
-		void gen_body(ofstream& o);                                       	/* Generate assert lines. */
-		void gen_head(ofstream& o);                                       	/* Generate define lines. */
-		void gen_tail(ofstream& o);                                       	/* Generate get-value lines. */
+		void gen_body(ostream& o);                                       	/* Generate assert lines. */
+		void gen_head(ostream& o);                                       	/* Generate define lines. */
+		void gen_tail(ostream& o);                                       	/* Generate get-value lines. */
 		
-		void select_sync_proc(set<TestPath*> procs, int cycle);				/* Select synchorous processes. */
-		void select_combine_proc(int cycle, list<TestPath*>& procs,         /* Select combine processes. */
-		set<string>& refs, map<TestPath*, unsigned>& excute_procs);         
 		void add_refs(TestPath* tp, set<string>& refs);                     /* Add refs after excute a process. */
-		void update_refs(set<string>& refs);                                /* Update the space after excuting a synchorous process. */
+		void update_refs(set<string>& refs, unsigned cur_time);             /* Update the space after excuting a synchorous process. */
+		void update_changed(set<string>& refs, unordered_map<string, bool>& changed);
+		bool excute_process(unordered_map<string, bool>& changed, TestPath* tp);
 
-		void gen_proc_smt(TestPath* tp, ofstream& o);  	                    /* Generate smt for a process. */
+		void gen_proc_smt(TestPath* tp, ostream& o, set<string>& refs, unsigned cur_time);  	/* Generate smt for a process. */
 
 };
 

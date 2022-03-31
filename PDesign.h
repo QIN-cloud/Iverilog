@@ -40,9 +40,8 @@ class FinalRep;
 */
 class ModuleTreeNode{
 public:
-      ModuleTreeNode(perm_string type, Module* module):type_(type), module_(module){};
+      ModuleTreeNode(Module* module): module_(module){};
       Module* get_module(){return module_;}
-      perm_string get_type(){return type_;}
       
       //Module instantiations.
       //For example, there is a module instantiation like "xram xram1(...)",
@@ -50,7 +49,6 @@ public:
       map<perm_string, ModuleTreeNode*> next_;
 
 private:
-      perm_string type_;                  //Module type.
       Module* module_;
 };
 
@@ -82,17 +80,13 @@ public:
     void dump(ostream&o);
 
     /*Start Coverage Analysis.*/
-    void function_cover(perm_string cover_module, const char* fsm_selects, const char* vcd_file, ostream& target_file,
+    void function_cover(perm_string top_module, perm_string select_module, const char* fsm_selects, const char* vcd_file, ostream& target_file,
     bool toggle, bool fsm, bool statement, bool path, bool branch, bool combine);
 
 private:
 
     /*Build module node tree and conditional expressions table.*/
-    void build_before_cover(perm_string cover_module, const char* fsm_selects);
-
-    /*Build a table for varibles which are used as condition expressions and the cfgs 
-    they are located for every module.*/
-    void build_var_cfgs();
+    void build_before_cover(const char* fsm_selects);
 
     /*Split the selected variables using in fsm analysis.*/
     void fsm_var_parse(const char* fsm_selects);
@@ -100,7 +94,7 @@ private:
     /*It's possible that mutiple module types have the same module name of instantiation,
     for example "moduleA test(....);  moduleB test(....)" , so we need to store the 
     module types for every module name by building a module_tree.*/
-    ModuleTreeNode* build_module_tree(perm_string cover_module, Module* top_module_);
+    ModuleTreeNode* build_module_tree(Module* module_);
 
     /*Parse the definition lines before the "$enddefinitions".*/
     void vcd_parse_def( FILE* vcd );
@@ -144,17 +138,17 @@ private:
     void sim_timestep();
 
     /*Evaluate the sensitive list and decide whether to replay the process.*/
-    bool execute_process(Cfg_Node* node, VcdScope* vs);
+    bool execute_process(Cfg_Node* node, VcdScope* vs, Cfg* cfg);
 
     /*Replay a Cfg and get a list of linenos where the line is executed.*/
-    void cfg_replay(Module* var_module, int idx, VcdScope* scope);
+    void cfg_replay(Cfg* cfg, VcdScope* scope, set<string>& defs);
 
     /*Evaluate the conditional expression, then select the next node by evaluating value.*/
-    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg_, bool combine);
+    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, bool combine);
 
     /*After replaying a cfg, we get a list of linenos named paths, this will be the result 
     of statement, path and branch coverage.*/
-    void add_path(Module* var_module, Cfg* cfg, const set<unsigned>& path);
+    void add_path(Module* md, Cfg* cfg, const set<unsigned>& path);
 
     /*Dump the final coverage analysis report.*/
     void report_coverage(ostream& o);
@@ -180,8 +174,9 @@ private:
     Design* des;
     map<perm_string, Module*> modules_;
     map<perm_string, PUdp*> udps_; 
-    map<perm_string, ModuleTreeNode*> mt_nodes;                                 //Each module type only has one ModuleTreeNode.
-    ofstream cover_out;
+    map<perm_string, ModuleTreeNode*> mt_nodes;    //Each module type only has one ModuleTreeNode.
+    ofstream evaluate_out;                         //Record the value of condit expression at every time.                     
+    ofstream control_out;                            //Record the value changed.
 
 /*Function Coverage Analysis Signs.*/
 private:
@@ -191,25 +186,23 @@ private:
     bool path_;
     bool branch_;
     bool combine_; 
+    Module* top_;
+    map<Module*, bool> select_mod;
 
 /*Variables used in the part of definitions parsing.*/
 private:
     bool                   found_in_vcd;                                        //Flag whether the module exists in vcd file.
     int                    scope_count;                                         //Scope level in definition parsing.
-    ModuleTreeNode*        top_node;                                            //Top node in the module tree.
     VcdScope*              current_scope;                                       //Current module instantiate in the vcd parsing process.
     map<string, bool>      fsm_names;                                           //The variable names selected in fsm cover.
     stack<ModuleTreeNode*> enter_scopes;                                        //Overhead ModuleTreeNodes that are searched in dfs. 
 
 /*Variables used in the part of value changes parsing.*/
 private:    
-    FinalRep* report;                                                           //Coverage report for all analysis.
+    FinalRep* report;                                                           //Coverage report.
     int cur_sim_time;                                                           //Current time of the simulation replay process.
     map<VcdVar*, bool> fsm_vars;                                                //Record the vcd_var in fsm variables.
     map<string,verinum> variety_symbols;                                        //Recording of symbols having value changing at a moment.
-    map<VcdScope*, map<unsigned, bool> > cfg_records;                           //Avoid to replay a cfg again at a moment.
     unordered_map<string, vector<pair<string, VcdScope*> > >  symbol_vars;      //Form as {symbol, vector {var name, instantiated module} }.
-
 };
 #endif
-

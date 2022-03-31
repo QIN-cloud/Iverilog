@@ -904,6 +904,7 @@ RefVar* NetScope::build_var(perm_string s)
             }
             tmp->time = 0;
             tmp->space = 0;
+            tmp->record = false;
             if(net->packed_dims().size())
             {
                   tmp->lsb = net->packed_dims().front().get_lsb();

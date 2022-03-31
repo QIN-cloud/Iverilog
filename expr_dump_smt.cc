@@ -55,16 +55,22 @@ int NetESelect::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 			//Search the variable and make a SMT name
 			RefVar* var = vars[signal->name().str()];
 			ostringstream name;
-			SmtVar* sv = new SmtVar;
-			name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
-			sv->smtname = name.str();
-			sv->basename = var->name;
-			sv->lsb = var->lsb;
-			sv->msb = var->msb;
-			sv->width = var->width;
-			sv->type = var->ptype;
-			sv->temp_flag = false;
-			used.insert(sv);
+
+			name <<  var->name << "_" << var->time << "_" << var->space;
+
+			if(!var->record)
+			{
+				SmtVar* sv = new SmtVar;
+				sv->smtname = name.str();
+				sv->basename = var->name;
+				sv->lsb = var->lsb;
+				sv->msb = var->msb;
+				sv->width = var->width;
+				sv->type = var->ptype;
+				sv->temp_flag = false;
+				var->record = true;
+				used.insert(sv);
+			}
 
 			//Bit or part selection of variable.
 			if(base_){
@@ -109,18 +115,25 @@ int NetESignal::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 
 		RefVar* var = vars[name().str()];
 		ostringstream name;
-		SmtVar* sv = new SmtVar;
-		name << md->pscope_name() << "_" << var->name << "_" << var->time << "_" << var->space;
-		sv->smtname = name.str();
-		sv->basename = var->name;
-		sv->lsb = var->lsb;
-		sv->msb = var->msb;
-		sv->width = var->width;
-		sv->type = var->ptype;
-		sv->temp_flag = false;
-		used.insert(sv);
+
+		name <<  var->name << "_" << var->time << "_" << var->space;
+
+		if(!var->record)
+		{
+			SmtVar* sv = new SmtVar;
+			sv->smtname = name.str();
+			sv->basename = var->name;
+			sv->lsb = var->lsb;
+			sv->msb = var->msb;
+			sv->width = var->width;
+			sv->type = var->ptype;
+			sv->temp_flag = false;
+			var->record = true;
+			used.insert(sv);
+		}
+
+		width = var->width;
 		expr << name.str();
-		width = sv->width;
 
 		}
 
@@ -205,6 +218,7 @@ int NetETernary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostrin
 	expr << ")";
 	return width;
 }
+
 /*
 * Generate a SMT-LIB2 statement for a unary expression.
 */
@@ -221,14 +235,17 @@ int NetEUnary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostrings
 		ostringstream u_bool;
 
 		if(width == SMT_BOOL) 
-			expr << u_expr.str();
-		else if(width == SMT_INT) 
-			expr << "(distinct " << u_expr.str() << " 0)"; 
-		else 
-			bv_compare_zero(u_expr, "distinct", width, u_bool);
+			u_bool << "(= " << u_expr.str() << " " << "false" << ")";
 
-		expr << "(not " << u_bool.str() << ")";  
-		return SMT_BOOL;
+		else if(width == SMT_INT) 
+			u_bool << "(= " << u_expr.str() << " " << "0" << ")";
+
+		else 
+			bv_compare_zero(u_expr, "=", width, u_bool);
+
+		expr << "(ite " << u_bool.str() << " " << "1" << " " << "0" << ")";  
+
+		return SMT_INT;
 	}
 
 	//Form as +V, -V, ~V, the type is BitVec, others is unsupported now.
@@ -247,8 +264,8 @@ int NetEUnary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostrings
 	}
 
 	//Form as |V, ~|V and so on, the type of V is BitVec, and it returns only one bit.
-	else if(bv_logic[op_]){
-		expr << "(" << bv_logic[op_];
+	else if(SMT_Vec_Bits[op_]){
+		expr << "(" << SMT_Vec_Bits[op_];
 		for(int i = width-1; i >= 0; i--){
 			expr << " " << "((_ extract " << i << " " << i << ")" << u_expr.str() << ")";
 		}
@@ -261,26 +278,39 @@ int NetEUnary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostrings
 		exit(1);
 	}
 }
+
 /*
   Generate a SMT-LIB2 statement for a binary expression.
 */
 int NetEBinary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
+	return SMT_NULL;
+}
+
+int NetEBAdd::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
+	int width;
 
 	l_width = left_->dump_smt(vars, used, l_expr, md);
 	r_width = right_->dump_smt(vars, used, r_expr, md);
 
-	assert(l_width != SMT_NULL);
-	assert(r_width != SMT_NULL);
+	cout << l_expr.str() << endl;
+	cout << r_expr.str() << endl;
+
+	assert(l_width >= SMT_INT);
+	assert(r_width >= SMT_INT);
+
+	if(l_width == r_width && l_width != SMT_INT)
+	{
+		expr << "(" << SMT_Vec_Add[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
+
+		width = l_width;
+	}
 	
-	//Arithmetic oprator, exchange the BitVec into int type, then calculate and return Int num.
-	if(bv_arith[op_]){
-
-		assert(l_width != SMT_BOOL);
-		assert(r_width != SMT_BOOL);
-
+	else
+	{
 		ostringstream l_int, r_int;
 
 		if(l_width != SMT_INT) 
@@ -293,159 +323,233 @@ int NetEBinary::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 		else 
 			r_int << r_expr.str();
 
-		expr << "(" << op_ << " " << l_int.str() << " " << r_int.str() << ")";
-		return SMT_INT;
+		expr << "(" << op() << " " << l_int.str() << " " << r_int.str() << ")";
+
+		width = SMT_INT;
 	}
 
-	//Bitwise operator, exchange the int into BitVec type, then calculate and return BitVec or bool.
-	else if(bv_logic[op_])
+	return width;
+}
+
+int NetEBDiv::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	ostringstream l_expr, r_expr;
+	int l_width, r_width;
+	int width;
+
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
+
+	assert(l_width >= SMT_INT);
+	assert(r_width >= SMT_INT);
+
+	if(l_width == r_width && l_width != SMT_INT)
 	{
-		if(l_width == SMT_BOOL || r_width == SMT_BOOL)
-		{
-			ostringstream l_bool, r_bool;
-			bool not_flag = op_ == 'O' || op_ == 'X' || op_ == 'A';
+		expr << "(" << SMT_Vec_Div[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
 
-			if(l_width != SMT_BOOL){
-
-				if(l_width == SMT_INT) 
-					l_bool << "(distinct " << l_expr.str() << " 0)";
-				else 
-					bv_compare_zero(l_expr, "distinct", l_width, l_bool);
-
-			}
-			else 
-				l_bool << l_expr.str();
-
-			if(r_width != SMT_BOOL){
-
-				if(r_width == SMT_INT) 
-					r_bool << "(distinct " << r_expr.str() << " 0)";
-				else 
-					bv_compare_zero(r_expr, "distinct", r_width, r_bool);
-
-			}
-			else 
-				r_bool << r_expr.str();
-
-			if(not_flag) expr << "(not";
-			expr << "(" << bv_logic[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
-			if(not_flag) expr << ")";
-			return SMT_BOOL;
-		}
-		else
-		{
-			int width = !(l_width == SMT_INT && r_width == SMT_INT) ? max(l_width, r_width) : SMT_MAX;
-			ostringstream l_bv, r_bv;
-
-			if(width != SMT_MAX){
-
-				if(l_width == SMT_INT) 
-					int_to_bv(l_expr, width, l_bv);
-				else 
-					l_bv << l_expr.str();
-
-				if(r_width == SMT_INT) 
-					int_to_bv(r_expr, width, r_bv);
-				else 
-					r_bv << r_expr.str();
-
-			}
-			else{
-				int_to_bv(l_expr, width, l_bv);
-				int_to_bv(r_expr, width, r_bv);
-			}
-			expr << "(" << bv_logic[op_] << " " << l_bv.str() << " " << r_bv.str() << ")";
-			return width;
-		}
-	}
-
-	//Logic operator, exchange the int or BitVec into bool type, then calculate and return bool.
-	else if(logic_binary[op_])
-	{
-		ostringstream l_bool, r_bool;
-		if(l_width != SMT_BOOL)
-		{
-			if(l_width == SMT_INT) l_bool << "(distinct " << l_expr.str() << " 0)";
-			else bv_compare_zero(l_expr, "distinct", l_width, l_bool);
-		}
-		else l_bool << l_expr.str();
-		if(r_width != SMT_BOOL)
-		{
-			if(r_width == SMT_INT) r_bool << "(distinct " << r_expr.str() << " 0)";
-			else bv_compare_zero(r_expr, "distinct", r_width, r_bool);
-		}
-		else r_bool << r_expr.str();
-		expr << "(" << logic_binary[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
-		return SMT_BOOL; 
-	}
-
-	//Num compare opetator, exchange the BitVec into int type, then calculate and return bool.
-	else if(bv_compare[op_])
-	{
-		assert(l_width != SMT_BOOL);
-		assert(r_width != SMT_BOOL);
-
-		if(l_width == r_width){
-			const char* option;
-			option = l_width == SMT_INT ? int_compare[op_] : bv_compare[op_];
-			expr << "(" << option << " " << l_expr.str() << " " << r_expr.str() << ")";
-		}
-		else
-		{
-			ostringstream l_int, r_int;
-
-			if(l_width != SMT_INT) 
-				bv_to_int(l_expr, l_int);
-			else 
-				l_int << l_expr.str();
-
-			if(r_width != SMT_INT) 
-				bv_to_int(r_expr, r_int);
-			else 
-				r_int << r_expr.str();
-
-			expr << "(" << int_compare[op_] << " " << l_int.str() << " " << r_int.str() << ")";
-		}
-
-		return SMT_BOOL;
-	}
-
-	//Num and logic compare, calculate by types and return bool.
-	else if(int_compare[op_])
-	{
-		if(op_ == 'E' || op_ == 'N'){
-			cerr << get_fileline() << " : case equality unspported!" << endl;
-			exit(1);
-		}
-
-		assert(!(l_width == SMT_BOOL ^ r_width == SMT_BOOL));
-
-		if(l_width == r_width){
-			expr << "(" << int_compare[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
-		}
-		else{
-			ostringstream l_int, r_int;
-
-			if(l_width != SMT_INT) 
-				bv_to_int(l_expr, l_int);
-			else 
-				l_int << l_expr.str();
-
-			if(r_width != SMT_INT) 
-				bv_to_int(r_expr, r_int);
-			else 
-				r_int << r_expr.str();
-
-			expr << "(" << int_compare[op_] << " " << l_int.str() << " " << r_int.str() << ")";
-		}
-		return SMT_BOOL;
+		width = l_width;
 	}
 	
 	else
 	{
-		cerr << get_fileline() << " : NetEBinary operator " << op_ << " unspported!" << endl;
-		exit(1);
+		ostringstream l_int, r_int;
+
+		if(l_width != SMT_INT) 
+			bv_to_int(l_expr, l_int);
+		else 
+			l_int << l_expr.str();
+
+		if(r_width != SMT_INT) 
+			bv_to_int(r_expr, r_int);
+		else 
+			r_int << r_expr.str();
+
+		expr << "(" << op() << " " << l_int.str() << " " << r_int.str() << ")";
+
+		width = SMT_INT;
 	}
+
+	return width;
+}
+
+int NetEBBits::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	ostringstream l_expr, r_expr;
+	int l_width, r_width;
+	int width;
+
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
+
+	assert(l_width >= SMT_INT);
+	assert(r_width >= SMT_INT);
+
+	if(l_width == r_width && l_width != SMT_INT)
+	{
+		expr << "(" << SMT_Vec_Bits[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
+
+		width = l_width;
+	}
+
+	else
+	{
+		ostringstream l_max, r_max;
+
+		assert(l_width < SMT_MAX && r_width < SMT_MAX);
+		
+		if(l_width == SMT_INT)
+			int_to_bv(l_expr, SMT_MAX, l_max);
+		else
+			bv_int_bv(l_expr, SMT_MAX, l_max);
+
+		if(r_width == SMT_INT)
+			int_to_bv(r_expr, SMT_MAX, r_max);
+		else
+			bv_int_bv(r_expr, SMT_MAX, r_max);
+
+		expr << "(" << SMT_Vec_Bits[op()] << " " << l_max.str() << " " << r_max.str() << ")";
+		
+		width = SMT_MAX;
+	}
+
+	return width;
+}
+
+int NetEBComp::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	ostringstream l_expr, r_expr;
+	int l_width, r_width;
+	int width;
+
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
+
+	assert(l_width >= SMT_INT);
+	assert(r_width >= SMT_INT);
+
+	if(l_width == r_width && l_width != SMT_INT)
+	{
+		expr << "(" << SMT_Vec_Comp[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
+	}
+
+	else
+	{
+		ostringstream l_int, r_int;
+
+		if(l_width != SMT_INT)
+			bv_to_int(l_expr, l_int);
+		else
+			l_int << l_expr.str();
+
+		if(r_width != SMT_INT)
+			bv_to_int(r_expr, r_int);
+		else
+			r_int << r_expr.str();
+		
+		expr << "(" << SMT_Int_Comp[op()] << " " << l_int.str() << " " << r_int.str() << ")";
+	}
+
+	width = SMT_BOOL;
+
+	return width;
+}
+
+int NetEBLogic::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	ostringstream l_expr, r_expr;
+	int l_width, r_width;
+	int width;
+
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
+
+	if(l_width == r_width && l_width == SMT_BOOL)
+	{
+		expr << "(" << SMT_Bool_Logic[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
+	}
+
+	else
+	{
+		ostringstream l_bool, r_bool;
+
+		if(l_width != SMT_INT)
+			bv_compare_zero(l_expr, "distinct", l_width, l_bool);
+		else
+			int_compare_zero(l_expr, "distinct", l_bool);
+
+		if(r_width != SMT_INT)
+			bv_compare_zero(r_expr, "distinct", r_width, r_bool);
+		else
+			int_compare_zero(r_expr, "distinct", r_bool);
+		
+		expr << "(" << SMT_Bool_Logic[op()] << " " << l_bool.str() << " " << r_bool.str() << ")";
+	}
+
+	width = SMT_BOOL;
+
+	return width;
+}
+
+int NetEBMinMax::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	cerr << get_fileline() << " : Max and Min operator is unspported!" << endl;
+	exit(1);
+	return SMT_NULL;
+}
+
+int NetEBMult::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	ostringstream l_expr, r_expr;
+	int l_width, r_width;
+	int width;
+
+	l_width = left_->dump_smt(vars, used, l_expr, md);
+	r_width = right_->dump_smt(vars, used, r_expr, md);
+
+	assert(l_width >= SMT_INT);
+	assert(r_width >= SMT_INT);
+
+	if(l_width == r_width && l_width != SMT_INT)
+	{
+		expr << "(" << SMT_Vec_Mult[op()] << " " << l_expr.str() << " " << r_expr.str() << ")";
+
+		width = l_width;
+	}
+	
+	else
+	{
+		ostringstream l_int, r_int;
+
+		if(l_width != SMT_INT) 
+			bv_to_int(l_expr, l_int);
+		else 
+			l_int << l_expr.str();
+
+		if(r_width != SMT_INT) 
+			bv_to_int(r_expr, r_int);
+		else 
+			r_int << r_expr.str();
+
+		expr << "(" << op() << " " << l_int.str() << " " << r_int.str() << ")";
+
+		width = SMT_INT;
+	}
+
+	return width;
+}
+
+int NetEBPow::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	cerr << get_fileline() << " : Pow operator is unspported!" << endl;
+	exit(1);
+	return SMT_NULL;
+}
+
+int NetEBShift::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
+{
+	cerr << get_fileline() << " : Shift operator is unspported!" << endl;
+	exit(1);
+	return SMT_NULL;
 }
 
 int NetEArrayPattern::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
@@ -541,14 +645,14 @@ int NetESFunc::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostrings
 
 int NetEConcat::dump_smt(map<string, RefVar*>& vars, std::set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
-	cerr << "Concatation operator is unsupported now!" << endl;
+	cerr << get_fileline() << " : System function call unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
 int NetEUFunc::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
-	cerr << "Function call is unsupported now!" << endl;
+	cerr << get_fileline() << " : System function call unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
