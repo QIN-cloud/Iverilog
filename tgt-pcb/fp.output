@@ -1,0 +1,454 @@
+Grammar
+
+    0 $accept: file_items $end
+
+    1 file_items: file_items file_item
+    2           | file_item
+
+    3 file_item: element
+
+    4 element: K_ELEMENT element_header '(' element_items ')'
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer integer integer STRING ']'
+    6               | '[' error ']'
+
+    7 element_items: element_items element_item
+    8              | element_item
+
+    9 element_item: pad
+
+   10 integer: INTEGER
+   11        | '-' INTEGER
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer STRING STRING STRING ']'
+   13    | K_PAD '[' error ']'
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 4
+')' (41) 4
+'-' (45) 11
+'[' (91) 5 6 12 13
+']' (93) 5 6 12 13
+error (256) 6 13
+STRING (258) 5 12
+INTEGER (259) 5 10 11
+K_ELEMENT (260) 4
+K_PAD (261) 12 13
+
+
+Nonterminals, with rules where they appear
+
+$accept (12)
+    on left: 0
+file_items (13)
+    on left: 1 2, on right: 0 1
+file_item (14)
+    on left: 3, on right: 1 2
+element (15)
+    on left: 4, on right: 3
+element_header (16)
+    on left: 5 6, on right: 4
+element_items (17)
+    on left: 7 8, on right: 4 7
+element_item (18)
+    on left: 9, on right: 7 8
+integer (19)
+    on left: 10 11, on right: 5 12
+pad (20)
+    on left: 12 13, on right: 9
+
+
+State 0
+
+    0 $accept: . file_items $end
+
+    K_ELEMENT  shift, and go to state 1
+
+    file_items  go to state 2
+    file_item   go to state 3
+    element     go to state 4
+
+
+State 1
+
+    4 element: K_ELEMENT . element_header '(' element_items ')'
+
+    '['  shift, and go to state 5
+
+    element_header  go to state 6
+
+
+State 2
+
+    0 $accept: file_items . $end
+    1 file_items: file_items . file_item
+
+    $end       shift, and go to state 7
+    K_ELEMENT  shift, and go to state 1
+
+    file_item  go to state 8
+    element    go to state 4
+
+
+State 3
+
+    2 file_items: file_item .
+
+    $default  reduce using rule 2 (file_items)
+
+
+State 4
+
+    3 file_item: element .
+
+    $default  reduce using rule 3 (file_item)
+
+
+State 5
+
+    5 element_header: '[' . INTEGER STRING STRING STRING integer integer integer integer integer integer STRING ']'
+    6               | '[' . error ']'
+
+    error    shift, and go to state 9
+    INTEGER  shift, and go to state 10
+
+
+State 6
+
+    4 element: K_ELEMENT element_header . '(' element_items ')'
+
+    '('  shift, and go to state 11
+
+
+State 7
+
+    0 $accept: file_items $end .
+
+    $default  accept
+
+
+State 8
+
+    1 file_items: file_items file_item .
+
+    $default  reduce using rule 1 (file_items)
+
+
+State 9
+
+    6 element_header: '[' error . ']'
+
+    ']'  shift, and go to state 12
+
+
+State 10
+
+    5 element_header: '[' INTEGER . STRING STRING STRING integer integer integer integer integer integer STRING ']'
+
+    STRING  shift, and go to state 13
+
+
+State 11
+
+    4 element: K_ELEMENT element_header '(' . element_items ')'
+
+    K_PAD  shift, and go to state 14
+
+    element_items  go to state 15
+    element_item   go to state 16
+    pad            go to state 17
+
+
+State 12
+
+    6 element_header: '[' error ']' .
+
+    $default  reduce using rule 6 (element_header)
+
+
+State 13
+
+    5 element_header: '[' INTEGER STRING . STRING STRING integer integer integer integer integer integer STRING ']'
+
+    STRING  shift, and go to state 18
+
+
+State 14
+
+   12 pad: K_PAD . '[' integer integer integer integer integer integer integer STRING STRING STRING ']'
+   13    | K_PAD . '[' error ']'
+
+    '['  shift, and go to state 19
+
+
+State 15
+
+    4 element: K_ELEMENT element_header '(' element_items . ')'
+    7 element_items: element_items . element_item
+
+    K_PAD  shift, and go to state 14
+    ')'    shift, and go to state 20
+
+    element_item  go to state 21
+    pad           go to state 17
+
+
+State 16
+
+    8 element_items: element_item .
+
+    $default  reduce using rule 8 (element_items)
+
+
+State 17
+
+    9 element_item: pad .
+
+    $default  reduce using rule 9 (element_item)
+
+
+State 18
+
+    5 element_header: '[' INTEGER STRING STRING . STRING integer integer integer integer integer integer STRING ']'
+
+    STRING  shift, and go to state 22
+
+
+State 19
+
+   12 pad: K_PAD '[' . integer integer integer integer integer integer integer STRING STRING STRING ']'
+   13    | K_PAD '[' . error ']'
+
+    error    shift, and go to state 23
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 26
+
+
+State 20
+
+    4 element: K_ELEMENT element_header '(' element_items ')' .
+
+    $default  reduce using rule 4 (element)
+
+
+State 21
+
+    7 element_items: element_items element_item .
+
+    $default  reduce using rule 7 (element_items)
+
+
+State 22
+
+    5 element_header: '[' INTEGER STRING STRING STRING . integer integer integer integer integer integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 27
+
+
+State 23
+
+   13 pad: K_PAD '[' error . ']'
+
+    ']'  shift, and go to state 28
+
+
+State 24
+
+   10 integer: INTEGER .
+
+    $default  reduce using rule 10 (integer)
+
+
+State 25
+
+   11 integer: '-' . INTEGER
+
+    INTEGER  shift, and go to state 29
+
+
+State 26
+
+   12 pad: K_PAD '[' integer . integer integer integer integer integer integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 30
+
+
+State 27
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer . integer integer integer integer integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 31
+
+
+State 28
+
+   13 pad: K_PAD '[' error ']' .
+
+    $default  reduce using rule 13 (pad)
+
+
+State 29
+
+   11 integer: '-' INTEGER .
+
+    $default  reduce using rule 11 (integer)
+
+
+State 30
+
+   12 pad: K_PAD '[' integer integer . integer integer integer integer integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 32
+
+
+State 31
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer . integer integer integer integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 33
+
+
+State 32
+
+   12 pad: K_PAD '[' integer integer integer . integer integer integer integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 34
+
+
+State 33
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer . integer integer integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 35
+
+
+State 34
+
+   12 pad: K_PAD '[' integer integer integer integer . integer integer integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 36
+
+
+State 35
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer . integer integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 37
+
+
+State 36
+
+   12 pad: K_PAD '[' integer integer integer integer integer . integer integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 38
+
+
+State 37
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer integer . integer STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 39
+
+
+State 38
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer . integer STRING STRING STRING ']'
+
+    INTEGER  shift, and go to state 24
+    '-'      shift, and go to state 25
+
+    integer  go to state 40
+
+
+State 39
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer integer integer . STRING ']'
+
+    STRING  shift, and go to state 41
+
+
+State 40
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer . STRING STRING STRING ']'
+
+    STRING  shift, and go to state 42
+
+
+State 41
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer integer integer STRING . ']'
+
+    ']'  shift, and go to state 43
+
+
+State 42
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer STRING . STRING STRING ']'
+
+    STRING  shift, and go to state 44
+
+
+State 43
+
+    5 element_header: '[' INTEGER STRING STRING STRING integer integer integer integer integer integer STRING ']' .
+
+    $default  reduce using rule 5 (element_header)
+
+
+State 44
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer STRING STRING . STRING ']'
+
+    STRING  shift, and go to state 45
+
+
+State 45
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer STRING STRING STRING . ']'
+
+    ']'  shift, and go to state 46
+
+
+State 46
+
+   12 pad: K_PAD '[' integer integer integer integer integer integer integer STRING STRING STRING ']' .
+
+    $default  reduce using rule 12 (pad)

@@ -9,6 +9,17 @@ set<string> PExpr::get_var_names()
     return null_set;
 }
 
+set<string> PEConcat::get_var_names()
+{
+    set<string> res;
+    for(unsigned i = 0; i < parms_.size(); i++)
+    {
+        set<string> temp = parms_[i]->get_var_names();
+        res = merge(res,temp);
+    }
+    return res;
+}
+
 set<string> PEIdent::get_var_names()
 {
     set<string> res;

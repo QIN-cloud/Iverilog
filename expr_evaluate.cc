@@ -3,105 +3,186 @@
 #include "PGate.h"
 #include  "ivl_assert.h"
 
-VcdVar* PGAssign::evaluate(Design* des, NetScope* scope, VcdScope* instan)
+void link_wires(vector<Wires>& l, vector<Wires>& r);
+
+void PGAssign::evaluate(Design* des, NetScope* scope, VcdScope* instan, bool combine, bool branch)
 {
-	map<PExpr*, verinum> items;
-	verinum* v = pin(1)->evaluate(des, scope, instan, false, items);
-	set<string> lnames = pin(0)->get_var_names();
-	assert(lnames.size() == 1);
-	string name = *(lnames.begin());
-	bool found = false;
-	VcdVar* res = nullptr;
-	map<string, VcdVar*>::iterator var = instan->vars_.begin();
-	for(; var != instan->vars_.end(); var++)
-	{
-		if(var->second->name == name)
-		{
-			res = var->second;
-			var->second->sim_val = verinum(*v);
-			found = true;
-			break;
+	if(instan->bits_.find(this) == instan->bits_.end()){
+		parse_bits(des, scope, instan);
+	}
+
+	vector<Wires>* bits = &(instan->bits_[this]);
+
+	map<PExpr*, map<PExpr*, bool> > values;
+	verinum* value = pin(1)->evaluate(des, scope, instan, combine, values);
+	if(combine) instan->report_->add_cond_report(values);
+
+	unsigned width = value->get_nbits();
+	int index = width - 1; 
+	for(Wires w : *bits){
+		VcdVar* var = w.first;
+		for(unsigned bit : w.second){
+			if(index < 0){
+				cerr << get_fileline() << " width of ports should be equal." << endl;
+			}
+			var->sim_val.set(bit, value->get(index));
+			index--;
 		}
 	}
-	if(!found)
-	{
-		dump(cerr);
-		cerr << "Def " << name << " can't found in vcd scope." << endl;
-		exit(1);
+	delete value;
+}
+
+void link_wires(vector<Wires>& l, vector<Wires>& r)
+{
+	for(Wires w : r){
+		l.push_back(w);
 	}
-	delete v;
+}
+
+void PGAssign::parse_bits(Design* des, NetScope* scope, VcdScope* instan)
+{
+	instan->bits_[this] = get_pins()[0]->parse_bits(des, scope, instan);
+	assert(!instan->bits_[this].empty());
+}
+
+vector<Wires> PExpr::parse_bits(Design* des, NetScope*scope, VcdScope* instan)
+{
+	vector<Wires> res = vector<Wires>(0);
 	return res;
 }
 
-verinum* PExpr::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+vector<Wires> PEConcat::parse_bits(Design* des, NetScope*scope, VcdScope* instan)
+{
+	vector<Wires> res = vector<Wires>(0);
+
+	if(parms_.empty()){
+		cerr << "Line " << get_fileline() << " concat {null} is not allowed." << endl;
+	}
+
+	for(unsigned i = 0; i < parms_.size(); i++){
+		vector<Wires> ws = parms_[i]->parse_bits(des, scope, instan);
+		link_wires(res, ws);
+		ws.clear();
+	}
+
+	return res;
+}
+
+vector<Wires> PEIdent::parse_bits(Design* des, NetScope*scope, VcdScope* instan)
+{
+	vector<Wires> res = vector<Wires>(0);
+	vector<unsigned> bits;
+	//NetScope*found_in;
+	assert(scope);
+	name_component_t variable =  path_.back();
+	perm_string name = variable.name;
+	list<index_component_t> bits_width = variable.index;
+
+	//variable expression is a memory
+	if(bits_width.size() > 1){
+		cerr << get_fileline() << " error : "
+		" Memory values can not reported in vcd file , please use reg or wire in this condition expression" << endl;
+		exit(1);
+	}
+
+	VcdVar* var = 0;
+
+	assert(instan->defines_.find(name.str()) != instan->defines_.end());
+	var = instan->defines_[name.str()];
+
+	//Lsb or msb exit.
+	if(bits_width.size()){   
+		PExpr* lsb_ = bits_width.back().lsb;
+		PExpr* msb_ = bits_width.back().msb;
+		NetNet* net = scope->find_signal(name);
+
+		assert(net);
+		//Lsb and msb exit, we select the part form lsb to msb of current value.
+		if (lsb_){
+			assert(msb_);
+			verinum* lsn = lsb_->eval_const(des, scope);
+			verinum* msn = msb_->eval_const(des, scope);
+			assert(lsn);
+			assert(msn);
+			unsigned lsv = lsn->as_unsigned();
+			unsigned msv = msn->as_unsigned();
+			for(unsigned i = lsv; i <= msv; i++){
+				bits.insert(bits.begin(), (i - unsigned(var->lsb)));
+			}
+			delete lsn;
+			delete msn;
+		}
+		//Only msb exits and msb is a const type, we can get this bit directly, like "x[1]".
+		else if (msb_) {
+			verinum* msn = msb_->eval_const(des, scope);
+			assert(msn);
+			long msv = msn->as_long();
+			bits.push_back(msv - var->lsb);
+			delete msn;
+		}
+	}
+	//Using variable name, like x.
+	else{
+		for(unsigned i = 0; i < var->width; i++)
+			bits.insert(bits.begin(), i);
+	}
+
+	res.push_back(make_pair(var, bits));
+	return res;
+}
+
+verinum* PExpr::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	return 0;
 }
 
-verinum* PEConcat::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEConcat::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
-	long rep = 1;
-	svector<verinum*> vn;
-	if(repeat_)
-	{
-		verinum* vn = repeat_->evaluate(des, scope, instan, combine, items);
-		rep = vn->as_ulong();
+	verinum* v = nullptr;
+	verinum vec(verinum::V0,0,false);
+	for(unsigned i = 0; i < parms_.size(); i++){
+		verinum* vn = parms_[i]->evaluate(des, scope, instan, combine, values);
+		vec = concat(vec, *vn);
+		delete vn;
 	}
-	unsigned width = 0;
-	for(unsigned idx = 0; idx < parms_.size(); ++idx)
-	{
-		verinum* v = parms_[idx]->evaluate(des, scope, instan, combine, items);
-		width = width + v->len();
-		vn = svector<verinum*>(vn, v);
-	}
-	width = width * rep;
-	verinum* v = new verinum(verinum::Vx, width);
-	unsigned count = 0;
-	for(unsigned re = 0; re < rep; ++re)
-	{
-		for(unsigned idx = vn.count() - 1; idx >= 0; --idx)
-		{
-			for(unsigned index = vn[idx]->len() - 1; index >= 0; --index)
-			{
-				v->set(count, (*(vn[idx]))[index]);
-				count = count + 1;
+	if(repeat_){
+		PENumber* num = dynamic_cast<PENumber*>(repeat_);
+		assert(num);
+		unsigned n = num->value().as_unsigned();
+		unsigned l = vec.get_nbits();
+		v = new verinum(verinum::Vx, l*n, true);
+		for(unsigned i = 0; i < n; i++){
+			for(unsigned j = 0; j < l; j++){
+				v->set(i*l+j, vec.get(j));
 			}
 		}
 	}
-	if(combine)
-	{
-		items.insert(make_pair(this, verinum(*v)));
-	}
+	else
+		v = new verinum(vec);
 	return v;
 }
 
-verinum* PEEvent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEEvent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	return 0;
 }
 
-verinum* PEFNumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEFNumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	long val = value_->as_long();
 	verinum* v = new verinum(val);
-	if(combine)
-	{
-		items.insert(make_pair(this, verinum(*v)));
-	}
 	return v;
 }
 
-verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
-	//NetScope*found_in;
 	assert(scope);
 	name_component_t cond_expr =  path_.back();
 	perm_string cond_str = cond_expr.name;
 	list<index_component_t> bits_width = cond_expr.index;
 
 	//variable expression is a memory
-	if(bits_width.size() > 1)
-	{
+	if(bits_width.size() > 1){
 		cerr << "Line : " << get_lineno() << " error : "
 		" Memory values can not reported in vcd file , please use reg or wire in this condition expression" << endl;
 		exit(1);
@@ -113,21 +194,17 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 	NetScope::param_ref_t expr_pos;
 	
 	//The expr is a parameter.
-	if(scope->find_parameter(cond_str, expr_pos))
-	{
+	if(scope->find_parameter(cond_str, expr_pos)){
 		NetExpr* expr = expr_pos->second.val;
 		//Expr has lsb or msb , such as using "x[1:0]",  "x[1]".
-		if(bits_width.size())
-		{
+		if(bits_width.size()){
 			PExpr* lsb_ = bits_width.back().lsb;
 			PExpr* msb_ = bits_width.back().msb;
 			//Lsb and msb both exist, then we copy the part from lsb to msb of value.
-			if(lsb_ && msb_)
-			{
+			if(lsb_ && msb_){
 				verinum* lsn = lsb_->eval_const(des, scope);
 				verinum* msn = msb_->eval_const(des, scope);
-				if(lsn == 0 || msn == 0)
-				{
+				if(lsn == 0 || msn == 0){
 					cerr << "Line : " << get_lineno() << " error : "
 					"Part select expressions must be constant expressions."
 					<< endl;
@@ -136,8 +213,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 
 				long lsb = lsn->as_long();
 				long msb = lsn->as_long();
-				if((lsb < 0) || (msb < lsb))
-				{
+				if((lsb < 0) || (msb < lsb)){
 					cerr<<"Line : " << get_lineno() <<
 					"invaild part select : " << cond_str.str() << 
 					"[" << msb << ":" << lsb << "]" << endl;
@@ -150,8 +226,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 				verinum result(verinum::V0, msb-lsb+1, true);
 				verinum exl = le->value();
 
-				for(long idx = lsb ; idx <= msb; idx += 1)
-				{
+				for(long idx = lsb ; idx <= msb; idx += 1){
 					if (idx < exl.len())
 						result.set(idx-lsb, exl.get(idx));
 					else if (exl.is_string())
@@ -170,23 +245,19 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 				v = new verinum(result);
 			}
 			//Msb only, we select the bit in msb.
-			else if(msb_)
-			{
-				verinum* vn = msb_->evaluate(des, scope, instan, combine, items);
+			else if(msb_){
+				verinum* vn = msb_->evaluate(des, scope, instan, combine, values);
 				NetEConst* le = dynamic_cast<NetEConst*>(expr);
 
-				if (le) 
-				{
+				if (le){
 					verinum lv = le->value();
 					verinum::V rb = verinum::Vx;
 					
 					long ridx = vn->as_long();
-					if ((ridx >= 0) && (ridx < lv.len())) 
-					{
+					if ((ridx >= 0) && (ridx < lv.len())) {
 						rb = lv[ridx];
 					} 
-					else if ((ridx >= 0) && (!lv.has_len())) 
-					{
+					else if ((ridx >= 0) && (!lv.has_len())) {
 						if (lv.has_sign())
 							rb = lv[lv.len()-1];
 						else
@@ -194,8 +265,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 					}
 					v = new verinum(rb, 1);
 				} 
-				else 
-				{
+				else {
 					cerr << get_lineno() << ": internal error: Unable to evaluate "
 						<< "constant expression (parameter=" << path_
 						<< "): " << *le << endl;
@@ -205,8 +275,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 
 		}
 		//No lsb and msb means that we can use the value of parameter from where it defined.
-		else
-		{
+		else{
 			NetExpr* tmp = expr_pos->second.val;
 			NetEConst*ctmp = dynamic_cast<NetEConst*>(tmp);
 			if (ctmp == 0) {
@@ -220,34 +289,20 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 		}
 	}
 	//The expr is a variable, we need to get the value from vcd var.
-	else
-	{
+	else{
 		verinum vn;
-		VcdVar* var;
-		bool found = false;
+		VcdVar* var = 0;
 
-		map<string, VcdVar*>::iterator pos = instan->vars_.begin();
-		for(pos; pos != instan->vars_.end(); pos++)
-		{
-			if(pos->second->name == cond_str.str())
-			{
-				var = pos->second;
-				vn = var->sim_val;
-				found = true;
-				break;
-			}
-		}
-
-		if(!found)
-		{
+		if(instan->defines_.find(cond_str.str()) == instan->defines_.end()){
 			cerr << "Line : " << get_lineno() << " error : "
 			"The signal used in condition expression are not dumped : " << path_ << endl;
 			exit(1);
 		}
+		var = instan->defines_[cond_str.str()];
+		vn = var->sim_val;
 
 		//Lsb or msb exit.
-		if(bits_width.size())
-		{
+		if(bits_width.size()){   
 			PExpr* lsb_ = bits_width.back().lsb;
 			PExpr* msb_ = bits_width.back().msb;
 			verinum* msn_ ;
@@ -255,8 +310,7 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 
 			assert(net);
 			//Lsb and msb exit, we select the part form lsb to msb of current value.
-			if (lsb_)
-			{
+			if (lsb_){
 				assert(msb_);
 
 				verinum* lsn = lsb_->eval_const(des, scope);
@@ -267,25 +321,25 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 				long lsv = lsn->as_long();
 				long msv = msn->as_long();
 				unsigned long wid = 1 + ((msv>lsv)? (msv-lsv) : (lsv-msv));
-				
 				v = new verinum(verinum::Vx, wid); 
-				for(unsigned idx = 0; idx < wid; ++idx)
-				{
-					v->set(idx, vn[lsv + idx]);
+
+				for(unsigned idx = 0; idx < wid; ++idx){
+					if((lsv + idx) >= vn.get_nbits())
+						v->set(idx, verinum::V0);
+					else
+						v->set(idx, vn[lsv + idx]);
 				}
 			}
 
 			//Only msb exits and msb is a const type, we can get this bit directly, like "x[1]".
-			else if (msb_ && (msn_ = msb_->eval_const(des, scope))) 
-			{
+			else if (msb_ && (msn_ = msb_->eval_const(des, scope))) {
 				unsigned long msv = msn_->as_ulong();
 				unsigned idx = msv - var->lsb;
 				v = new verinum(vn[idx], 1);
 			}
 			//Msb is a expr, we need to evaluate this expr.
-			else if (msb_) 
-			{
-				verinum* t = msb_->evaluate(des, scope, instan, combine, items);
+			else if (msb_) {
+				verinum* t = msb_->evaluate(des, scope, instan, combine, values);
 				unsigned idx = t->as_ulong() - var->lsb;
 				v = new verinum(vn[idx], 1);
 				delete t;
@@ -294,38 +348,25 @@ verinum* PEIdent::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 		}
 		//Use the current value directly.
 		else
-		{
 			v = new verinum(vn);
-		}
-
 	}
-
-	if(combine)
-	{
-		items.insert(make_pair(this, verinum(*v)));
-	}
-
 	return v;
 }
 
-verinum* PENumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PENumber::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	return new verinum(value());
 }
 
-verinum* PEString::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEString::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	verinum* v = new verinum(string(text_));
-	if(combine)
-	{
-		items.insert(make_pair(this, verinum(*v)));
-	}
 	return v;
 }
 
-verinum* PEUnary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEUnary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
-	verinum* val = expr_->evaluate(des, scope, instan, combine, items);
+	verinum* val = expr_->evaluate(des, scope, instan, combine, values);
 	verinum* v; 
 	switch(op_)
 	{
@@ -375,11 +416,20 @@ verinum* PEUnary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool co
 	return v;
 }
 
-verinum* PEBinary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PEBinary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
-	verinum*l = left_->evaluate(des, scope, instan, combine, items);
-	verinum*r = right_->evaluate(des, scope, instan, combine, items);
-
+	verinum*l = left_->evaluate(des, scope, instan, combine, values);
+	verinum*r = right_->evaluate(des, scope, instan, combine, values);
+	
+	if(combine){
+		if(instan->module_->reverse_exprs_.find(left_)
+		!= instan->module_->reverse_exprs_.end())
+			values[instan->module_->reverse_exprs_[left_]][left_] = l->as_unsigned();
+		if(instan->module_->reverse_exprs_.find(right_)
+		!= instan->module_->reverse_exprs_.end())
+			values[instan->module_->reverse_exprs_[right_]][right_] = r->as_unsigned();
+	}
+	
 	verinum* v;
 
 	switch(op_)
@@ -511,23 +561,21 @@ verinum* PEBinary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool c
 	return v;
 }
 
-verinum* PETernary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PETernary::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
-	verinum* vn = expr_->evaluate(des, scope, instan, combine, items);
+	verinum* vn = expr_->evaluate(des, scope, instan, combine, values);
 	verinum* v;
-	if((*vn)[0] == verinum::V1)
-		v = tru_->evaluate(des, scope, instan, combine, items);
-	else
-		v = fal_->evaluate(des, scope, instan, combine, items);
 	if(combine)
-	{
-		items.insert(make_pair(this, verinum(*v)));
-	}
+		values[this][expr_] = (*vn)[0] == verinum::V1;
+	if((*vn)[0] == verinum::V1)
+		v = tru_->evaluate(des, scope, instan, combine, values);
+	else
+		v = fal_->evaluate(des, scope, instan, combine, values);
 	delete vn;
 	return v;
 }
 
-verinum* PECallFunction::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, verinum>& items)
+verinum* PECallFunction::evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values)
 {
 	cerr << "Unsupported function call in expression!" << endl;
 	exit(1);

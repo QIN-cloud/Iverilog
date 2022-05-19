@@ -1419,7 +1419,7 @@ int main(int argc, char*argv[])
 			ofstream assigns("../verilog-files/dump/assigns.txt");
 			ofstream procs("../verilog-files/dump/procs.txt");
 			cout << "Initialize..." << endl;
-			select_md->initialize();
+			select_md->initialize(false, false, false, false, true);
 			select_md->dump_sort_cfg(procs);
 			select_md->dump_sort_assign(assigns);
 			cout << "Enumrate..." << endl;
@@ -1449,7 +1449,7 @@ int main(int argc, char*argv[])
 		assert(vcd_file);
 
 		if(!target_file)
-			target_file = "dump/coverage.txt";
+			target_file = "coverage.txt";
 		
 		ofstream report(target_file);
 

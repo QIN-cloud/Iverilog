@@ -1,0 +1,1 @@
+#define VERSION_TAG "s20150603-1116-g60a77b08-dirty"

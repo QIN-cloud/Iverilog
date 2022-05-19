@@ -167,7 +167,7 @@ void data_type_t::pform_dump(ostream&out, unsigned indent) const
 
 ostream& data_type_t::debug_dump(ostream&out) const
 {
-      out << typeid(*this).name();
+      out << typeid(*this).name() << " ";
       return out;
 }
 
@@ -326,12 +326,12 @@ static void dump_attributes_map(ostream&out,
 
 void PExpr::dump(ostream&out) const
 {
-      out << typeid(*this).name();
+      out << typeid(*this).name() << " ";
 }
 
 void PEAssignPattern::dump(ostream&out) const
 {
-      out << "'{";
+      out << "{";
       if (parms_.size() > 0) {
 	    parms_[0]->dump(out);
 	    for (size_t idx = 1 ; idx < parms_.size() ; idx += 1) {
@@ -353,10 +353,14 @@ void PEConcat::dump(ostream&out) const
       }
 
       out << "{";
-      if (parms_[0]) out << *parms_[0];
+      if (parms_[0]) 
+	  	parms_[0]->dump(out);
+	  //out << *parms_[0];
       for (unsigned idx = 1 ;  idx < parms_.size() ;  idx += 1) {
 	    out << ", ";
-	    if (parms_[idx]) out << *parms_[idx];
+	    if (parms_[idx]) 
+			parms_[idx]->dump(out);
+		//out << *parms_[idx];
       }
 
       out << "}";
@@ -933,15 +937,18 @@ void PCase::dump(ostream&out, unsigned ind) const
       for (unsigned idx = 0 ;  idx < items_->count() ;  idx += 1) {
 	    PCase::Item*cur = (*items_)[idx];
 
-	    if (! cur->expr.empty()) {
+	    if (cur->expr.empty()) {
 		  out << setw(ind+2) << "" << "default:";
 
-	    } else {
+	    } 
+		 else {
 		  list<PExpr*>::iterator idx_exp = cur->expr.begin();
 		  out << setw(ind+2) << "" << *idx_exp;
 
-		  for( ; idx_exp != cur->expr.end() ; ++idx_exp)
-			out << ", " << *idx_exp;
+		  for( ; idx_exp != cur->expr.end() ; ++idx_exp){
+			  out << ", ";
+			  (*idx_exp)->dump(out);
+		  }
 
 		  out << ":";
 	    }

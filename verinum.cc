@@ -61,15 +61,23 @@ verinum::verinum(const V*bits, unsigned nbits, bool has_len__)
 
 void verinum::dump(ostream& o) const
 {
-	for(int i = nbits_-1; i >= 0; i--)
-	{
-		switch(bits_[i])
-		{
-			case V::V0: o << "0"; break;
-			case V::V1: o << "1"; break;
-			case V::Vx: o << "x"; break;
-			case V::Vz: o << "z"; break;
-			default:	o << "?"; break;
+	for(int i = nbits_-1; i >= 0; i--) {
+		switch(bits_[i]) {
+			case V::V0: 
+				o << "0"; 
+				break;
+			case V::V1: 
+				o << "1"; 
+				break;
+			case V::Vx: 
+				o << "x"; 
+				break;
+			case V::Vz: 
+			    o << "z"; 
+				break;
+			default:	
+				o << "?"; 
+				break;
 		}
 	}
 }
@@ -377,6 +385,7 @@ verinum& verinum::operator= (const verinum&that)
 
 verinum::V verinum::get(unsigned idx) const
 {
+	//cout << nbits_ << " " << idx << endl;
       assert(idx < nbits_);
       return bits_[idx];
 }
@@ -865,6 +874,27 @@ verinum::V operator == (const verinum&left, const verinum&right)
       }
 
       return verinum::V1;
+}
+
+bool case_x_or_z(const verinum& left, const verinum& right, string type)
+{
+	verinum::V left_pad = verinum::V0;
+    verinum::V right_pad = verinum::V0;
+	verinum::V pad = type == "ISCONTROL.CASEZ" ? verinum::Vz : verinum::Vx;
+
+	unsigned max_len = left.len();
+	if (right.len() > max_len)
+	max_len = right.len();
+
+	for (unsigned idx = 0 ;  idx < max_len ;  idx += 1) {
+	verinum::V left_bit  = idx < left.len() ? left[idx]  : left_pad;
+	verinum::V right_bit = idx < right.len()? right[idx] : right_pad;
+	if (left_bit >= pad || right_bit >= pad)
+		continue; 
+	if (left_bit != right_bit)
+		return false;
+	}
+	return true;
 }
 
 verinum::V operator <= (const verinum&left, const verinum&right)

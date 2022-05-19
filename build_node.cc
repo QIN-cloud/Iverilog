@@ -132,7 +132,11 @@ CfgNode* PCase::build_node(PDesign& de)
     svector<CfgNode*> nodes;
     CfgNode* rootnode;
     
-    rootnode = new CfgNode(get_lineno());
+	if(type_ == NetCase::EQ)
+		rootnode = new CfgNode(get_lineno());
+	else
+		rootnode = new CfgNode(expr_->get_lineno());
+
     rootnode->add_refs(expr_->get_vars());
 	rootnode->set_expr(expr_);
 	switch(type_)
@@ -226,19 +230,8 @@ CfgNode* PDeassign::build_node(PDesign& de)
 CfgNode* PDelayStatement::build_node(PDesign& de)
 {
 	//cout << get_fileline() << " : " << typeid(this).name() << endl;
-	DelayNode* en = new DelayNode(get_lineno());
 	CfgNode* node = new CfgNode(get_lineno());
-	node->add_refs(delay_->get_vars());
-	node->add_funcs(delay_->get_funcname());
-	node->set_expr(delay_);
-	if(statement_){
-		CfgNode* tmp = statement_->build_node(de);
-		en->add_node(tmp, 1);
-		node->add_dsucc(statement_->get_lineno());
-		node->add_infl(statement_->get_linenos());
-	}
-	en->add_node(node, 0);
-	return en;
+	return node;
 }
 
 CfgNode* PEventStatement::build_node(PDesign& de)

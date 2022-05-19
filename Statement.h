@@ -66,6 +66,7 @@ class PProcess : public LineInfo {
       map<perm_string,PExpr*> attributes;
 
       ProcessNode* build_node(PDesign& de);
+      void build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual svector<unsigned>& get_linenos();
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer* s) const;
       virtual set<string>& get_funcs();
@@ -94,6 +95,7 @@ class Statement : virtual public LineInfo {
       virtual ~Statement() = 0;
 
       virtual CfgNode* build_node(PDesign& de);
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual svector<unsigned>& get_linenos();
       virtual svector<string>& get_vars();
       virtual set<string>& get_funcname();
@@ -123,6 +125,7 @@ class PAssign_  : public Statement {
       //const PExpr* lval() const  { return lval_; }
       PExpr* lval() const  { return lval_; } //2021.2.4
       PExpr* rval() const  { return rval_; }
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
 
     protected:
       NetAssign_* elaborate_lval(Design*, NetScope*scope) const;
@@ -216,6 +219,7 @@ class PBlock  : public PScope, public Statement, public PNamedItem {
       BL_TYPE bl_type() const { return bl_type_; }
 
       virtual CfgNode* build_node(PDesign& de);
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual svector<unsigned>& get_linenos();
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();
@@ -315,7 +319,9 @@ class PCase  : public Statement {
       ~PCase();
 
       virtual CfgNode* build_node(PDesign& de);
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual svector<unsigned>& get_linenos();
+      unsigned get_lineno() const;
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();
 
@@ -381,6 +387,7 @@ class PCondit  : public Statement {
       ~PCondit();
 
       virtual CfgNode* build_node(PDesign& de);
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual svector<unsigned>& get_linenos();
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();
@@ -496,6 +503,7 @@ class PEventStatement  : public Statement {
       void set_statement(Statement*st);
 
       virtual CfgNode* build_node(PDesign& de);
+      virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();
 
@@ -718,6 +726,7 @@ class PWhile  : public Statement {
       ~PWhile();
 
       virtual CfgNode* build_node(PDesign& de);
+      
       virtual svector<unsigned>& get_linenos();
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();

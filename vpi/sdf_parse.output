@@ -1,0 +1,3482 @@
+Grammar
+
+    0 $accept: source_file $end
+
+    1 source_file: '(' K_DELAYFILE sdf_header_list cell_list ')'
+    2            | '(' K_DELAYFILE error ')'
+
+    3 sdf_header_list: sdf_header_list sdf_header_item
+    4                | sdf_header_item
+
+    5 sdf_header_item: sdfversion
+    6                | design_name
+    7                | date
+    8                | vendor
+    9                | program_name
+   10                | program_version
+   11                | hierarchy_divider
+   12                | voltage
+   13                | process
+   14                | temperature
+   15                | time_scale
+
+   16 sdfversion: '(' K_SDFVERSION QSTRING ')'
+
+   17 design_name: '(' K_DESIGN QSTRING ')'
+
+   18 date: '(' K_DATE QSTRING ')'
+
+   19 vendor: '(' K_VENDOR QSTRING ')'
+
+   20 program_name: '(' K_PROGRAM QSTRING ')'
+
+   21 program_version: '(' K_VERSION QSTRING ')'
+
+   22 hierarchy_divider: '(' K_DIVIDER '.' ')'
+   23                  | '(' K_DIVIDER '/' ')'
+   24                  | '(' K_DIVIDER HCHAR ')'
+
+   25 voltage: '(' K_VOLTAGE rtriple ')'
+   26        | '(' K_VOLTAGE signed_real_number ')'
+
+   27 process: '(' K_PROCESS QSTRING ')'
+
+   28 temperature: '(' K_TEMPERATURE rtriple ')'
+   29            | '(' K_TEMPERATURE signed_real_number ')'
+
+   30 time_scale: '(' K_TIMESCALE REAL_NUMBER IDENTIFIER ')'
+   31           | '(' K_TIMESCALE INTEGER IDENTIFIER ')'
+
+   32 cell_list: cell_list cell
+   33          | cell
+
+   34 $@1: %empty
+
+   35 cell: '(' K_CELL celltype cell_instance $@1 timing_spec_list_opt ')'
+   36     | '(' K_CELL error ')'
+
+   37 celltype: '(' K_CELLTYPE QSTRING ')'
+
+   38 cell_instance: '(' K_INSTANCE hierarchical_identifier ')'
+   39              | '(' K_INSTANCE ')'
+   40              | '(' K_INSTANCE '*' ')'
+   41              | '(' K_INSTANCE error ')'
+
+   42 timing_spec_list_opt: %empty
+   43                     | timing_spec_list_opt timing_spec
+
+   44 timing_spec: '(' K_DELAY deltype_list ')'
+   45            | '(' K_DELAY error ')'
+   46            | '(' K_TIMINGCHECK tchk_def_list ')'
+   47            | '(' K_TIMINGCHECK error ')'
+
+   48 deltype_list: deltype_list deltype
+   49             | deltype
+
+   50 deltype: '(' K_PATHPULSE input_output_path_opt rvalue rvalue_opt ')'
+   51        | '(' K_PATHPULSEPERCENT input_output_path_opt rvalue rvalue_opt ')'
+   52        | '(' K_ABSOLUTE del_def_list ')'
+   53        | '(' K_INCREMENT del_def_list ')'
+   54        | '(' error ')'
+
+   55 del_def_list: del_def_list del_def
+   56             | del_def
+
+   57 del_def: '(' K_IOPATH port_spec port_instance delval_list ')'
+   58        | '(' K_IOPATH error ')'
+   59        | '(' K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   60        | '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   61        | '(' K_COND error ')'
+   62        | '(' K_CONDELSE '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   63        | '(' K_CONDELSE error ')'
+   64        | '(' K_INTERCONNECT port_interconnect port_interconnect delval_list ')'
+   65        | '(' K_INTERCONNECT error ')'
+
+   66 tchk_def_list: tchk_def_list tchk_def
+   67              | tchk_def
+
+   68 tchk_def: '(' K_SETUP port_tchk port_tchk rvalue ')'
+   69         | '(' K_HOLD port_tchk port_tchk rvalue ')'
+   70         | '(' K_SETUPHOLD port_tchk port_tchk rvalue rvalue ')'
+   71         | '(' K_RECOVERY port_tchk port_tchk rvalue ')'
+   72         | '(' K_RECREM port_tchk port_tchk rvalue rvalue ')'
+   73         | '(' K_REMOVAL port_tchk port_tchk rvalue ')'
+   74         | '(' K_WIDTH port_tchk rvalue ')'
+   75         | '(' K_PERIOD port_tchk rvalue ')'
+
+   76 port_tchk: port_instance
+   77          | cond_edge_start port_instance ')'
+   78          | cond_edge_start timing_check_condition port_spec ')'
+   79          | cond_edge_start QSTRING timing_check_condition port_spec ')'
+
+   80 $@2: %empty
+
+   81 cond_edge_start: '(' $@2 cond_edge_identifier
+
+   82 cond_edge_identifier: K_POSEDGE
+   83                     | K_NEGEDGE
+   84                     | K_01
+   85                     | K_10
+   86                     | K_0Z
+   87                     | K_Z1
+   88                     | K_1Z
+   89                     | K_Z0
+   90                     | K_COND
+
+   91 timing_check_condition: port_interconnect
+   92                       | '~' port_interconnect
+   93                       | '!' port_interconnect
+   94                       | port_interconnect equality_operator scalar_constant
+
+   95 conditional_port_expr: port
+   96                      | scalar_constant
+   97                      | '(' conditional_port_expr ')'
+   98                      | conditional_port_expr K_LAND conditional_port_expr
+   99                      | conditional_port_expr K_LOR conditional_port_expr
+  100                      | conditional_port_expr K_EQ conditional_port_expr
+  101                      | conditional_port_expr K_NE conditional_port_expr
+  102                      | conditional_port_expr K_CEQ conditional_port_expr
+  103                      | conditional_port_expr K_CNE conditional_port_expr
+
+  104 equality_operator: K_EQ
+  105                  | K_NE
+  106                  | K_CEQ
+  107                  | K_CNE
+
+  108 scalar_constant: K_LOGICAL_ONE
+  109                | K_LOGICAL_ZERO
+
+  110 input_output_path_opt: input_output_path
+  111                      | %empty
+
+  112 input_output_path: port_instance port_instance
+
+  113 port_spec: port_instance
+  114          | port_edge
+
+  115 port_instance: port
+
+  116 port: hierarchical_identifier
+
+  117 port_interconnect: hierarchical_identifier
+  118                  | hierarchical_identifier '[' INTEGER ']'
+
+  119 $@3: %empty
+
+  120 $@4: %empty
+
+  121 port_edge: '(' $@3 edge_identifier $@4 port_instance ')'
+
+  122 edge_identifier: K_POSEDGE
+  123                | K_NEGEDGE
+  124                | K_01
+  125                | K_10
+  126                | K_0Z
+  127                | K_Z1
+  128                | K_1Z
+  129                | K_Z0
+
+  130 delval_list: delval_list delval
+  131            | delval
+
+  132 delval: rvalue
+  133       | '(' rvalue rvalue ')'
+  134       | '(' rvalue rvalue rvalue ')'
+
+  135 rvalue_opt: %empty
+  136           | rvalue
+
+  137 rvalue: '(' signed_real_number ')'
+  138       | '(' rtriple ')'
+  139       | '(' ')'
+
+  140 hierarchical_identifier: IDENTIFIER
+  141                        | hierarchical_identifier HCHAR IDENTIFIER
+
+  142 rtriple: signed_real_number_opt ':' signed_real_number_opt ':' signed_real_number_opt
+
+  143 signed_real_number_opt: %empty
+  144                       | signed_real_number
+
+  145 signed_real_number: REAL_NUMBER
+  146                   | '+' REAL_NUMBER
+  147                   | '-' REAL_NUMBER
+  148                   | INTEGER
+  149                   | '+' INTEGER
+  150                   | '-' INTEGER
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'!' (33) 93
+'(' (40) 1 2 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 35 36
+    37 38 39 40 41 44 45 46 47 50 51 52 53 54 57 58 59 60 61 62 63
+    64 65 68 69 70 71 72 73 74 75 81 97 121 133 134 137 138 139
+')' (41) 1 2 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 35 36
+    37 38 39 40 41 44 45 46 47 50 51 52 53 54 57 58 59 60 61 62 63
+    64 65 68 69 70 71 72 73 74 75 77 78 79 97 121 133 134 137 138 139
+'*' (42) 40
+'+' (43) 146 149
+'-' (45) 147 150
+'.' (46) 22
+'/' (47) 23
+':' (58) 142
+'[' (91) 118
+']' (93) 118
+'~' (126) 92
+error (256) 2 36 41 45 47 54 58 61 63 65
+K_ABSOLUTE (258) 52
+K_CELL (259) 35 36
+K_CELLTYPE (260) 37
+K_COND (261) 59 60 61 90
+K_CONDELSE (262) 62 63
+K_DATE (263) 18
+K_DELAYFILE (264) 1 2
+K_DELAY (265) 44 45
+K_DESIGN (266) 17
+K_DIVIDER (267) 22 23 24
+K_HOLD (268) 69
+K_INCREMENT (269) 53
+K_INSTANCE (270) 38 39 40 41
+K_INTERCONNECT (271) 64 65
+K_IOPATH (272) 57 58 59 60 62
+K_NEGEDGE (273) 83 123
+K_PATHPULSE (274) 50
+K_PATHPULSEPERCENT (275) 51
+K_PERIOD (276) 75
+K_POSEDGE (277) 82 122
+K_PROCESS (278) 27
+K_PROGRAM (279) 20
+K_RECREM (280) 72
+K_RECOVERY (281) 71
+K_REMOVAL (282) 73
+K_SDFVERSION (283) 16
+K_SETUP (284) 68
+K_SETUPHOLD (285) 70
+K_TEMPERATURE (286) 28 29
+K_TIMESCALE (287) 30 31
+K_TIMINGCHECK (288) 46 47
+K_VENDOR (289) 19
+K_VERSION (290) 21
+K_VOLTAGE (291) 25 26
+K_WIDTH (292) 74
+K_01 (293) 84 124
+K_10 (294) 85 125
+K_0Z (295) 86 126
+K_Z1 (296) 87 127
+K_1Z (297) 88 128
+K_Z0 (298) 89 129
+K_EQ (299) 100 104
+K_NE (300) 101 105
+K_CEQ (301) 102 106
+K_CNE (302) 103 107
+K_LOGICAL_ONE (303) 108
+K_LOGICAL_ZERO (304) 109
+K_LAND (305) 98
+K_LOR (306) 99
+HCHAR (307) 24 141
+QSTRING (308) 16 17 18 19 20 21 27 37 60 79
+IDENTIFIER (309) 30 31 140 141
+REAL_NUMBER (310) 30 145 146 147
+INTEGER (311) 31 118 148 149 150
+
+
+Nonterminals, with rules where they appear
+
+$accept (69)
+    on left: 0
+source_file (70)
+    on left: 1 2, on right: 0
+sdf_header_list (71)
+    on left: 3 4, on right: 1 3
+sdf_header_item (72)
+    on left: 5 6 7 8 9 10 11 12 13 14 15, on right: 3 4
+sdfversion (73)
+    on left: 16, on right: 5
+design_name (74)
+    on left: 17, on right: 6
+date (75)
+    on left: 18, on right: 7
+vendor (76)
+    on left: 19, on right: 8
+program_name (77)
+    on left: 20, on right: 9
+program_version (78)
+    on left: 21, on right: 10
+hierarchy_divider (79)
+    on left: 22 23 24, on right: 11
+voltage (80)
+    on left: 25 26, on right: 12
+process (81)
+    on left: 27, on right: 13
+temperature (82)
+    on left: 28 29, on right: 14
+time_scale (83)
+    on left: 30 31, on right: 15
+cell_list (84)
+    on left: 32 33, on right: 1 32
+cell (85)
+    on left: 35 36, on right: 32 33
+$@1 (86)
+    on left: 34, on right: 35
+celltype (87)
+    on left: 37, on right: 35
+cell_instance (88)
+    on left: 38 39 40 41, on right: 35
+timing_spec_list_opt (89)
+    on left: 42 43, on right: 35 43
+timing_spec (90)
+    on left: 44 45 46 47, on right: 43
+deltype_list (91)
+    on left: 48 49, on right: 44 48
+deltype (92)
+    on left: 50 51 52 53 54, on right: 48 49
+del_def_list (93)
+    on left: 55 56, on right: 52 53 55
+del_def (94)
+    on left: 57 58 59 60 61 62 63 64 65, on right: 55 56
+tchk_def_list (95)
+    on left: 66 67, on right: 46 66
+tchk_def (96)
+    on left: 68 69 70 71 72 73 74 75, on right: 66 67
+port_tchk (97)
+    on left: 76 77 78 79, on right: 68 69 70 71 72 73 74 75
+cond_edge_start (98)
+    on left: 81, on right: 77 78 79
+$@2 (99)
+    on left: 80, on right: 81
+cond_edge_identifier (100)
+    on left: 82 83 84 85 86 87 88 89 90, on right: 81
+timing_check_condition (101)
+    on left: 91 92 93 94, on right: 78 79
+conditional_port_expr (102)
+    on left: 95 96 97 98 99 100 101 102 103, on right: 59 60 97 98
+    99 100 101 102 103
+equality_operator (103)
+    on left: 104 105 106 107, on right: 94
+scalar_constant (104)
+    on left: 108 109, on right: 94 96
+input_output_path_opt (105)
+    on left: 110 111, on right: 50 51
+input_output_path (106)
+    on left: 112, on right: 110
+port_spec (107)
+    on left: 113 114, on right: 57 59 60 62 78 79
+port_instance (108)
+    on left: 115, on right: 57 59 60 62 76 77 112 113 121
+port (109)
+    on left: 116, on right: 95 115
+port_interconnect (110)
+    on left: 117 118, on right: 64 91 92 93 94
+port_edge (111)
+    on left: 121, on right: 114
+$@3 (112)
+    on left: 119, on right: 121
+$@4 (113)
+    on left: 120, on right: 121
+edge_identifier (114)
+    on left: 122 123 124 125 126 127 128 129, on right: 121
+delval_list (115)
+    on left: 130 131, on right: 57 59 60 62 64 130
+delval (116)
+    on left: 132 133 134, on right: 130 131
+rvalue_opt (117)
+    on left: 135 136, on right: 50 51
+rvalue (118)
+    on left: 137 138 139, on right: 50 51 68 69 70 71 72 73 74 75 132
+    133 134 136
+hierarchical_identifier (119)
+    on left: 140 141, on right: 38 116 117 118 141
+rtriple (120)
+    on left: 142, on right: 25 28 138
+signed_real_number_opt (121)
+    on left: 143 144, on right: 142
+signed_real_number (122)
+    on left: 145 146 147 148 149 150, on right: 26 29 137 144
+
+
+State 0
+
+    0 $accept: . source_file $end
+
+    '('  shift, and go to state 1
+
+    source_file  go to state 2
+
+
+State 1
+
+    1 source_file: '(' . K_DELAYFILE sdf_header_list cell_list ')'
+    2            | '(' . K_DELAYFILE error ')'
+
+    K_DELAYFILE  shift, and go to state 3
+
+
+State 2
+
+    0 $accept: source_file . $end
+
+    $end  shift, and go to state 4
+
+
+State 3
+
+    1 source_file: '(' K_DELAYFILE . sdf_header_list cell_list ')'
+    2            | '(' K_DELAYFILE . error ')'
+
+    error  shift, and go to state 5
+    '('    shift, and go to state 6
+
+    sdf_header_list    go to state 7
+    sdf_header_item    go to state 8
+    sdfversion         go to state 9
+    design_name        go to state 10
+    date               go to state 11
+    vendor             go to state 12
+    program_name       go to state 13
+    program_version    go to state 14
+    hierarchy_divider  go to state 15
+    voltage            go to state 16
+    process            go to state 17
+    temperature        go to state 18
+    time_scale         go to state 19
+
+
+State 4
+
+    0 $accept: source_file $end .
+
+    $default  accept
+
+
+State 5
+
+    2 source_file: '(' K_DELAYFILE error . ')'
+
+    ')'  shift, and go to state 20
+
+
+State 6
+
+   16 sdfversion: '(' . K_SDFVERSION QSTRING ')'
+   17 design_name: '(' . K_DESIGN QSTRING ')'
+   18 date: '(' . K_DATE QSTRING ')'
+   19 vendor: '(' . K_VENDOR QSTRING ')'
+   20 program_name: '(' . K_PROGRAM QSTRING ')'
+   21 program_version: '(' . K_VERSION QSTRING ')'
+   22 hierarchy_divider: '(' . K_DIVIDER '.' ')'
+   23                  | '(' . K_DIVIDER '/' ')'
+   24                  | '(' . K_DIVIDER HCHAR ')'
+   25 voltage: '(' . K_VOLTAGE rtriple ')'
+   26        | '(' . K_VOLTAGE signed_real_number ')'
+   27 process: '(' . K_PROCESS QSTRING ')'
+   28 temperature: '(' . K_TEMPERATURE rtriple ')'
+   29            | '(' . K_TEMPERATURE signed_real_number ')'
+   30 time_scale: '(' . K_TIMESCALE REAL_NUMBER IDENTIFIER ')'
+   31           | '(' . K_TIMESCALE INTEGER IDENTIFIER ')'
+
+    K_DATE         shift, and go to state 21
+    K_DESIGN       shift, and go to state 22
+    K_DIVIDER      shift, and go to state 23
+    K_PROCESS      shift, and go to state 24
+    K_PROGRAM      shift, and go to state 25
+    K_SDFVERSION   shift, and go to state 26
+    K_TEMPERATURE  shift, and go to state 27
+    K_TIMESCALE    shift, and go to state 28
+    K_VENDOR       shift, and go to state 29
+    K_VERSION      shift, and go to state 30
+    K_VOLTAGE      shift, and go to state 31
+
+
+State 7
+
+    1 source_file: '(' K_DELAYFILE sdf_header_list . cell_list ')'
+    3 sdf_header_list: sdf_header_list . sdf_header_item
+
+    '('  shift, and go to state 32
+
+    sdf_header_item    go to state 33
+    sdfversion         go to state 9
+    design_name        go to state 10
+    date               go to state 11
+    vendor             go to state 12
+    program_name       go to state 13
+    program_version    go to state 14
+    hierarchy_divider  go to state 15
+    voltage            go to state 16
+    process            go to state 17
+    temperature        go to state 18
+    time_scale         go to state 19
+    cell_list          go to state 34
+    cell               go to state 35
+
+
+State 8
+
+    4 sdf_header_list: sdf_header_item .
+
+    $default  reduce using rule 4 (sdf_header_list)
+
+
+State 9
+
+    5 sdf_header_item: sdfversion .
+
+    $default  reduce using rule 5 (sdf_header_item)
+
+
+State 10
+
+    6 sdf_header_item: design_name .
+
+    $default  reduce using rule 6 (sdf_header_item)
+
+
+State 11
+
+    7 sdf_header_item: date .
+
+    $default  reduce using rule 7 (sdf_header_item)
+
+
+State 12
+
+    8 sdf_header_item: vendor .
+
+    $default  reduce using rule 8 (sdf_header_item)
+
+
+State 13
+
+    9 sdf_header_item: program_name .
+
+    $default  reduce using rule 9 (sdf_header_item)
+
+
+State 14
+
+   10 sdf_header_item: program_version .
+
+    $default  reduce using rule 10 (sdf_header_item)
+
+
+State 15
+
+   11 sdf_header_item: hierarchy_divider .
+
+    $default  reduce using rule 11 (sdf_header_item)
+
+
+State 16
+
+   12 sdf_header_item: voltage .
+
+    $default  reduce using rule 12 (sdf_header_item)
+
+
+State 17
+
+   13 sdf_header_item: process .
+
+    $default  reduce using rule 13 (sdf_header_item)
+
+
+State 18
+
+   14 sdf_header_item: temperature .
+
+    $default  reduce using rule 14 (sdf_header_item)
+
+
+State 19
+
+   15 sdf_header_item: time_scale .
+
+    $default  reduce using rule 15 (sdf_header_item)
+
+
+State 20
+
+    2 source_file: '(' K_DELAYFILE error ')' .
+
+    $default  reduce using rule 2 (source_file)
+
+
+State 21
+
+   18 date: '(' K_DATE . QSTRING ')'
+
+    QSTRING  shift, and go to state 36
+
+
+State 22
+
+   17 design_name: '(' K_DESIGN . QSTRING ')'
+
+    QSTRING  shift, and go to state 37
+
+
+State 23
+
+   22 hierarchy_divider: '(' K_DIVIDER . '.' ')'
+   23                  | '(' K_DIVIDER . '/' ')'
+   24                  | '(' K_DIVIDER . HCHAR ')'
+
+    HCHAR  shift, and go to state 38
+    '.'    shift, and go to state 39
+    '/'    shift, and go to state 40
+
+
+State 24
+
+   27 process: '(' K_PROCESS . QSTRING ')'
+
+    QSTRING  shift, and go to state 41
+
+
+State 25
+
+   20 program_name: '(' K_PROGRAM . QSTRING ')'
+
+    QSTRING  shift, and go to state 42
+
+
+State 26
+
+   16 sdfversion: '(' K_SDFVERSION . QSTRING ')'
+
+    QSTRING  shift, and go to state 43
+
+
+State 27
+
+   28 temperature: '(' K_TEMPERATURE . rtriple ')'
+   29            | '(' K_TEMPERATURE . signed_real_number ')'
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    rtriple                 go to state 48
+    signed_real_number_opt  go to state 49
+    signed_real_number      go to state 50
+
+
+State 28
+
+   30 time_scale: '(' K_TIMESCALE . REAL_NUMBER IDENTIFIER ')'
+   31           | '(' K_TIMESCALE . INTEGER IDENTIFIER ')'
+
+    REAL_NUMBER  shift, and go to state 51
+    INTEGER      shift, and go to state 52
+
+
+State 29
+
+   19 vendor: '(' K_VENDOR . QSTRING ')'
+
+    QSTRING  shift, and go to state 53
+
+
+State 30
+
+   21 program_version: '(' K_VERSION . QSTRING ')'
+
+    QSTRING  shift, and go to state 54
+
+
+State 31
+
+   25 voltage: '(' K_VOLTAGE . rtriple ')'
+   26        | '(' K_VOLTAGE . signed_real_number ')'
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    rtriple                 go to state 55
+    signed_real_number_opt  go to state 49
+    signed_real_number      go to state 56
+
+
+State 32
+
+   16 sdfversion: '(' . K_SDFVERSION QSTRING ')'
+   17 design_name: '(' . K_DESIGN QSTRING ')'
+   18 date: '(' . K_DATE QSTRING ')'
+   19 vendor: '(' . K_VENDOR QSTRING ')'
+   20 program_name: '(' . K_PROGRAM QSTRING ')'
+   21 program_version: '(' . K_VERSION QSTRING ')'
+   22 hierarchy_divider: '(' . K_DIVIDER '.' ')'
+   23                  | '(' . K_DIVIDER '/' ')'
+   24                  | '(' . K_DIVIDER HCHAR ')'
+   25 voltage: '(' . K_VOLTAGE rtriple ')'
+   26        | '(' . K_VOLTAGE signed_real_number ')'
+   27 process: '(' . K_PROCESS QSTRING ')'
+   28 temperature: '(' . K_TEMPERATURE rtriple ')'
+   29            | '(' . K_TEMPERATURE signed_real_number ')'
+   30 time_scale: '(' . K_TIMESCALE REAL_NUMBER IDENTIFIER ')'
+   31           | '(' . K_TIMESCALE INTEGER IDENTIFIER ')'
+   35 cell: '(' . K_CELL celltype cell_instance $@1 timing_spec_list_opt ')'
+   36     | '(' . K_CELL error ')'
+
+    K_CELL         shift, and go to state 57
+    K_DATE         shift, and go to state 21
+    K_DESIGN       shift, and go to state 22
+    K_DIVIDER      shift, and go to state 23
+    K_PROCESS      shift, and go to state 24
+    K_PROGRAM      shift, and go to state 25
+    K_SDFVERSION   shift, and go to state 26
+    K_TEMPERATURE  shift, and go to state 27
+    K_TIMESCALE    shift, and go to state 28
+    K_VENDOR       shift, and go to state 29
+    K_VERSION      shift, and go to state 30
+    K_VOLTAGE      shift, and go to state 31
+
+
+State 33
+
+    3 sdf_header_list: sdf_header_list sdf_header_item .
+
+    $default  reduce using rule 3 (sdf_header_list)
+
+
+State 34
+
+    1 source_file: '(' K_DELAYFILE sdf_header_list cell_list . ')'
+   32 cell_list: cell_list . cell
+
+    '('  shift, and go to state 58
+    ')'  shift, and go to state 59
+
+    cell  go to state 60
+
+
+State 35
+
+   33 cell_list: cell .
+
+    $default  reduce using rule 33 (cell_list)
+
+
+State 36
+
+   18 date: '(' K_DATE QSTRING . ')'
+
+    ')'  shift, and go to state 61
+
+
+State 37
+
+   17 design_name: '(' K_DESIGN QSTRING . ')'
+
+    ')'  shift, and go to state 62
+
+
+State 38
+
+   24 hierarchy_divider: '(' K_DIVIDER HCHAR . ')'
+
+    ')'  shift, and go to state 63
+
+
+State 39
+
+   22 hierarchy_divider: '(' K_DIVIDER '.' . ')'
+
+    ')'  shift, and go to state 64
+
+
+State 40
+
+   23 hierarchy_divider: '(' K_DIVIDER '/' . ')'
+
+    ')'  shift, and go to state 65
+
+
+State 41
+
+   27 process: '(' K_PROCESS QSTRING . ')'
+
+    ')'  shift, and go to state 66
+
+
+State 42
+
+   20 program_name: '(' K_PROGRAM QSTRING . ')'
+
+    ')'  shift, and go to state 67
+
+
+State 43
+
+   16 sdfversion: '(' K_SDFVERSION QSTRING . ')'
+
+    ')'  shift, and go to state 68
+
+
+State 44
+
+  145 signed_real_number: REAL_NUMBER .
+
+    $default  reduce using rule 145 (signed_real_number)
+
+
+State 45
+
+  148 signed_real_number: INTEGER .
+
+    $default  reduce using rule 148 (signed_real_number)
+
+
+State 46
+
+  146 signed_real_number: '+' . REAL_NUMBER
+  149                   | '+' . INTEGER
+
+    REAL_NUMBER  shift, and go to state 69
+    INTEGER      shift, and go to state 70
+
+
+State 47
+
+  147 signed_real_number: '-' . REAL_NUMBER
+  150                   | '-' . INTEGER
+
+    REAL_NUMBER  shift, and go to state 71
+    INTEGER      shift, and go to state 72
+
+
+State 48
+
+   28 temperature: '(' K_TEMPERATURE rtriple . ')'
+
+    ')'  shift, and go to state 73
+
+
+State 49
+
+  142 rtriple: signed_real_number_opt . ':' signed_real_number_opt ':' signed_real_number_opt
+
+    ':'  shift, and go to state 74
+
+
+State 50
+
+   29 temperature: '(' K_TEMPERATURE signed_real_number . ')'
+  144 signed_real_number_opt: signed_real_number .
+
+    ')'  shift, and go to state 75
+
+    $default  reduce using rule 144 (signed_real_number_opt)
+
+
+State 51
+
+   30 time_scale: '(' K_TIMESCALE REAL_NUMBER . IDENTIFIER ')'
+
+    IDENTIFIER  shift, and go to state 76
+
+
+State 52
+
+   31 time_scale: '(' K_TIMESCALE INTEGER . IDENTIFIER ')'
+
+    IDENTIFIER  shift, and go to state 77
+
+
+State 53
+
+   19 vendor: '(' K_VENDOR QSTRING . ')'
+
+    ')'  shift, and go to state 78
+
+
+State 54
+
+   21 program_version: '(' K_VERSION QSTRING . ')'
+
+    ')'  shift, and go to state 79
+
+
+State 55
+
+   25 voltage: '(' K_VOLTAGE rtriple . ')'
+
+    ')'  shift, and go to state 80
+
+
+State 56
+
+   26 voltage: '(' K_VOLTAGE signed_real_number . ')'
+  144 signed_real_number_opt: signed_real_number .
+
+    ')'  shift, and go to state 81
+
+    $default  reduce using rule 144 (signed_real_number_opt)
+
+
+State 57
+
+   35 cell: '(' K_CELL . celltype cell_instance $@1 timing_spec_list_opt ')'
+   36     | '(' K_CELL . error ')'
+
+    error  shift, and go to state 82
+    '('    shift, and go to state 83
+
+    celltype  go to state 84
+
+
+State 58
+
+   35 cell: '(' . K_CELL celltype cell_instance $@1 timing_spec_list_opt ')'
+   36     | '(' . K_CELL error ')'
+
+    K_CELL  shift, and go to state 57
+
+
+State 59
+
+    1 source_file: '(' K_DELAYFILE sdf_header_list cell_list ')' .
+
+    $default  reduce using rule 1 (source_file)
+
+
+State 60
+
+   32 cell_list: cell_list cell .
+
+    $default  reduce using rule 32 (cell_list)
+
+
+State 61
+
+   18 date: '(' K_DATE QSTRING ')' .
+
+    $default  reduce using rule 18 (date)
+
+
+State 62
+
+   17 design_name: '(' K_DESIGN QSTRING ')' .
+
+    $default  reduce using rule 17 (design_name)
+
+
+State 63
+
+   24 hierarchy_divider: '(' K_DIVIDER HCHAR ')' .
+
+    $default  reduce using rule 24 (hierarchy_divider)
+
+
+State 64
+
+   22 hierarchy_divider: '(' K_DIVIDER '.' ')' .
+
+    $default  reduce using rule 22 (hierarchy_divider)
+
+
+State 65
+
+   23 hierarchy_divider: '(' K_DIVIDER '/' ')' .
+
+    $default  reduce using rule 23 (hierarchy_divider)
+
+
+State 66
+
+   27 process: '(' K_PROCESS QSTRING ')' .
+
+    $default  reduce using rule 27 (process)
+
+
+State 67
+
+   20 program_name: '(' K_PROGRAM QSTRING ')' .
+
+    $default  reduce using rule 20 (program_name)
+
+
+State 68
+
+   16 sdfversion: '(' K_SDFVERSION QSTRING ')' .
+
+    $default  reduce using rule 16 (sdfversion)
+
+
+State 69
+
+  146 signed_real_number: '+' REAL_NUMBER .
+
+    $default  reduce using rule 146 (signed_real_number)
+
+
+State 70
+
+  149 signed_real_number: '+' INTEGER .
+
+    $default  reduce using rule 149 (signed_real_number)
+
+
+State 71
+
+  147 signed_real_number: '-' REAL_NUMBER .
+
+    $default  reduce using rule 147 (signed_real_number)
+
+
+State 72
+
+  150 signed_real_number: '-' INTEGER .
+
+    $default  reduce using rule 150 (signed_real_number)
+
+
+State 73
+
+   28 temperature: '(' K_TEMPERATURE rtriple ')' .
+
+    $default  reduce using rule 28 (temperature)
+
+
+State 74
+
+  142 rtriple: signed_real_number_opt ':' . signed_real_number_opt ':' signed_real_number_opt
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    signed_real_number_opt  go to state 85
+    signed_real_number      go to state 86
+
+
+State 75
+
+   29 temperature: '(' K_TEMPERATURE signed_real_number ')' .
+
+    $default  reduce using rule 29 (temperature)
+
+
+State 76
+
+   30 time_scale: '(' K_TIMESCALE REAL_NUMBER IDENTIFIER . ')'
+
+    ')'  shift, and go to state 87
+
+
+State 77
+
+   31 time_scale: '(' K_TIMESCALE INTEGER IDENTIFIER . ')'
+
+    ')'  shift, and go to state 88
+
+
+State 78
+
+   19 vendor: '(' K_VENDOR QSTRING ')' .
+
+    $default  reduce using rule 19 (vendor)
+
+
+State 79
+
+   21 program_version: '(' K_VERSION QSTRING ')' .
+
+    $default  reduce using rule 21 (program_version)
+
+
+State 80
+
+   25 voltage: '(' K_VOLTAGE rtriple ')' .
+
+    $default  reduce using rule 25 (voltage)
+
+
+State 81
+
+   26 voltage: '(' K_VOLTAGE signed_real_number ')' .
+
+    $default  reduce using rule 26 (voltage)
+
+
+State 82
+
+   36 cell: '(' K_CELL error . ')'
+
+    ')'  shift, and go to state 89
+
+
+State 83
+
+   37 celltype: '(' . K_CELLTYPE QSTRING ')'
+
+    K_CELLTYPE  shift, and go to state 90
+
+
+State 84
+
+   35 cell: '(' K_CELL celltype . cell_instance $@1 timing_spec_list_opt ')'
+
+    '('  shift, and go to state 91
+
+    cell_instance  go to state 92
+
+
+State 85
+
+  142 rtriple: signed_real_number_opt ':' signed_real_number_opt . ':' signed_real_number_opt
+
+    ':'  shift, and go to state 93
+
+
+State 86
+
+  144 signed_real_number_opt: signed_real_number .
+
+    $default  reduce using rule 144 (signed_real_number_opt)
+
+
+State 87
+
+   30 time_scale: '(' K_TIMESCALE REAL_NUMBER IDENTIFIER ')' .
+
+    $default  reduce using rule 30 (time_scale)
+
+
+State 88
+
+   31 time_scale: '(' K_TIMESCALE INTEGER IDENTIFIER ')' .
+
+    $default  reduce using rule 31 (time_scale)
+
+
+State 89
+
+   36 cell: '(' K_CELL error ')' .
+
+    $default  reduce using rule 36 (cell)
+
+
+State 90
+
+   37 celltype: '(' K_CELLTYPE . QSTRING ')'
+
+    QSTRING  shift, and go to state 94
+
+
+State 91
+
+   38 cell_instance: '(' . K_INSTANCE hierarchical_identifier ')'
+   39              | '(' . K_INSTANCE ')'
+   40              | '(' . K_INSTANCE '*' ')'
+   41              | '(' . K_INSTANCE error ')'
+
+    K_INSTANCE  shift, and go to state 95
+
+
+State 92
+
+   35 cell: '(' K_CELL celltype cell_instance . $@1 timing_spec_list_opt ')'
+
+    $default  reduce using rule 34 ($@1)
+
+    $@1  go to state 96
+
+
+State 93
+
+  142 rtriple: signed_real_number_opt ':' signed_real_number_opt ':' . signed_real_number_opt
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    signed_real_number_opt  go to state 97
+    signed_real_number      go to state 86
+
+
+State 94
+
+   37 celltype: '(' K_CELLTYPE QSTRING . ')'
+
+    ')'  shift, and go to state 98
+
+
+State 95
+
+   38 cell_instance: '(' K_INSTANCE . hierarchical_identifier ')'
+   39              | '(' K_INSTANCE . ')'
+   40              | '(' K_INSTANCE . '*' ')'
+   41              | '(' K_INSTANCE . error ')'
+
+    error       shift, and go to state 99
+    IDENTIFIER  shift, and go to state 100
+    ')'         shift, and go to state 101
+    '*'         shift, and go to state 102
+
+    hierarchical_identifier  go to state 103
+
+
+State 96
+
+   35 cell: '(' K_CELL celltype cell_instance $@1 . timing_spec_list_opt ')'
+
+    $default  reduce using rule 42 (timing_spec_list_opt)
+
+    timing_spec_list_opt  go to state 104
+
+
+State 97
+
+  142 rtriple: signed_real_number_opt ':' signed_real_number_opt ':' signed_real_number_opt .
+
+    $default  reduce using rule 142 (rtriple)
+
+
+State 98
+
+   37 celltype: '(' K_CELLTYPE QSTRING ')' .
+
+    $default  reduce using rule 37 (celltype)
+
+
+State 99
+
+   41 cell_instance: '(' K_INSTANCE error . ')'
+
+    ')'  shift, and go to state 105
+
+
+State 100
+
+  140 hierarchical_identifier: IDENTIFIER .
+
+    $default  reduce using rule 140 (hierarchical_identifier)
+
+
+State 101
+
+   39 cell_instance: '(' K_INSTANCE ')' .
+
+    $default  reduce using rule 39 (cell_instance)
+
+
+State 102
+
+   40 cell_instance: '(' K_INSTANCE '*' . ')'
+
+    ')'  shift, and go to state 106
+
+
+State 103
+
+   38 cell_instance: '(' K_INSTANCE hierarchical_identifier . ')'
+  141 hierarchical_identifier: hierarchical_identifier . HCHAR IDENTIFIER
+
+    HCHAR  shift, and go to state 107
+    ')'    shift, and go to state 108
+
+
+State 104
+
+   35 cell: '(' K_CELL celltype cell_instance $@1 timing_spec_list_opt . ')'
+   43 timing_spec_list_opt: timing_spec_list_opt . timing_spec
+
+    '('  shift, and go to state 109
+    ')'  shift, and go to state 110
+
+    timing_spec  go to state 111
+
+
+State 105
+
+   41 cell_instance: '(' K_INSTANCE error ')' .
+
+    $default  reduce using rule 41 (cell_instance)
+
+
+State 106
+
+   40 cell_instance: '(' K_INSTANCE '*' ')' .
+
+    $default  reduce using rule 40 (cell_instance)
+
+
+State 107
+
+  141 hierarchical_identifier: hierarchical_identifier HCHAR . IDENTIFIER
+
+    IDENTIFIER  shift, and go to state 112
+
+
+State 108
+
+   38 cell_instance: '(' K_INSTANCE hierarchical_identifier ')' .
+
+    $default  reduce using rule 38 (cell_instance)
+
+
+State 109
+
+   44 timing_spec: '(' . K_DELAY deltype_list ')'
+   45            | '(' . K_DELAY error ')'
+   46            | '(' . K_TIMINGCHECK tchk_def_list ')'
+   47            | '(' . K_TIMINGCHECK error ')'
+
+    K_DELAY        shift, and go to state 113
+    K_TIMINGCHECK  shift, and go to state 114
+
+
+State 110
+
+   35 cell: '(' K_CELL celltype cell_instance $@1 timing_spec_list_opt ')' .
+
+    $default  reduce using rule 35 (cell)
+
+
+State 111
+
+   43 timing_spec_list_opt: timing_spec_list_opt timing_spec .
+
+    $default  reduce using rule 43 (timing_spec_list_opt)
+
+
+State 112
+
+  141 hierarchical_identifier: hierarchical_identifier HCHAR IDENTIFIER .
+
+    $default  reduce using rule 141 (hierarchical_identifier)
+
+
+State 113
+
+   44 timing_spec: '(' K_DELAY . deltype_list ')'
+   45            | '(' K_DELAY . error ')'
+
+    error  shift, and go to state 115
+    '('    shift, and go to state 116
+
+    deltype_list  go to state 117
+    deltype       go to state 118
+
+
+State 114
+
+   46 timing_spec: '(' K_TIMINGCHECK . tchk_def_list ')'
+   47            | '(' K_TIMINGCHECK . error ')'
+
+    error  shift, and go to state 119
+    '('    shift, and go to state 120
+
+    tchk_def_list  go to state 121
+    tchk_def       go to state 122
+
+
+State 115
+
+   45 timing_spec: '(' K_DELAY error . ')'
+
+    ')'  shift, and go to state 123
+
+
+State 116
+
+   50 deltype: '(' . K_PATHPULSE input_output_path_opt rvalue rvalue_opt ')'
+   51        | '(' . K_PATHPULSEPERCENT input_output_path_opt rvalue rvalue_opt ')'
+   52        | '(' . K_ABSOLUTE del_def_list ')'
+   53        | '(' . K_INCREMENT del_def_list ')'
+   54        | '(' . error ')'
+
+    error               shift, and go to state 124
+    K_ABSOLUTE          shift, and go to state 125
+    K_INCREMENT         shift, and go to state 126
+    K_PATHPULSE         shift, and go to state 127
+    K_PATHPULSEPERCENT  shift, and go to state 128
+
+
+State 117
+
+   44 timing_spec: '(' K_DELAY deltype_list . ')'
+   48 deltype_list: deltype_list . deltype
+
+    '('  shift, and go to state 116
+    ')'  shift, and go to state 129
+
+    deltype  go to state 130
+
+
+State 118
+
+   49 deltype_list: deltype .
+
+    $default  reduce using rule 49 (deltype_list)
+
+
+State 119
+
+   47 timing_spec: '(' K_TIMINGCHECK error . ')'
+
+    ')'  shift, and go to state 131
+
+
+State 120
+
+   68 tchk_def: '(' . K_SETUP port_tchk port_tchk rvalue ')'
+   69         | '(' . K_HOLD port_tchk port_tchk rvalue ')'
+   70         | '(' . K_SETUPHOLD port_tchk port_tchk rvalue rvalue ')'
+   71         | '(' . K_RECOVERY port_tchk port_tchk rvalue ')'
+   72         | '(' . K_RECREM port_tchk port_tchk rvalue rvalue ')'
+   73         | '(' . K_REMOVAL port_tchk port_tchk rvalue ')'
+   74         | '(' . K_WIDTH port_tchk rvalue ')'
+   75         | '(' . K_PERIOD port_tchk rvalue ')'
+
+    K_HOLD       shift, and go to state 132
+    K_PERIOD     shift, and go to state 133
+    K_RECREM     shift, and go to state 134
+    K_RECOVERY   shift, and go to state 135
+    K_REMOVAL    shift, and go to state 136
+    K_SETUP      shift, and go to state 137
+    K_SETUPHOLD  shift, and go to state 138
+    K_WIDTH      shift, and go to state 139
+
+
+State 121
+
+   46 timing_spec: '(' K_TIMINGCHECK tchk_def_list . ')'
+   66 tchk_def_list: tchk_def_list . tchk_def
+
+    '('  shift, and go to state 120
+    ')'  shift, and go to state 140
+
+    tchk_def  go to state 141
+
+
+State 122
+
+   67 tchk_def_list: tchk_def .
+
+    $default  reduce using rule 67 (tchk_def_list)
+
+
+State 123
+
+   45 timing_spec: '(' K_DELAY error ')' .
+
+    $default  reduce using rule 45 (timing_spec)
+
+
+State 124
+
+   54 deltype: '(' error . ')'
+
+    ')'  shift, and go to state 142
+
+
+State 125
+
+   52 deltype: '(' K_ABSOLUTE . del_def_list ')'
+
+    '('  shift, and go to state 143
+
+    del_def_list  go to state 144
+    del_def       go to state 145
+
+
+State 126
+
+   53 deltype: '(' K_INCREMENT . del_def_list ')'
+
+    '('  shift, and go to state 143
+
+    del_def_list  go to state 146
+    del_def       go to state 145
+
+
+State 127
+
+   50 deltype: '(' K_PATHPULSE . input_output_path_opt rvalue rvalue_opt ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    $default  reduce using rule 111 (input_output_path_opt)
+
+    input_output_path_opt    go to state 147
+    input_output_path        go to state 148
+    port_instance            go to state 149
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 128
+
+   51 deltype: '(' K_PATHPULSEPERCENT . input_output_path_opt rvalue rvalue_opt ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    $default  reduce using rule 111 (input_output_path_opt)
+
+    input_output_path_opt    go to state 152
+    input_output_path        go to state 148
+    port_instance            go to state 149
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 129
+
+   44 timing_spec: '(' K_DELAY deltype_list ')' .
+
+    $default  reduce using rule 44 (timing_spec)
+
+
+State 130
+
+   48 deltype_list: deltype_list deltype .
+
+    $default  reduce using rule 48 (deltype_list)
+
+
+State 131
+
+   47 timing_spec: '(' K_TIMINGCHECK error ')' .
+
+    $default  reduce using rule 47 (timing_spec)
+
+
+State 132
+
+   69 tchk_def: '(' K_HOLD . port_tchk port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 154
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 133
+
+   75 tchk_def: '(' K_PERIOD . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 157
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 134
+
+   72 tchk_def: '(' K_RECREM . port_tchk port_tchk rvalue rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 158
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 135
+
+   71 tchk_def: '(' K_RECOVERY . port_tchk port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 159
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 136
+
+   73 tchk_def: '(' K_REMOVAL . port_tchk port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 160
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 137
+
+   68 tchk_def: '(' K_SETUP . port_tchk port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 161
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 138
+
+   70 tchk_def: '(' K_SETUPHOLD . port_tchk port_tchk rvalue rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 162
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 139
+
+   74 tchk_def: '(' K_WIDTH . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 163
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 140
+
+   46 timing_spec: '(' K_TIMINGCHECK tchk_def_list ')' .
+
+    $default  reduce using rule 46 (timing_spec)
+
+
+State 141
+
+   66 tchk_def_list: tchk_def_list tchk_def .
+
+    $default  reduce using rule 66 (tchk_def_list)
+
+
+State 142
+
+   54 deltype: '(' error ')' .
+
+    $default  reduce using rule 54 (deltype)
+
+
+State 143
+
+   57 del_def: '(' . K_IOPATH port_spec port_instance delval_list ')'
+   58        | '(' . K_IOPATH error ')'
+   59        | '(' . K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   60        | '(' . K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   61        | '(' . K_COND error ')'
+   62        | '(' . K_CONDELSE '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   63        | '(' . K_CONDELSE error ')'
+   64        | '(' . K_INTERCONNECT port_interconnect port_interconnect delval_list ')'
+   65        | '(' . K_INTERCONNECT error ')'
+
+    K_COND          shift, and go to state 164
+    K_CONDELSE      shift, and go to state 165
+    K_INTERCONNECT  shift, and go to state 166
+    K_IOPATH        shift, and go to state 167
+
+
+State 144
+
+   52 deltype: '(' K_ABSOLUTE del_def_list . ')'
+   55 del_def_list: del_def_list . del_def
+
+    '('  shift, and go to state 143
+    ')'  shift, and go to state 168
+
+    del_def  go to state 169
+
+
+State 145
+
+   56 del_def_list: del_def .
+
+    $default  reduce using rule 56 (del_def_list)
+
+
+State 146
+
+   53 deltype: '(' K_INCREMENT del_def_list . ')'
+   55 del_def_list: del_def_list . del_def
+
+    '('  shift, and go to state 143
+    ')'  shift, and go to state 170
+
+    del_def  go to state 169
+
+
+State 147
+
+   50 deltype: '(' K_PATHPULSE input_output_path_opt . rvalue rvalue_opt ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 172
+
+
+State 148
+
+  110 input_output_path_opt: input_output_path .
+
+    $default  reduce using rule 110 (input_output_path_opt)
+
+
+State 149
+
+  112 input_output_path: port_instance . port_instance
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 173
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 150
+
+  115 port_instance: port .
+
+    $default  reduce using rule 115 (port_instance)
+
+
+State 151
+
+  116 port: hierarchical_identifier .
+  141 hierarchical_identifier: hierarchical_identifier . HCHAR IDENTIFIER
+
+    HCHAR  shift, and go to state 107
+
+    $default  reduce using rule 116 (port)
+
+
+State 152
+
+   51 deltype: '(' K_PATHPULSEPERCENT input_output_path_opt . rvalue rvalue_opt ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 174
+
+
+State 153
+
+   81 cond_edge_start: '(' . $@2 cond_edge_identifier
+
+    $default  reduce using rule 80 ($@2)
+
+    $@2  go to state 175
+
+
+State 154
+
+   69 tchk_def: '(' K_HOLD port_tchk . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 176
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 155
+
+   77 port_tchk: cond_edge_start . port_instance ')'
+   78          | cond_edge_start . timing_check_condition port_spec ')'
+   79          | cond_edge_start . QSTRING timing_check_condition port_spec ')'
+
+    QSTRING     shift, and go to state 177
+    IDENTIFIER  shift, and go to state 100
+    '~'         shift, and go to state 178
+    '!'         shift, and go to state 179
+
+    timing_check_condition   go to state 180
+    port_instance            go to state 181
+    port                     go to state 150
+    port_interconnect        go to state 182
+    hierarchical_identifier  go to state 183
+
+
+State 156
+
+   76 port_tchk: port_instance .
+
+    $default  reduce using rule 76 (port_tchk)
+
+
+State 157
+
+   75 tchk_def: '(' K_PERIOD port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 184
+
+
+State 158
+
+   72 tchk_def: '(' K_RECREM port_tchk . port_tchk rvalue rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 185
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 159
+
+   71 tchk_def: '(' K_RECOVERY port_tchk . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 186
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 160
+
+   73 tchk_def: '(' K_REMOVAL port_tchk . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 187
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 161
+
+   68 tchk_def: '(' K_SETUP port_tchk . port_tchk rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 188
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 162
+
+   70 tchk_def: '(' K_SETUPHOLD port_tchk . port_tchk rvalue rvalue ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 153
+
+    port_tchk                go to state 189
+    cond_edge_start          go to state 155
+    port_instance            go to state 156
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 163
+
+   74 tchk_def: '(' K_WIDTH port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 190
+
+
+State 164
+
+   59 del_def: '(' K_COND . conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   60        | '(' K_COND . QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   61        | '(' K_COND . error ')'
+
+    error           shift, and go to state 191
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    QSTRING         shift, and go to state 194
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 196
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 165
+
+   62 del_def: '(' K_CONDELSE . '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   63        | '(' K_CONDELSE . error ')'
+
+    error  shift, and go to state 199
+    '('    shift, and go to state 200
+
+
+State 166
+
+   64 del_def: '(' K_INTERCONNECT . port_interconnect port_interconnect delval_list ')'
+   65        | '(' K_INTERCONNECT . error ')'
+
+    error       shift, and go to state 201
+    IDENTIFIER  shift, and go to state 100
+
+    port_interconnect        go to state 202
+    hierarchical_identifier  go to state 203
+
+
+State 167
+
+   57 del_def: '(' K_IOPATH . port_spec port_instance delval_list ')'
+   58        | '(' K_IOPATH . error ')'
+
+    error       shift, and go to state 204
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 206
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 168
+
+   52 deltype: '(' K_ABSOLUTE del_def_list ')' .
+
+    $default  reduce using rule 52 (deltype)
+
+
+State 169
+
+   55 del_def_list: del_def_list del_def .
+
+    $default  reduce using rule 55 (del_def_list)
+
+
+State 170
+
+   53 deltype: '(' K_INCREMENT del_def_list ')' .
+
+    $default  reduce using rule 53 (deltype)
+
+
+State 171
+
+  137 rvalue: '(' . signed_real_number ')'
+  138       | '(' . rtriple ')'
+  139       | '(' . ')'
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    ')'          shift, and go to state 209
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    rtriple                 go to state 210
+    signed_real_number_opt  go to state 49
+    signed_real_number      go to state 211
+
+
+State 172
+
+   50 deltype: '(' K_PATHPULSE input_output_path_opt rvalue . rvalue_opt ')'
+
+    '('  shift, and go to state 171
+
+    $default  reduce using rule 135 (rvalue_opt)
+
+    rvalue_opt  go to state 212
+    rvalue      go to state 213
+
+
+State 173
+
+  112 input_output_path: port_instance port_instance .
+
+    $default  reduce using rule 112 (input_output_path)
+
+
+State 174
+
+   51 deltype: '(' K_PATHPULSEPERCENT input_output_path_opt rvalue . rvalue_opt ')'
+
+    '('  shift, and go to state 171
+
+    $default  reduce using rule 135 (rvalue_opt)
+
+    rvalue_opt  go to state 214
+    rvalue      go to state 213
+
+
+State 175
+
+   81 cond_edge_start: '(' $@2 . cond_edge_identifier
+
+    K_COND     shift, and go to state 215
+    K_NEGEDGE  shift, and go to state 216
+    K_POSEDGE  shift, and go to state 217
+    K_01       shift, and go to state 218
+    K_10       shift, and go to state 219
+    K_0Z       shift, and go to state 220
+    K_Z1       shift, and go to state 221
+    K_1Z       shift, and go to state 222
+    K_Z0       shift, and go to state 223
+
+    cond_edge_identifier  go to state 224
+
+
+State 176
+
+   69 tchk_def: '(' K_HOLD port_tchk port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 225
+
+
+State 177
+
+   79 port_tchk: cond_edge_start QSTRING . timing_check_condition port_spec ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '~'         shift, and go to state 178
+    '!'         shift, and go to state 179
+
+    timing_check_condition   go to state 226
+    port_interconnect        go to state 182
+    hierarchical_identifier  go to state 203
+
+
+State 178
+
+   92 timing_check_condition: '~' . port_interconnect
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_interconnect        go to state 227
+    hierarchical_identifier  go to state 203
+
+
+State 179
+
+   93 timing_check_condition: '!' . port_interconnect
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_interconnect        go to state 228
+    hierarchical_identifier  go to state 203
+
+
+State 180
+
+   78 port_tchk: cond_edge_start timing_check_condition . port_spec ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 229
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 181
+
+   77 port_tchk: cond_edge_start port_instance . ')'
+
+    ')'  shift, and go to state 230
+
+
+State 182
+
+   91 timing_check_condition: port_interconnect .
+   94                       | port_interconnect . equality_operator scalar_constant
+
+    K_EQ   shift, and go to state 231
+    K_NE   shift, and go to state 232
+    K_CEQ  shift, and go to state 233
+    K_CNE  shift, and go to state 234
+
+    $default  reduce using rule 91 (timing_check_condition)
+
+    equality_operator  go to state 235
+
+
+State 183
+
+  116 port: hierarchical_identifier .
+  117 port_interconnect: hierarchical_identifier .
+  118                  | hierarchical_identifier . '[' INTEGER ']'
+  141 hierarchical_identifier: hierarchical_identifier . HCHAR IDENTIFIER
+
+    HCHAR  shift, and go to state 107
+    '['    shift, and go to state 236
+
+    ')'       reduce using rule 116 (port)
+    $default  reduce using rule 117 (port_interconnect)
+
+
+State 184
+
+   75 tchk_def: '(' K_PERIOD port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 237
+
+
+State 185
+
+   72 tchk_def: '(' K_RECREM port_tchk port_tchk . rvalue rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 238
+
+
+State 186
+
+   71 tchk_def: '(' K_RECOVERY port_tchk port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 239
+
+
+State 187
+
+   73 tchk_def: '(' K_REMOVAL port_tchk port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 240
+
+
+State 188
+
+   68 tchk_def: '(' K_SETUP port_tchk port_tchk . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 241
+
+
+State 189
+
+   70 tchk_def: '(' K_SETUPHOLD port_tchk port_tchk . rvalue rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 242
+
+
+State 190
+
+   74 tchk_def: '(' K_WIDTH port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 243
+
+
+State 191
+
+   61 del_def: '(' K_COND error . ')'
+
+    ')'  shift, and go to state 244
+
+
+State 192
+
+  108 scalar_constant: K_LOGICAL_ONE .
+
+    $default  reduce using rule 108 (scalar_constant)
+
+
+State 193
+
+  109 scalar_constant: K_LOGICAL_ZERO .
+
+    $default  reduce using rule 109 (scalar_constant)
+
+
+State 194
+
+   60 del_def: '(' K_COND QSTRING . conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 245
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 195
+
+   97 conditional_port_expr: '(' . conditional_port_expr ')'
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 246
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 196
+
+   59 del_def: '(' K_COND conditional_port_expr . '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    K_EQ    shift, and go to state 247
+    K_NE    shift, and go to state 248
+    K_CEQ   shift, and go to state 249
+    K_CNE   shift, and go to state 250
+    K_LAND  shift, and go to state 251
+    K_LOR   shift, and go to state 252
+    '('     shift, and go to state 253
+
+
+State 197
+
+   96 conditional_port_expr: scalar_constant .
+
+    $default  reduce using rule 96 (conditional_port_expr)
+
+
+State 198
+
+   95 conditional_port_expr: port .
+
+    $default  reduce using rule 95 (conditional_port_expr)
+
+
+State 199
+
+   63 del_def: '(' K_CONDELSE error . ')'
+
+    ')'  shift, and go to state 254
+
+
+State 200
+
+   62 del_def: '(' K_CONDELSE '(' . K_IOPATH port_spec port_instance delval_list ')' ')'
+
+    K_IOPATH  shift, and go to state 255
+
+
+State 201
+
+   65 del_def: '(' K_INTERCONNECT error . ')'
+
+    ')'  shift, and go to state 256
+
+
+State 202
+
+   64 del_def: '(' K_INTERCONNECT port_interconnect . port_interconnect delval_list ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_interconnect        go to state 257
+    hierarchical_identifier  go to state 203
+
+
+State 203
+
+  117 port_interconnect: hierarchical_identifier .
+  118                  | hierarchical_identifier . '[' INTEGER ']'
+  141 hierarchical_identifier: hierarchical_identifier . HCHAR IDENTIFIER
+
+    HCHAR  shift, and go to state 107
+    '['    shift, and go to state 236
+
+    $default  reduce using rule 117 (port_interconnect)
+
+
+State 204
+
+   58 del_def: '(' K_IOPATH error . ')'
+
+    ')'  shift, and go to state 258
+
+
+State 205
+
+  121 port_edge: '(' . $@3 edge_identifier $@4 port_instance ')'
+
+    $default  reduce using rule 119 ($@3)
+
+    $@3  go to state 259
+
+
+State 206
+
+   57 del_def: '(' K_IOPATH port_spec . port_instance delval_list ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 260
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 207
+
+  113 port_spec: port_instance .
+
+    $default  reduce using rule 113 (port_spec)
+
+
+State 208
+
+  114 port_spec: port_edge .
+
+    $default  reduce using rule 114 (port_spec)
+
+
+State 209
+
+  139 rvalue: '(' ')' .
+
+    $default  reduce using rule 139 (rvalue)
+
+
+State 210
+
+  138 rvalue: '(' rtriple . ')'
+
+    ')'  shift, and go to state 261
+
+
+State 211
+
+  137 rvalue: '(' signed_real_number . ')'
+  144 signed_real_number_opt: signed_real_number .
+
+    ')'  shift, and go to state 262
+
+    $default  reduce using rule 144 (signed_real_number_opt)
+
+
+State 212
+
+   50 deltype: '(' K_PATHPULSE input_output_path_opt rvalue rvalue_opt . ')'
+
+    ')'  shift, and go to state 263
+
+
+State 213
+
+  136 rvalue_opt: rvalue .
+
+    $default  reduce using rule 136 (rvalue_opt)
+
+
+State 214
+
+   51 deltype: '(' K_PATHPULSEPERCENT input_output_path_opt rvalue rvalue_opt . ')'
+
+    ')'  shift, and go to state 264
+
+
+State 215
+
+   90 cond_edge_identifier: K_COND .
+
+    $default  reduce using rule 90 (cond_edge_identifier)
+
+
+State 216
+
+   83 cond_edge_identifier: K_NEGEDGE .
+
+    $default  reduce using rule 83 (cond_edge_identifier)
+
+
+State 217
+
+   82 cond_edge_identifier: K_POSEDGE .
+
+    $default  reduce using rule 82 (cond_edge_identifier)
+
+
+State 218
+
+   84 cond_edge_identifier: K_01 .
+
+    $default  reduce using rule 84 (cond_edge_identifier)
+
+
+State 219
+
+   85 cond_edge_identifier: K_10 .
+
+    $default  reduce using rule 85 (cond_edge_identifier)
+
+
+State 220
+
+   86 cond_edge_identifier: K_0Z .
+
+    $default  reduce using rule 86 (cond_edge_identifier)
+
+
+State 221
+
+   87 cond_edge_identifier: K_Z1 .
+
+    $default  reduce using rule 87 (cond_edge_identifier)
+
+
+State 222
+
+   88 cond_edge_identifier: K_1Z .
+
+    $default  reduce using rule 88 (cond_edge_identifier)
+
+
+State 223
+
+   89 cond_edge_identifier: K_Z0 .
+
+    $default  reduce using rule 89 (cond_edge_identifier)
+
+
+State 224
+
+   81 cond_edge_start: '(' $@2 cond_edge_identifier .
+
+    $default  reduce using rule 81 (cond_edge_start)
+
+
+State 225
+
+   69 tchk_def: '(' K_HOLD port_tchk port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 265
+
+
+State 226
+
+   79 port_tchk: cond_edge_start QSTRING timing_check_condition . port_spec ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 266
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 227
+
+   92 timing_check_condition: '~' port_interconnect .
+
+    $default  reduce using rule 92 (timing_check_condition)
+
+
+State 228
+
+   93 timing_check_condition: '!' port_interconnect .
+
+    $default  reduce using rule 93 (timing_check_condition)
+
+
+State 229
+
+   78 port_tchk: cond_edge_start timing_check_condition port_spec . ')'
+
+    ')'  shift, and go to state 267
+
+
+State 230
+
+   77 port_tchk: cond_edge_start port_instance ')' .
+
+    $default  reduce using rule 77 (port_tchk)
+
+
+State 231
+
+  104 equality_operator: K_EQ .
+
+    $default  reduce using rule 104 (equality_operator)
+
+
+State 232
+
+  105 equality_operator: K_NE .
+
+    $default  reduce using rule 105 (equality_operator)
+
+
+State 233
+
+  106 equality_operator: K_CEQ .
+
+    $default  reduce using rule 106 (equality_operator)
+
+
+State 234
+
+  107 equality_operator: K_CNE .
+
+    $default  reduce using rule 107 (equality_operator)
+
+
+State 235
+
+   94 timing_check_condition: port_interconnect equality_operator . scalar_constant
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+
+    scalar_constant  go to state 268
+
+
+State 236
+
+  118 port_interconnect: hierarchical_identifier '[' . INTEGER ']'
+
+    INTEGER  shift, and go to state 269
+
+
+State 237
+
+   75 tchk_def: '(' K_PERIOD port_tchk rvalue ')' .
+
+    $default  reduce using rule 75 (tchk_def)
+
+
+State 238
+
+   72 tchk_def: '(' K_RECREM port_tchk port_tchk rvalue . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 270
+
+
+State 239
+
+   71 tchk_def: '(' K_RECOVERY port_tchk port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 271
+
+
+State 240
+
+   73 tchk_def: '(' K_REMOVAL port_tchk port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 272
+
+
+State 241
+
+   68 tchk_def: '(' K_SETUP port_tchk port_tchk rvalue . ')'
+
+    ')'  shift, and go to state 273
+
+
+State 242
+
+   70 tchk_def: '(' K_SETUPHOLD port_tchk port_tchk rvalue . rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 274
+
+
+State 243
+
+   74 tchk_def: '(' K_WIDTH port_tchk rvalue ')' .
+
+    $default  reduce using rule 74 (tchk_def)
+
+
+State 244
+
+   61 del_def: '(' K_COND error ')' .
+
+    $default  reduce using rule 61 (del_def)
+
+
+State 245
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr . '(' K_IOPATH port_spec port_instance delval_list ')' ')'
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    K_EQ    shift, and go to state 247
+    K_NE    shift, and go to state 248
+    K_CEQ   shift, and go to state 249
+    K_CNE   shift, and go to state 250
+    K_LAND  shift, and go to state 251
+    K_LOR   shift, and go to state 252
+    '('     shift, and go to state 275
+
+
+State 246
+
+   97 conditional_port_expr: '(' conditional_port_expr . ')'
+   98                      | conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    K_EQ    shift, and go to state 247
+    K_NE    shift, and go to state 248
+    K_CEQ   shift, and go to state 249
+    K_CNE   shift, and go to state 250
+    K_LAND  shift, and go to state 251
+    K_LOR   shift, and go to state 252
+    ')'     shift, and go to state 276
+
+
+State 247
+
+  100 conditional_port_expr: conditional_port_expr K_EQ . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 277
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 248
+
+  101 conditional_port_expr: conditional_port_expr K_NE . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 278
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 249
+
+  102 conditional_port_expr: conditional_port_expr K_CEQ . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 279
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 250
+
+  103 conditional_port_expr: conditional_port_expr K_CNE . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 280
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 251
+
+   98 conditional_port_expr: conditional_port_expr K_LAND . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 281
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 252
+
+   99 conditional_port_expr: conditional_port_expr K_LOR . conditional_port_expr
+
+    K_LOGICAL_ONE   shift, and go to state 192
+    K_LOGICAL_ZERO  shift, and go to state 193
+    IDENTIFIER      shift, and go to state 100
+    '('             shift, and go to state 195
+
+    conditional_port_expr    go to state 282
+    scalar_constant          go to state 197
+    port                     go to state 198
+    hierarchical_identifier  go to state 151
+
+
+State 253
+
+   59 del_def: '(' K_COND conditional_port_expr '(' . K_IOPATH port_spec port_instance delval_list ')' ')'
+
+    K_IOPATH  shift, and go to state 283
+
+
+State 254
+
+   63 del_def: '(' K_CONDELSE error ')' .
+
+    $default  reduce using rule 63 (del_def)
+
+
+State 255
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH . port_spec port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 284
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 256
+
+   65 del_def: '(' K_INTERCONNECT error ')' .
+
+    $default  reduce using rule 65 (del_def)
+
+
+State 257
+
+   64 del_def: '(' K_INTERCONNECT port_interconnect port_interconnect . delval_list ')'
+
+    '('  shift, and go to state 285
+
+    delval_list  go to state 286
+    delval       go to state 287
+    rvalue       go to state 288
+
+
+State 258
+
+   58 del_def: '(' K_IOPATH error ')' .
+
+    $default  reduce using rule 58 (del_def)
+
+
+State 259
+
+  121 port_edge: '(' $@3 . edge_identifier $@4 port_instance ')'
+
+    K_NEGEDGE  shift, and go to state 289
+    K_POSEDGE  shift, and go to state 290
+    K_01       shift, and go to state 291
+    K_10       shift, and go to state 292
+    K_0Z       shift, and go to state 293
+    K_Z1       shift, and go to state 294
+    K_1Z       shift, and go to state 295
+    K_Z0       shift, and go to state 296
+
+    edge_identifier  go to state 297
+
+
+State 260
+
+   57 del_def: '(' K_IOPATH port_spec port_instance . delval_list ')'
+
+    '('  shift, and go to state 285
+
+    delval_list  go to state 298
+    delval       go to state 287
+    rvalue       go to state 288
+
+
+State 261
+
+  138 rvalue: '(' rtriple ')' .
+
+    $default  reduce using rule 138 (rvalue)
+
+
+State 262
+
+  137 rvalue: '(' signed_real_number ')' .
+
+    $default  reduce using rule 137 (rvalue)
+
+
+State 263
+
+   50 deltype: '(' K_PATHPULSE input_output_path_opt rvalue rvalue_opt ')' .
+
+    $default  reduce using rule 50 (deltype)
+
+
+State 264
+
+   51 deltype: '(' K_PATHPULSEPERCENT input_output_path_opt rvalue rvalue_opt ')' .
+
+    $default  reduce using rule 51 (deltype)
+
+
+State 265
+
+   69 tchk_def: '(' K_HOLD port_tchk port_tchk rvalue ')' .
+
+    $default  reduce using rule 69 (tchk_def)
+
+
+State 266
+
+   79 port_tchk: cond_edge_start QSTRING timing_check_condition port_spec . ')'
+
+    ')'  shift, and go to state 299
+
+
+State 267
+
+   78 port_tchk: cond_edge_start timing_check_condition port_spec ')' .
+
+    $default  reduce using rule 78 (port_tchk)
+
+
+State 268
+
+   94 timing_check_condition: port_interconnect equality_operator scalar_constant .
+
+    $default  reduce using rule 94 (timing_check_condition)
+
+
+State 269
+
+  118 port_interconnect: hierarchical_identifier '[' INTEGER . ']'
+
+    ']'  shift, and go to state 300
+
+
+State 270
+
+   72 tchk_def: '(' K_RECREM port_tchk port_tchk rvalue rvalue . ')'
+
+    ')'  shift, and go to state 301
+
+
+State 271
+
+   71 tchk_def: '(' K_RECOVERY port_tchk port_tchk rvalue ')' .
+
+    $default  reduce using rule 71 (tchk_def)
+
+
+State 272
+
+   73 tchk_def: '(' K_REMOVAL port_tchk port_tchk rvalue ')' .
+
+    $default  reduce using rule 73 (tchk_def)
+
+
+State 273
+
+   68 tchk_def: '(' K_SETUP port_tchk port_tchk rvalue ')' .
+
+    $default  reduce using rule 68 (tchk_def)
+
+
+State 274
+
+   70 tchk_def: '(' K_SETUPHOLD port_tchk port_tchk rvalue rvalue . ')'
+
+    ')'  shift, and go to state 302
+
+
+State 275
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' . K_IOPATH port_spec port_instance delval_list ')' ')'
+
+    K_IOPATH  shift, and go to state 303
+
+
+State 276
+
+   97 conditional_port_expr: '(' conditional_port_expr ')' .
+
+    $default  reduce using rule 97 (conditional_port_expr)
+
+
+State 277
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  100                      | conditional_port_expr K_EQ conditional_port_expr .
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    $default  reduce using rule 100 (conditional_port_expr)
+
+
+State 278
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  101                      | conditional_port_expr K_NE conditional_port_expr .
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    $default  reduce using rule 101 (conditional_port_expr)
+
+
+State 279
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  102                      | conditional_port_expr K_CEQ conditional_port_expr .
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    $default  reduce using rule 102 (conditional_port_expr)
+
+
+State 280
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+  103                      | conditional_port_expr K_CNE conditional_port_expr .
+
+    $default  reduce using rule 103 (conditional_port_expr)
+
+
+State 281
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   98                      | conditional_port_expr K_LAND conditional_port_expr .
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    K_EQ   shift, and go to state 247
+    K_NE   shift, and go to state 248
+    K_CEQ  shift, and go to state 249
+    K_CNE  shift, and go to state 250
+
+    $default  reduce using rule 98 (conditional_port_expr)
+
+
+State 282
+
+   98 conditional_port_expr: conditional_port_expr . K_LAND conditional_port_expr
+   99                      | conditional_port_expr . K_LOR conditional_port_expr
+   99                      | conditional_port_expr K_LOR conditional_port_expr .
+  100                      | conditional_port_expr . K_EQ conditional_port_expr
+  101                      | conditional_port_expr . K_NE conditional_port_expr
+  102                      | conditional_port_expr . K_CEQ conditional_port_expr
+  103                      | conditional_port_expr . K_CNE conditional_port_expr
+
+    K_EQ    shift, and go to state 247
+    K_NE    shift, and go to state 248
+    K_CEQ   shift, and go to state 249
+    K_CNE   shift, and go to state 250
+    K_LAND  shift, and go to state 251
+
+    $default  reduce using rule 99 (conditional_port_expr)
+
+
+State 283
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH . port_spec port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 304
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 284
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH port_spec . port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 305
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 285
+
+  133 delval: '(' . rvalue rvalue ')'
+  134       | '(' . rvalue rvalue rvalue ')'
+  137 rvalue: '(' . signed_real_number ')'
+  138       | '(' . rtriple ')'
+  139       | '(' . ')'
+
+    REAL_NUMBER  shift, and go to state 44
+    INTEGER      shift, and go to state 45
+    '('          shift, and go to state 171
+    ')'          shift, and go to state 209
+    '+'          shift, and go to state 46
+    '-'          shift, and go to state 47
+
+    $default  reduce using rule 143 (signed_real_number_opt)
+
+    rvalue                  go to state 306
+    rtriple                 go to state 210
+    signed_real_number_opt  go to state 49
+    signed_real_number      go to state 211
+
+
+State 286
+
+   64 del_def: '(' K_INTERCONNECT port_interconnect port_interconnect delval_list . ')'
+  130 delval_list: delval_list . delval
+
+    '('  shift, and go to state 285
+    ')'  shift, and go to state 307
+
+    delval  go to state 308
+    rvalue  go to state 288
+
+
+State 287
+
+  131 delval_list: delval .
+
+    $default  reduce using rule 131 (delval_list)
+
+
+State 288
+
+  132 delval: rvalue .
+
+    $default  reduce using rule 132 (delval)
+
+
+State 289
+
+  123 edge_identifier: K_NEGEDGE .
+
+    $default  reduce using rule 123 (edge_identifier)
+
+
+State 290
+
+  122 edge_identifier: K_POSEDGE .
+
+    $default  reduce using rule 122 (edge_identifier)
+
+
+State 291
+
+  124 edge_identifier: K_01 .
+
+    $default  reduce using rule 124 (edge_identifier)
+
+
+State 292
+
+  125 edge_identifier: K_10 .
+
+    $default  reduce using rule 125 (edge_identifier)
+
+
+State 293
+
+  126 edge_identifier: K_0Z .
+
+    $default  reduce using rule 126 (edge_identifier)
+
+
+State 294
+
+  127 edge_identifier: K_Z1 .
+
+    $default  reduce using rule 127 (edge_identifier)
+
+
+State 295
+
+  128 edge_identifier: K_1Z .
+
+    $default  reduce using rule 128 (edge_identifier)
+
+
+State 296
+
+  129 edge_identifier: K_Z0 .
+
+    $default  reduce using rule 129 (edge_identifier)
+
+
+State 297
+
+  121 port_edge: '(' $@3 edge_identifier . $@4 port_instance ')'
+
+    $default  reduce using rule 120 ($@4)
+
+    $@4  go to state 309
+
+
+State 298
+
+   57 del_def: '(' K_IOPATH port_spec port_instance delval_list . ')'
+  130 delval_list: delval_list . delval
+
+    '('  shift, and go to state 285
+    ')'  shift, and go to state 310
+
+    delval  go to state 308
+    rvalue  go to state 288
+
+
+State 299
+
+   79 port_tchk: cond_edge_start QSTRING timing_check_condition port_spec ')' .
+
+    $default  reduce using rule 79 (port_tchk)
+
+
+State 300
+
+  118 port_interconnect: hierarchical_identifier '[' INTEGER ']' .
+
+    $default  reduce using rule 118 (port_interconnect)
+
+
+State 301
+
+   72 tchk_def: '(' K_RECREM port_tchk port_tchk rvalue rvalue ')' .
+
+    $default  reduce using rule 72 (tchk_def)
+
+
+State 302
+
+   70 tchk_def: '(' K_SETUPHOLD port_tchk port_tchk rvalue rvalue ')' .
+
+    $default  reduce using rule 70 (tchk_def)
+
+
+State 303
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH . port_spec port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+    '('         shift, and go to state 205
+
+    port_spec                go to state 311
+    port_instance            go to state 207
+    port                     go to state 150
+    port_edge                go to state 208
+    hierarchical_identifier  go to state 151
+
+
+State 304
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH port_spec . port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 312
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 305
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH port_spec port_instance . delval_list ')' ')'
+
+    '('  shift, and go to state 285
+
+    delval_list  go to state 313
+    delval       go to state 287
+    rvalue       go to state 288
+
+
+State 306
+
+  133 delval: '(' rvalue . rvalue ')'
+  134       | '(' rvalue . rvalue rvalue ')'
+
+    '('  shift, and go to state 171
+
+    rvalue  go to state 314
+
+
+State 307
+
+   64 del_def: '(' K_INTERCONNECT port_interconnect port_interconnect delval_list ')' .
+
+    $default  reduce using rule 64 (del_def)
+
+
+State 308
+
+  130 delval_list: delval_list delval .
+
+    $default  reduce using rule 130 (delval_list)
+
+
+State 309
+
+  121 port_edge: '(' $@3 edge_identifier $@4 . port_instance ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 315
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 310
+
+   57 del_def: '(' K_IOPATH port_spec port_instance delval_list ')' .
+
+    $default  reduce using rule 57 (del_def)
+
+
+State 311
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec . port_instance delval_list ')' ')'
+
+    IDENTIFIER  shift, and go to state 100
+
+    port_instance            go to state 316
+    port                     go to state 150
+    hierarchical_identifier  go to state 151
+
+
+State 312
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance . delval_list ')' ')'
+
+    '('  shift, and go to state 285
+
+    delval_list  go to state 317
+    delval       go to state 287
+    rvalue       go to state 288
+
+
+State 313
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH port_spec port_instance delval_list . ')' ')'
+  130 delval_list: delval_list . delval
+
+    '('  shift, and go to state 285
+    ')'  shift, and go to state 318
+
+    delval  go to state 308
+    rvalue  go to state 288
+
+
+State 314
+
+  133 delval: '(' rvalue rvalue . ')'
+  134       | '(' rvalue rvalue . rvalue ')'
+
+    '('  shift, and go to state 171
+    ')'  shift, and go to state 319
+
+    rvalue  go to state 320
+
+
+State 315
+
+  121 port_edge: '(' $@3 edge_identifier $@4 port_instance . ')'
+
+    ')'  shift, and go to state 321
+
+
+State 316
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance . delval_list ')' ')'
+
+    '('  shift, and go to state 285
+
+    delval_list  go to state 322
+    delval       go to state 287
+    rvalue       go to state 288
+
+
+State 317
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list . ')' ')'
+  130 delval_list: delval_list . delval
+
+    '('  shift, and go to state 285
+    ')'  shift, and go to state 323
+
+    delval  go to state 308
+    rvalue  go to state 288
+
+
+State 318
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH port_spec port_instance delval_list ')' . ')'
+
+    ')'  shift, and go to state 324
+
+
+State 319
+
+  133 delval: '(' rvalue rvalue ')' .
+
+    $default  reduce using rule 133 (delval)
+
+
+State 320
+
+  134 delval: '(' rvalue rvalue rvalue . ')'
+
+    ')'  shift, and go to state 325
+
+
+State 321
+
+  121 port_edge: '(' $@3 edge_identifier $@4 port_instance ')' .
+
+    $default  reduce using rule 121 (port_edge)
+
+
+State 322
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list . ')' ')'
+  130 delval_list: delval_list . delval
+
+    '('  shift, and go to state 285
+    ')'  shift, and go to state 326
+
+    delval  go to state 308
+    rvalue  go to state 288
+
+
+State 323
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' . ')'
+
+    ')'  shift, and go to state 327
+
+
+State 324
+
+   62 del_def: '(' K_CONDELSE '(' K_IOPATH port_spec port_instance delval_list ')' ')' .
+
+    $default  reduce using rule 62 (del_def)
+
+
+State 325
+
+  134 delval: '(' rvalue rvalue rvalue ')' .
+
+    $default  reduce using rule 134 (delval)
+
+
+State 326
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' . ')'
+
+    ')'  shift, and go to state 328
+
+
+State 327
+
+   59 del_def: '(' K_COND conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')' .
+
+    $default  reduce using rule 59 (del_def)
+
+
+State 328
+
+   60 del_def: '(' K_COND QSTRING conditional_port_expr '(' K_IOPATH port_spec port_instance delval_list ')' ')' .
+
+    $default  reduce using rule 60 (del_def)

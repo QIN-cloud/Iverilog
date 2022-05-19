@@ -106,7 +106,7 @@ void TestGen::get_stats()
 
 void TestGen::get_vartab()
 {
-	module_->initialize();
+	module_->initialize(false, false, false, false, true);
 
 	vartabs_[module_] = module_->vartab_;
 }

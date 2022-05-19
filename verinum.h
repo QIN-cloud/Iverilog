@@ -239,4 +239,6 @@ extern verinum::V cneq(const verinum&left, const verinum&right);//!==
 extern verinum lshift(const verinum& l, const verinum& r);
 extern verinum rshift(const verinum& l, const verinum& r);
 
+extern bool case_x_or_z(const verinum& left, const verinum& right, string type);
+
 #endif /* IVL_verinum_H */

@@ -1,2 +1,0 @@
-# gperf in MSYS chokes on DOS line endings
-*.gperf text eol=lf

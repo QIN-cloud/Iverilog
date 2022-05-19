@@ -28,7 +28,7 @@ class PGate;
 class VcdVar;
 class VcdScope;
 class verinum;
-class FinalRep;
+class ScopeRep;
 
 /* 
 *  Each Module will be represented by a node, the module information and 
@@ -71,6 +71,7 @@ public:
 
     map<perm_string, Module*> get_modules();
     map<perm_string, PUdp*> get_udps();
+    map<perm_string, vector<string> >* get_lines();
     
     svector<ModuleNode*>* build_nodes(PDesign& de, std::string mainmodule);
 	svector<ModuleNode*>* build_nodes(PDesign& de);
@@ -86,7 +87,7 @@ public:
 private:
 
     /*Build module node tree and conditional expressions table.*/
-    void build_before_cover(const char* fsm_selects);
+    void initialize(const char* fsm_selects);
 
     /*Split the selected variables using in fsm analysis.*/
     void fsm_var_parse(const char* fsm_selects);
@@ -144,41 +145,44 @@ private:
     void cfg_replay(Cfg* cfg, VcdScope* scope, set<string>& defs);
 
     /*Evaluate the conditional expression, then select the next node by evaluating value.*/
-    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, bool combine);
+    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned, vector<unsigned> >& bvalues, unsigned blineno);
 
     /*After replaying a cfg, we get a list of linenos named paths, this will be the result 
     of statement, path and branch coverage.*/
-    void add_path(Module* md, Cfg* cfg, const set<unsigned>& path);
+    void add_path(VcdScope* scope, Cfg* cfg, set<unsigned>& path);
+
+    void add_branch(VcdScope* scope, map<unsigned, vector<unsigned> >& bvalues);
 
     /*Dump the final coverage analysis report.*/
     void report_coverage(ostream& o);
     
     /*Dump the module and module gates structure.*/
-    void dump_module_tree(ostream& o);
+    //void dump_module_tree(ostream& o);
 
     /*Dump the variables and symbols prasing in vcd file.*/
-    void dump_symbol_vars(ostream& o);
+    //void dump_symbol_vars(ostream& o);
 
     /*Dump the cfgs and instantiation modules for every module type.*/
-    void dump_module_vars(ostream& o);
+    //void dump_module_vars(ostream& o);
 
     /*Dump the value of all variables at current moment.*/
-    void dump_everytime_vars(ostream& o);
+    //void dump_everytime_vars(ostream& o);
 
     /*Dump the dates before starting the simulation replay process, excluding 
     the conditon expressions and their cfgs in every modules, vcd symbols and 
     the variables they matched,module instantiate informations.*/
-    void dump_def_information();
+    //void dump_def_information();
 
 private:
     Design* des;
     map<perm_string, Module*> modules_;
     map<perm_string, PUdp*> udps_; 
     map<perm_string, ModuleTreeNode*> mt_nodes;    //Each module type only has one ModuleTreeNode.
+    map<perm_string, vector<string> > lines_;                       //File lines.
     ofstream evaluate_out;                         //Record the value of condit expression at every time.                     
-    ofstream control_out;                            //Record the value changed.
+    ofstream control_out;                          //Record the value changed.
 
-/*Function Coverage Analysis Signs.*/
+/*Function Coverage Analysis inputs.*/
 private:
     bool toggle_;
     bool fsm_;
@@ -193,16 +197,16 @@ private:
 private:
     bool                   found_in_vcd;                                        //Flag whether the module exists in vcd file.
     int                    scope_count;                                         //Scope level in definition parsing.
-    VcdScope*              current_scope;                                       //Current module instantiate in the vcd parsing process.
+    VcdScope*              cur_scope;                                           //Current module instantiate in the vcd parsing process.
     map<string, bool>      fsm_names;                                           //The variable names selected in fsm cover.
+    stack<VcdScope*>       scope_layer;                                         //Layer of instan modules.
     stack<ModuleTreeNode*> enter_scopes;                                        //Overhead ModuleTreeNodes that are searched in dfs. 
 
 /*Variables used in the part of value changes parsing.*/
 private:    
-    FinalRep* report;                                                           //Coverage report.
     int cur_sim_time;                                                           //Current time of the simulation replay process.
-    map<VcdVar*, bool> fsm_vars;                                                //Record the vcd_var in fsm variables.
+    set<pair<VcdScope*, VcdVar*> > fsm_vars;                                    //Record the vcd_var in fsm variables.
     map<string,verinum> variety_symbols;                                        //Recording of symbols having value changing at a moment.
-    unordered_map<string, vector<pair<string, VcdScope*> > >  symbol_vars;      //Form as {symbol, vector {var name, instantiated module} }.
+    unordered_map<string, vector<pair<string, VcdScope*> > >  symbol_vars;      //Form as {symbol, vector {var name, instantiation} }.
 };
 #endif

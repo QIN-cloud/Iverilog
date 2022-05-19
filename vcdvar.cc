@@ -1,37 +1,11 @@
 #include "vcdvar.h"
 #include <iomanip>
-
-unsigned time_ = 0;
-int smt_time = 0;
-ofstream new_path;
-
-CoverNum::~CoverNum()
-{
-
-}
-
-void CoverNum::add(const CoverNum* num)
-{
-	total_ += num->total_;
-	active_ += num->active_;
-	hit_ += num->hit_;
-	miss_ += num->miss_;
-}
-
-void CoverNum::dump(ostream& o, string s){
-	o << left << setw(10);
-	o << left << setw(20) << s;
-	o << left << setw(10) << active_;
-	o << left << setw(10) << total_;
-	o << left << setw(10) << miss_;
-	o << left << setw(10) << hit_;
-	o << left << setw(10) << (double(hit_*100)/double(total_));
-	o << endl;
-}
+#include <algorithm>
 
 void VcdVar::dump(ostream& o)
 {
-	o << name << "[" << msb << ":" << lsb <<"]" << " cur_var = ";
+	o << name << "[" << msb << ":" << lsb <<"]";
+	o << " cur_var = ";
 	cur_val.dump(o);
 	o << " pre_val = ";
 	pre_val.dump(o);
@@ -40,993 +14,1293 @@ void VcdVar::dump(ostream& o)
 	o << endl; 
 }
 
-VarToggle::VarToggle(const VcdVar* var)
-{
-	lsb_ = var->lsb;
-	msb_ = var->msb;
-	little_endia_ = var->little_endia;
-	width_ = var->width;
-	name_ = var->name;
-	num_ = new CoverNum;
-	num_->total_ = width_ * 2;
-	num_->miss_ = width_ * 2;
-	for(unsigned idx = 0; idx < width_; ++idx){
-		toggle01_[idx] = 0;
-		toggle10_[idx] = 0;
-	}
-}
-
-VarToggle::~VarToggle()
-{
-	delete num_;
-}
-
-void VarToggle::add(const VcdVar* var)
-{
-	//Toggle bit change from 0 to 1
-	for(unsigned idx = 0; idx < width_; ++idx){
-		//Toggle bit change from 0 to 1
-		if((var->pre_val[idx] == verinum::V0) && (var->cur_val[idx] == verinum::V1)){
-			if(toggle01_[idx] == 0){
-				num_->hit_ += 1;
-				num_->miss_ -= 1;
-			}
-			toggle01_[idx] += 1;
-		}
-		//Toggle bit change from 1 to 0
-		if((var->pre_val[idx] == verinum::V1) && (var->cur_val[idx] == verinum::V0)){
-			if(toggle10_[idx] == 0){
-				num_->hit_ += 1;
-				num_->miss_ -= 1;
-			}
-			toggle10_[idx] += 1;
-		}
-
-	}
-	num_->active_ += 2;
-}
-
-void VarToggle::dump(ostream& o)
-{
-	for(unsigned idx = 0; idx < width_; idx++){
-		long locate;
-		if(little_endia_)
-			locate = idx + lsb_;
-		else
-			locate = idx + msb_;
-		o << left << setw(25) << name_ + "[" + to_string(locate) + "]";
-		o << right << setw(10) << toggle01_[idx];
-		o << right << setw(10) << toggle10_[idx];
-		o << endl;
-	}
-}
-
-ToggleRep::ToggleRep()
-{
-	num_ = new CoverNum;
-}
-
-ToggleRep::~ToggleRep()
-{
-	delete num_;
-	for(map<string, VarToggle*>::iterator pos = vars_.begin(); pos != vars_.end(); pos++){
-		delete pos->second;
-	}
-}
-
-void ToggleRep::add(const VcdVar* var)
-{
-	if(vars_.find(var->name) == vars_.end()){
-		vars_[var->name] = new VarToggle(var);
-	}
-	vars_[var->name]->add(var);
-}
-
-void ToggleRep::dump(ostream& o)
-{
-	for(map<string, VarToggle*>::iterator pos = vars_.begin(); pos != vars_.end(); pos++)
-	{
-		pos->second->dump(o);
-		num_->add(pos->second->get_num());
-	}
-}
-
-FsmRep::FsmRep()
+VcdVar::VcdVar()
 {
 
 }
 
-FsmRep::~FsmRep()
-{
-	for(map<string, CoverState*>::iterator pos = var_states_.begin(); pos != var_states_.end(); pos++){
-		delete pos->second;
-	}
-	for(map<string, CoverTran*>::iterator pos = var_trans_.begin(); pos != var_trans_.end(); pos++){
-		delete pos->second;
-	}
-}
-
-void FsmRep::add(const VcdVar* var)
-{
-	//add the state
-	if(var_states_.find(var->name) == var_states_.end()){
-		var_states_[var->name] = new CoverState();
-	}
-	CoverState* cs = var_states_[var->name];
-	vector<pair<unsigned, verinum> >::iterator spos;
-	for(spos = cs->states_.begin(); spos != cs->states_.end(); spos++){
-		if((*spos).second == var->cur_val){
-			(*spos).first += 1;
-			break;
-		}
-	}
-	if(spos == cs->states_.end()){
-		cs->states_.push_back(make_pair(1, var->cur_val));
-	}
-	cs->num_ += 1;
-
-	//add the tran
-	if(var_trans_.find(var->name) == var_trans_.end()){
-		var_trans_[var->name] = new CoverTran();
-	}
-	CoverTran* ct = var_trans_[var->name];
-	vector<pair<unsigned, pair<verinum, verinum> > >::iterator tpos;
-	for(tpos = ct->trans_.begin(); tpos != ct->trans_.end(); tpos++){
-		if((*tpos).second.first == var->pre_val
-		&& (*tpos).second.second == var->cur_val){
-			(*tpos).first += 1;
-			break;
-		}
-	}
-	if(tpos == ct->trans_.end()){
-		ct->trans_.push_back(make_pair(1, make_pair(var->pre_val, var->cur_val)));
-	}
-	ct->num_ += 1;
-}
-
-void FsmRep::dump(ostream& o)
-{
-	for(map<string, CoverState*>::iterator pos = var_states_.begin(); pos != var_states_.end(); pos++){
-		o << "Variable : " << pos->first<< " States : " << pos->second->num_ << endl;
-		o << "------------------------------------------------------------------------------" << endl;
-		o << left << setw(10) << "Cover%" << left << setw(10) << "Times" << "State" << endl;
-		o << left << setw(10) << "------" << left << setw(10) << "-----" << "----------------" << endl;
-		for(pair<unsigned, verinum> state : pos->second->states_){
-			o << left << setw(10) << double(state.first*100)/double(pos->second->num_);
-			o << left << setw(10) << state.first;
-			state.second.dump(o);
-			o << endl;
-		}
-		o << "------------------------------------------------------------------------------" << endl;
-		o << left << setw(10) << "Cover%" << left << setw(10) << "Times" << "State Tran" << endl;
-		o << left << setw(10) << "------" << left << setw(10) << "-----" << "----------------" << endl;
-		for(pair<unsigned, pair<verinum, verinum> > tran : var_trans_[pos->first]->trans_){
-			o << left << setw(10) << double(tran.first*100)/double(pos->second->num_);
-			o << left << setw(10) << tran.first;
-			tran.second.first.dump(o);
-			o << " -> ";
-			tran.second.second.dump(o);
-			o << endl;
-		}
-		o << "------------------------------------------------------------------------------" << endl;
-	}
-}
-
-StatRep::StatRep(Module_Cfgs* cfgs)
-{
-	for(unsigned i = 0; i < cfgs->cfgs->count(); i++){
-		Cfg* cfg = (*(cfgs->cfgs))[i];
-		if((*(cfg->root))[1]->type == "ISCONTROL.EVENT"){
-			for(unsigned j = 0; j < cfg->root->count(); j++){
-				Cfg_Node* node = (*(cfg->root))[j];
-				if(node->lineno > 0){
-					stmts_[node->lineno] = 0;
-					nodes_[node->lineno] = node;
-				}
-			}
-		}
-	}
-	num_ = new CoverNum;
-	num_->total_ = stmts_.size();
-	num_->miss_ = stmts_.size();
-}
-
-StatRep::~StatRep()
-{
-	delete num_;
-}	
-
-void StatRep::add(const set<unsigned>& stmt)
-{
-	for(set<unsigned, less<unsigned> >::iterator spos = stmt.begin(); spos != stmt.end(); ++spos){
-		if(stmts_.find(*spos) != stmts_.end()){
-			if(stmts_[*spos] == 0){
-				num_->hit_ += 1;
-				num_->miss_ -= 1;
-			}
-			stmts_[*spos] += 1;
-			num_->active_ += 1;
-		}
-	}
-}
-
-void StatRep::dump(ostream& o)
-{
-    map<unsigned, unsigned>::iterator stmt;
-	for(stmt = stmts_.begin(); stmt != stmts_.end(); stmt++){
-		o << left << setw(10) << stmt->first;
-		o << left << setw(25) << nodes_[stmt->first]->type;
-		o << left << setw(10) << stmt->second;
-		o << endl;
-	}
-}
-
-ProcessRep::ProcessRep(Module* mod, Cfg* cfg)
-{
-	module_ = mod;
-	cfg_ = cfg;
-	num_ = new CoverNum;
-	num_->total_ = module_->routes_[cfg_].size();
-	num_->miss_ = module_->routes_[cfg_].size();
-	for(unsigned i = 0; i < num_->total_; i++){
-		paths_[i] = 0;
-	}
-}
-
-ProcessRep::~ProcessRep()
-{
-	delete num_;
-}
-
-bool ProcessRep::equal(const set<unsigned>& p1, const set<unsigned>& p2)
-{
-	set<unsigned, less<unsigned> >::iterator ppos1 = p1.begin();
-	set<unsigned, less<unsigned> >::iterator ppos2 = p2.begin();
-	while((ppos1 != p1.end()) && (ppos2 != p2.end())){
-		if((*ppos1) == (*ppos2)){
-			++ppos1;
-			++ppos2;
-		}
-		else{
-			return false;
-		}
-	}
-	return true;
-}
-
-
-void ProcessRep::add(unsigned time, const set<unsigned>& path)
-{
-	bool found = false;
-	vector<set<unsigned> >& routes = module_->routes_[cfg_];
-	for(unsigned i = 0; i < routes.size(); i++){
-		set<unsigned>& route = routes[i];
-		if(equal(route, path)){
-			time_paths_[time].push_back(i);
-			if(!paths_[i]){
-				num_->hit_ += 1;
-				num_->miss_ -= 1;
-			}
-			paths_[i] += 1;
-			
-			if(smt_time <= 100)
-			{
-				if(time_ < time)
-				{
-					time_ = time;
-					if(smt_time != 0)
-						new_path << "end" << endl;
-					new_path << "cycle: " << smt_time << endl;
-					new_path << "path" << " ";
-					smt_time++;
-				}
-				new_path << "[" << cfg_->id << "," << i << "] ";
-			}
-			found = true;
-			break;
-		}
-	}
-	if(!found)
-	{
-		cerr << "Can't find path in process " << cfg_->id << endl;
-		cerr << "Path ";
-		for(unsigned line : path)
-		{
-			cerr << line << " ";
-		}
-		cerr << endl;
-		exit(1);
-	}
-	num_->active_ += 1;
-}
-
-void ProcessRep::dump_time_paths(ostream& o)
-{
-	o << "------------------------------------------------------------------------------" << endl;
-	o << "Process id : " << cfg_->id << endl;
-	o << "------------------------------------------------------------------------------" << endl;
-	map<unsigned, vector<unsigned> >::iterator pos;
-	for(pos = time_paths_.begin(); pos != time_paths_.end(); pos++){
-		o << "Time : " << pos->first << " " << "Path : ";
-		for(unsigned idx : pos->second){
-			set<unsigned> route = module_->routes_[cfg_][idx];
-			o << "{ ";
-			for(unsigned lineno : route){
-				o << lineno << " ";
-			}
-			o << "}" << endl;
-		}
-	}
-	o << "------------------------------------------------------------------------------" << endl;
-}
-
-void ProcessRep::dump_cover_paths(ostream& o)
-{
-	o << "------------------------------------------------------------------------------" << endl;
-	o << "Process id : " << cfg_->id << endl;
-	o << "------------------------------------------------------------------------------" << endl;
-	o << left << setw(10) << "Hit" << left << setw(10) << "Covered%" << "Path" << endl;
-	o << left << setw(10) << "---" << left << setw(10) << "--------" << "----" << endl;
-	map<unsigned, unsigned>::iterator pos;
-	for(pos = paths_.begin(); pos != paths_.end(); pos++){
-		o << left << setw(10) << pos->second;
-		o << left << setw(10) << double(pos->second*100)/double(num_->active_);
-		o << "{ ";
-		for(unsigned lineno : module_->routes_[cfg_][pos->first]){
-			o << lineno << " ";
-		}
-		o << "}" << endl;
-	}
-}
-
-PathRep::PathRep(Module* mod)
-{
-	num_ = new CoverNum;
-	module_ = mod;
-}
-
-PathRep::~PathRep()
-{
-	delete num_;
-	for(map<Cfg*, ProcessRep*>::iterator pos = procs_.begin(); pos != procs_.end(); pos++){
-		delete pos->second;
-	}
-}
-
-void PathRep::add(unsigned time, Cfg* cfg, const set<unsigned>& path)
-{
-	if(procs_.find(cfg) == procs_.end()){
-		procs_[cfg] = new ProcessRep(module_, cfg);
-	}
-	procs_[cfg]->add(time, path);
-}
-
-void PathRep::dump(ostream& o)
-{
-	for(map<Cfg*, ProcessRep*>::iterator pos = procs_.begin(); pos != procs_.end(); pos++){
-		pos->second->dump_cover_paths(o);
-		//pos->second->dump_time_paths(o);
-		num_->add(pos->second->get_num());
-	}
-}
-
-ExprBranch::ExprBranch(Cfg*  cfg, Cfg_Node* node, map<unsigned, ExprBranch*>& branchs)
-{
-	node_ = node;
-	for(unsigned idx = 0; idx < node->dsuc.count(); idx++){
-		if((*(cfg->root))[node->dsuc[idx]->index]->lineno > 0){
-			unsigned lineno = (*(cfg->root))[node->dsuc[idx]->index]->lineno;
-			branch_[lineno] = 0;
-			branchs[lineno] = this;
-		}
-	}
-	num_ = new CoverNum;
-	num_->total_ = branch_.size();
-	num_->miss_ = branch_.size();
-}
-
-ExprBranch::~ExprBranch()
-{
-	delete num_;
-}
-
-void ExprBranch::add(unsigned lineno)
-{
-	if(branch_[lineno] == 0){
-		num_->hit_ += 1;
-		num_->miss_ -=1;
-	}
-	branch_[lineno] += 1;
-	num_->active_ += 1;
-}
-
-void ExprBranch::dump(ostream& o)
-{	
-	o << "------------------------------------Branch------------------------------------" << endl;
-	o << "Count coming in to " << node_->type << " in line " << node_->lineno << endl;
-	o << left << setw(10) << "Line" << left << setw(10) << "Hit Times" << endl;
-	o << left << setw(10) << "----" << left << setw(10) << "---------" << endl;
-	map<unsigned, unsigned>::iterator pos;
-	for(pos = branch_.begin(); pos != branch_.end(); pos++){
-		o << left << setw(10) << pos->first << left << setw(10) << pos->second << endl;
-	}
-	o << "Branch Coverage = " << double(num_->hit_*100)/double(num_->total_);
-	o << "%(" << num_->hit_ << " hit of " << num_->total_ << " branches" << ")";
-	o << endl;
-}
-
-BranchRep::BranchRep(Module_Cfgs* cfgs)
-{
-	num_ = new CoverNum;
-	//Search every cfg
-	for(unsigned i = 0; i < cfgs->cfgs->count(); i++){
-		Cfg* cfg = (*(cfgs->cfgs))[i];{
-			//Search every cfg node
-			if((*(cfg->root))[1]->type == "ISCONTROL.EVENT"){
-				for(unsigned j = 0; j < cfg->root->count(); j++){
-					Cfg_Node* node = (*(cfg->root))[j];
-					//Build branch report for control node
-					if(node->type.find("ISCONTROL") == 0 && node->type != "ISCONTROL.EVENT"){
-						ExprBranch* branch_ = new ExprBranch(cfg, node, locations_);
-						branchs_.push_back(branch_);
-					}
-				}
-			}
-		}
-	}
-}
-
-BranchRep::~BranchRep()
-{
-	vector<ExprBranch*>::iterator pos;
-	for(pos = branchs_.begin(); pos != branchs_.end(); pos++){
-		delete *pos;
-	}
-	delete num_;
-}
-
-void BranchRep::add(const set<unsigned>& linenos)
-{
-	for(unsigned lineno : linenos){
-		if(locations_.find(lineno) != locations_.end()){
-			locations_[lineno]->add(lineno);
-		}
-	}
-}
-
-void BranchRep::dump(ostream& o)
-{
-	vector<ExprBranch*>::iterator pos;
-	for(pos = branchs_.begin(); pos != branchs_.end(); pos++){
-		(*pos)->dump(o);
-		num_->add((*pos)->get_num());
-	}
-}
-
-
-CondValue::CondValue(const vector<pair<PExpr*, verinum> >& items)
-{
-	copy(items.begin(), items.end(), inserter(items_, items_.begin()));
-	num_ = 1;
-}
-
-CondValue::~CondValue()
+VcdVar::~VcdVar()
 {
 
 }
 
-void CondValue::dump(ostream& o)
+BranchTree::BranchTree(Module* md, TreeType type)
 {
-	vector<pair<PExpr*, verinum> >::iterator pos;
-	o << "{ ";
-	for(pos = items_.begin(); pos != items_.end();pos++){
-		pos->first->dump(o);
-		o << "{";
-		pos->second.dump(o);
-		o << "} ";
-	}
-	o << "} ";
+	module_ = md;
+	type_ = type;
 }
 
-ExprCombine::ExprCombine(Cfg_Node* node)
-{
-	node_ = node;
-	num_ = 0;
-}
-
-ExprCombine::~ExprCombine()
+BranchTree::~BranchTree()
 {
 	
 }
 
-bool operator == (const vector<pair<PExpr*, verinum> >& v1, const vector<pair<PExpr*, verinum> >& v2)
+BrCondit::BrCondit(Module* md, TreeType type) : BranchTree(md, type)
 {
-	if(v1.size() != v2.size()) return false;
-	for(unsigned i = 0; i < v1.size(); i++){
-		if(v1[i].second != v2[i].second){
-			return false;
-		}
-	}
-	return true;
+
 }
 
-void ExprCombine::add(verinum value, const map<PExpr*, verinum>& items)
+BrCondit::~BrCondit()
 {
-	vector<pair<PExpr*, verinum> > temp_items;
-	map<PExpr*, verinum>::const_iterator pos;
-	for(pos = items.begin(); pos != items.end(); pos++){
-		temp_items.push_back(make_pair(pos->first, pos->second));
-	}
-
-	bool find = false;
-	if(cond_items_.find(value) != cond_items_.end()){
-
-		if(!cond_items_[value].second.empty()){
-
-			for(CondValue* cv : cond_items_[value].second){
-
-				if(cv->items_ == temp_items){
-					find = true;
-					cv->num_ += 1;
-					break;
-				}
-			}
-		}
-	}
-
-	if(!find){
-		CondValue* cond_value = new CondValue(temp_items);
-		cond_items_[value].second.push_back(cond_value);
-	}
-
-	cond_items_[value].first += 1;
-	num_ += 1;
+	delete tru_;
+	if(fal_) delete fal_;
 }
 
-void ExprCombine::dump(ostream& o)
+BrCase::BrCase(Module* md, TreeType type) : BranchTree(md, type)
 {
-	o << "------------------------------------Combine------------------------------------" << endl;
-	o << "Count coming in to " << node_->type << " in line " << node_->lineno << " ";
-	node_->expr[0]->dump(o);
-	o << endl;
-	map<verinum, pair<unsigned, vector<CondValue*> > >::iterator pos;
-	for(pos = cond_items_.begin(); pos != cond_items_.end(); pos++){
-		o << "-------------------------------------------------------------------------------" << endl;
-		o << "Value : ";
-		pos->first.dump(o);
-		o << " Hit Times : " << pos->second.first << " Covered : " << double(pos->second.first*100)/double(num_) << endl;
-		o << "-------------------------------------------------------------------------------" << endl;
-		o << left << setw(10) << "Hit Times" << left << setw(10) << "Covered%" << "Items" << endl;
-		o << left << setw(10) << "---------" << left << setw(10) << "--------" << "-----" << endl;
-		for(CondValue* cv : pos->second.second){
-			o << left << setw(10) << cv->num_ << left << setw(10) << double(cv->num_*100)/double(pos->second.first);
-			cv->dump(o);
-			o << endl;
-		}
+	
+}
+
+BrCase::~BrCase()
+{
+	for(pair<PExpr*, BranchTree*> item : items_) {
+		delete item.second;
 	}
 }
 
-CombineRep::CombineRep(Module_Cfgs* cfgs)
+BrBlock::BrBlock(Module* md, TreeType type) : BranchTree(md, type)
 {
-	//build combine report for every cfg
-	for(unsigned i = 0; i < cfgs->cfgs->count(); i++){
-		Cfg* cfg = (*(cfgs->cfgs))[i];
 
-		//select the always block
-		if((*(cfg->root))[1]->type == "ISCONTROL.EVENT"){
-			for(unsigned j = 0; j < cfg->root->count(); j++){
-				Cfg_Node* node = (*(cfg->root))[j];
+}
 
-				//build combine report for a condit expression
-				if(node->type.find("ISCONTROL") == 0 && node->type != "ISCONTROL.EVENT"){
-					exprs_[node] = new ExprCombine(node);
-				}
-			}
+BrBlock::~BrBlock()
+{
+	for(BranchTree* stat : stats_) {
+		delete stat;
+	}
+}
+
+BrLeaf::BrLeaf(Module* md, TreeType type) : BranchTree(md, type)
+{
+
+}
+
+BrLeaf::~BrLeaf()
+{
+
+}
+
+unsigned BrCondit::get_total()
+{
+	unsigned n1, n2;
+	n1 = tru_->get_total();
+	if(fal_) n2 = fal_->get_total();
+	else n2 = 1;
+	return (n1+n2);
+}
+
+unsigned BrCondit::get_hit(VcdScope* scope)
+{
+	unsigned n1, n2;
+	n1 = tru_->get_hit(scope);
+	if(fal_) n2 = fal_->get_hit(scope);
+	else n2 = 1;
+	return (n1+n2);
+}
+
+unsigned BrCase::get_total()
+{
+	unsigned res = 0;
+	for(pair<PExpr*, BranchTree*> item : items_) {
+		res += item.second->get_total();
+	}
+	return res;
+}
+
+unsigned BrCase::get_hit(VcdScope* scope)
+{
+	unsigned res = 0;
+	for(pair<PExpr*, BranchTree*> item : items_) {
+		res += item.second->get_hit(scope);
+	}
+	return res;
+}
+
+unsigned BrBlock::get_total()
+{
+	unsigned res = 0;
+	for(BranchTree* stat : stats_) {
+		res += stat->get_total();
+	}
+	return res;
+}
+
+unsigned BrBlock::get_hit(VcdScope* scope)
+{
+	unsigned res = 0;
+	for(BranchTree* stat : stats_) {
+		res += stat->get_hit(scope);
+	}
+	return res;
+}
+
+unsigned BrLeaf::get_total()
+{
+	return 1;
+}
+
+unsigned BrLeaf::get_hit(VcdScope* scope)
+{
+	if(cover_.find(scope) == cover_.end())
+		return 0;
+	return 1;
+}
+
+void BrCondit::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
+{
+	cout << typeid(this).name() << " " << idx << endl;
+	assert(idx < values.size());
+	cover_[scope] = true;
+	if(values[idx]) tru_->add(values, scope, ++idx);
+	else fal_->add(values, scope, ++idx);
+}
+
+void BrCase::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
+{
+	cout << typeid(this).name() << " " << idx << endl;
+	for(size_t i = 0; i < items_.size(); i++) {
+		if(items_[i].first)
+			cout << i << " " << (*(items_[i].first)) << " " << items_[i].second << endl;
+		else
+			cout << i << " " << "default" << " " << items_[i].second << endl;
+	}
+	assert(idx < values.size());
+	cover_[scope] = true;
+	assert(values[idx] < items_.size());
+	items_[values[idx]].second->add(values, scope, ++idx);
+}
+
+void BrBlock::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
+{
+	cout << typeid(this).name() << " " << idx << " " << this << endl;
+	cover_[scope] = true;
+	for(BranchTree* stat : stats_) {
+		stat->add(values, scope, idx);
+	}
+}
+
+void BrLeaf::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
+{
+	cout << typeid(this).name() << " " << idx << " " << this << endl;
+	cover_[scope] = true;
+}
+
+void BrCondit::dump_summary(ostream& o, VcdScope* scope)
+{
+	string type;
+	switch (type_) {
+	case TreeType::IF :
+		type = "IF";
+		break;
+	case TreeType::TERNARY :
+		type = "TERNARY";
+		break;
+	default:
+		break;
+	}
+	dump_summary_line(o, type, cond_->get_lineno(), get_total(), get_hit(scope));
+}
+
+void BrCase::dump_summary(ostream& o, VcdScope* scope)
+{
+	string type;
+	switch (type_) {
+	case TreeType::CASE :
+		type = "CASE";
+		break;
+	case TreeType::CASEX :
+		type = "CASEX";
+		break;
+	case TreeType::CASEZ :
+		type = "CASEZ";
+		break;
+	default:
+		break;
+	}
+	dump_summary_line(o, type, cond_->get_lineno(), get_total(), get_hit(scope));
+}
+
+void BrBlock::dump_summary(ostream& o, VcdScope* scope)
+{
+
+}
+
+void BrLeaf::dump_summary(ostream& o, VcdScope* scope)
+{
+
+}
+
+void BrCondit::dump(ostream& o, VcdScope* scope)
+{
+	bool found = cover_.find(scope) != cover_.end();
+	if(type_ == TERNARY) {
+		dump_line_detail(o, false, false, cond_);
+	} else {
+		Filelines* file_ = scope->pdesign_->get_lines();
+		string lineinf = (*file_)[scope->module_->get_file()][lineno_-1];
+		dump_line_detail(o, lineno_, false, false, lineinf);
+	}
+	tru_->dump(o, scope);
+	if(fal_) fal_->dump(o, scope);
+	else {
+		string error = "MISSING ELSE";
+		dump_line_detail(o, lineno_, true, true, error);
+	}
+}
+
+void BrCase::dump(ostream& o, VcdScope* scope)
+{
+	Filelines* file_ = scope->pdesign_->get_lines();
+	bool found = cover_.find(scope) != cover_.end();
+	string lineinf = (*file_)[scope->module_->get_file()][lineno_-1];
+	dump_line_detail(o, lineno_, false, false, lineinf);
+	for(pair<PExpr*, BranchTree*> item : items_){
+		item.second->dump(o, scope);
+		if(item.second == (--items_.end())->second && item.first) {
+			string error = "MISSING DEFAULT";
+			dump_line_detail(o, lineno_, true, true, error);
 		}
 	}
 }
 
-CombineRep::~CombineRep(){
-	if(!exprs_.empty()){
-		map<Cfg_Node* , ExprCombine*>::iterator pos;
-		for(pos = exprs_.begin(); pos != exprs_.end(); pos++){
+void BrBlock::dump(ostream& o, VcdScope* scope)
+{
+	for(BranchTree* stat : stats_){
+		stat->dump(o, scope);
+	}
+}
+
+void BrLeaf::dump(ostream& o, VcdScope* scope)
+{
+	bool found = cover_.find(scope) != cover_.end();
+	if(type_ == EXPRLEAF)
+		dump_line_detail(o, true, found, node_.expr_);
+	else {
+		Filelines* file_ = scope->pdesign_->get_lines();
+		string lineinf = (*file_)[scope->module_->get_file()][node_.lineno-1];
+		dump_line_detail(o, node_.lineno, true, found, lineinf);
+	}
+}
+
+ScopeRep::ScopeRep(bool t, bool f, bool l, bool p, bool b, bool c, VcdScope* scope)
+{
+	cover_t = t;
+	cover_f = f;
+	cover_l = l;
+	cover_p = p;
+	cover_b = b;
+	cover_c = c;
+	scope_ = scope;
+}
+
+void ScopeRep::initial()
+{
+	if(cover_t) toggle_initial();
+	if(cover_f) fsm_initial();
+	if(cover_l) line_initial();
+	if(cover_p) path_initial();
+	if(cover_b) branch_initial();
+	if(cover_c) cond_initial();
+}
+
+void ScopeRep::toggle_initial()
+{
+	map<string, VcdVar*>::iterator pos = scope_->defines_.begin();
+	for(; pos != scope_->defines_.end(); pos++) {
+		ToggleRep* rep = new ToggleRep(pos->second);
+		toggle_[pos->second] = rep;
+	}
+}
+
+void ScopeRep::fsm_initial()
+{
+	for(VcdVar* var : scope_->fsm_vars_) {
+		FsmRep* rep = new FsmRep(var);
+		fsm_[var] = rep;
+	}
+}
+
+void ScopeRep::line_initial()
+{
+	if(!scope_->module_->sync_cfgs_.empty() || !scope_->module_->combine_cfgs_.empty()) {
+		for(unsigned i = 0; i < scope_->module_->get_cfg()->cfgs->count(); i++) {
+			Cfg* cfg = (*(scope_->module_->get_cfg()->cfgs))[i];
+			LineRep* rep = new LineRep(cfg, scope_);
+			line_[cfg->id] = rep;
+		}
+	}
+}
+
+void ScopeRep::path_initial()
+{
+	if(!scope_->module_->sync_cfgs_.empty() || !scope_->module_->combine_cfgs_.empty()) {
+		for(unsigned i = 0; i < scope_->module_->get_cfg()->cfgs->count(); i++) {
+			Cfg* cfg = (*(scope_->module_->get_cfg()->cfgs))[i];
+			PathRep* rep = new PathRep(cfg, scope_);
+			path_[cfg->id] = rep;
+		}
+	}
+}
+
+void ScopeRep::branch_initial()
+{
+	cout << scope_->module_->branchs_.size() << endl;
+	map<unsigned, BranchTree*>::iterator pos = scope_->module_->branchs_.begin();
+	for(; pos != scope_->module_->branchs_.end(); pos++) {
+		BranchRep* rep = new BranchRep(pos->second, scope_);
+		branch_[pos->first] = rep;
+	}
+}
+
+void ScopeRep::cond_initial()
+{
+	map<PExpr*, set<PExpr*> >::iterator pos = scope_->module_->exprs_.begin();
+	for(; pos != scope_->module_->exprs_.end(); pos++) {
+		CondRep* rep = new CondRep(pos->first, pos->second);
+		cond_[pos->first] = rep;
+	}
+}
+
+ScopeRep::~ScopeRep()
+{
+	if(cover_t) {
+		map<VcdVar*, ToggleRep*>::iterator pos = toggle_.begin();
+		for(; pos != toggle_.end(); pos++) {
+			delete pos->second;
+		}
+	}
+	if(cover_f) {
+		map<VcdVar*, FsmRep*>::iterator pos = fsm_.begin();
+		for(; pos != fsm_.end(); pos++) {
+			delete pos->second;
+		}
+	}
+	if(cover_l) {
+		map<unsigned, LineRep*>::iterator pos = line_.begin();
+		for(; pos != line_.end(); pos++) {
+			delete pos->second;
+		}
+	}
+	if(cover_p) {
+		map<unsigned, PathRep*>::iterator pos = path_.begin();
+		for(; pos != path_.end(); pos++) {
+			delete pos->second;
+		}
+	}
+	if(cover_b) {
+		map<unsigned, BranchRep*>::iterator pos = branch_.begin();
+		for(; pos != branch_.end(); pos++) {
+			delete pos->second;
+		}
+	}
+	if(cover_c) {
+		map<PExpr*, CondRep*>::iterator pos = cond_.begin();
+		for(; pos != cond_.end(); pos++) {
 			delete pos->second;
 		}
 	}
 }
 
-void CombineRep::add(Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items)
+void ScopeRep::add_tgl_report(set<VcdVar*> vars)
 {
-	if(exprs_.find(node) != exprs_.end()){
-		exprs_[node]->add(value, items);
+	for(VcdVar* var : vars) {
+		assert(toggle_.find(var) != toggle_.end());
+		toggle_[var]->add();
 	}
 }
 
-void CombineRep::dump(ostream& o)
+void ScopeRep::add_fsm_report(VcdVar* var)
 {
-	map<Cfg_Node* , ExprCombine*>::iterator pos;
-	for(pos = exprs_.begin(); pos != exprs_.end(); pos++){
+	assert(fsm_.find(var) != fsm_.end());
+	fsm_[var]->add();
+}
+
+void ScopeRep::add_line_report(Cfg* cfg, set<unsigned>& lines)
+{
+	assert(line_.find(cfg->id) != line_.end());
+	line_[cfg->id]->add(lines);
+}
+
+void ScopeRep::add_path_report(Cfg* cfg, set<unsigned>& lines)
+{
+	assert(path_.find(cfg->id) != path_.end());
+	path_[cfg->id]->add(lines);
+}
+
+void ScopeRep::add_branch_report(unsigned lineno, vector<unsigned>& values)
+{
+	cout << lineno << " ";
+	cout << "<";
+	for(unsigned value : values) {
+		cout << " [" << value << "]";
+	}
+	cout << " >" << endl;
+	assert(branch_.find(lineno) != branch_.end());
+	branch_[lineno]->add(values);
+}
+
+void ScopeRep::add_cond_report(map<PExpr*, map<PExpr*, bool> > values)
+{
+	map<PExpr*, map<PExpr*, bool> >::iterator pos = values.begin();
+	for(; pos != values.end(); pos++) {
+		assert(cond_.find(pos->first) != cond_.end());
+		cond_[pos->first]->add(pos->second);
+	}
+}
+
+void ScopeRep::dump(ostream& o)
+{
+	if(cover_t)
+		dump_tgl_report(o);
+	if(cover_f)
+		dump_fsm_report(o);
+	if(cover_l)
+		dump_line_report(o);
+	if(cover_p)
+		dump_path_report(o);
+	if(cover_b)
+		dump_branch_report(o);
+	if(cover_c)
+		dump_cond_report(o);
+}
+
+void ScopeRep::dump_tgl_report(ostream& o)
+{
+	unsigned port_num = 0;
+	unsigned signal_num = 0;
+	map<VcdVar*, ToggleRep*>::iterator pos;
+	for(pos = toggle_.begin(); pos != toggle_.end(); pos++){
+		if(pos->first->type == VcdVar::SIGNAL) signal_num++;
+		else port_num++;
+	}
+	dump_coverage_line(o, scope_, "Toggle");
+	dump_summary_line(o, "Type", "Total", "Covered", "Persent");
+	dump_summary_line(o, "----", "-----", "-------", "-------");
+	dump_tgl_summary(o, "Total");
+	if(port_num) dump_tgl_summary(o, "Port");
+	if(signal_num) dump_tgl_summary(o, "Signal");
+	if(port_num) dump_tgl_detail(o, "Port");
+	if(signal_num) dump_tgl_detail(o, "Signal");
+	if(port_num) dump_tgl_bit(o, "Port");
+	if(signal_num) dump_tgl_bit(o, "Signal");
+	dump_line(o, "\n");
+}
+
+void ScopeRep::dump_tgl_summary(ostream& o, string type)
+{
+	unsigned total = 0; 
+	unsigned pos_covered = 0;
+	unsigned neg_covered = 0;
+	unsigned num = 0;
+	unsigned cover_num = 0;
+	map<VcdVar*, ToggleRep*>::iterator pos = toggle_.begin();
+	for(; pos != toggle_.end(); pos++) {
+		if(type == "Total"
+		|| (type == "Port" && pos->first->type != VcdVar::SIGNAL)
+		|| (type == "Signal" && pos->first->type == VcdVar::SIGNAL)) {
+			unsigned pos_add, neg_add;
+			pos_add = pos->second->get_pos_num();
+			neg_add = pos->second->get_neg_num();
+			total += pos->first->width;
+			pos_covered += pos_add;
+			neg_covered += neg_add;
+			if(pos_add == pos->first->width && neg_add == pos->first->width)
+				cover_num++;
+			num++;
+		}
+	}
+	dump_summary_line(o, type + "s", num, cover_num);
+	dump_summary_line(o, type + " Bits", total*2, pos_covered+neg_covered);
+	dump_summary_line(o, type + " Bits 0->1", total, pos_covered);
+	dump_summary_line(o, type + " Bits 1->0", total, neg_covered);
+}
+
+void ScopeRep::dump_tgl_detail(ostream&o, string type)
+{
+	dump_item_line(o, type + " Details");
+	dump_toggle_detail(o, "Name", "Toggle", "Toggle 0->1", "Toggle 1->0", "Direction");
+	dump_toggle_detail(o, "----", "------", "-----------", "-----------", "---------");
+	bool flag = type == "Signal"; 
+	map<VcdVar*, ToggleRep*>::iterator pos = toggle_.begin();
+	for(; pos != toggle_.end(); pos++) {
+		if(pos->first->type == VcdVar::SIGNAL && flag
+		|| pos->first->type != VcdVar::SIGNAL && !flag)
+			pos->second->dump_detail(o);
+	}
+}
+
+void ScopeRep::dump_tgl_bit(ostream& o, string type)
+{
+	dump_item_line(o, type + " Bits");
+	dump_toggle_bit(o, "Name", "Bits");
+	dump_toggle_bit(o, "----", "----");
+	bool flag = type == "Signal"; 
+	map<VcdVar*, ToggleRep*>::iterator pos = toggle_.begin();
+	for(; pos != toggle_.end(); pos++) {
+		if(pos->first->type == VcdVar::SIGNAL && flag
+		|| pos->first->type != VcdVar::SIGNAL && !flag)
+			pos->second->dump_bit(o);
+	}
+}
+
+void ScopeRep::dump_fsm_report(ostream& o)
+{
+	if(!fsm_.empty()) {
+		dump_coverage_line(o, scope_, "Fsm");
+		map<VcdVar*, FsmRep*>::iterator pos = fsm_.begin();
+		for(; pos != fsm_.end(); pos++) {
+			pos->second->dump_state(o);
+			dump_depart_line(o);
+			pos->second->dump_transition(o);
+			dump_depart_line(o);
+		}
+		dump_line(o, "\n");
+	}
+}
+
+void ScopeRep::dump_line_summary(ostream& o)
+{
+	unsigned hit = 0;
+	unsigned total = 0;
+	map<unsigned, LineRep*>::iterator pos = line_.begin();
+	for(; pos != line_.end(); pos++) {
+		pos->second->dump_summary(o);
+		hit += pos->second->get_hit();
+		total += pos->second->get_total();
+	}
+	dump_summary_line(o, "TOTAL", 0, total, hit);
+}
+
+void ScopeRep::dump_line_detail(ostream& o)
+{
+	map<unsigned, LineRep*>::iterator pos = line_.begin();
+	for(; pos != line_.end(); pos++) {
 		pos->second->dump(o);
 	}
 }
 
-BasicRep::BasicRep()
+void ScopeRep::dump_line_report(ostream& o)
 {
-	toggle_num_ = new CoverNum;
-	stat_num_ = new CoverNum;
-	path_num_ = new CoverNum;
-	branch_num_ = new CoverNum;
+	if(!line_.empty()) {
+		dump_coverage_line(o, scope_, "Line");
+		dump_summary_line(o, "Type", "Lineno", "Total", "Covered", "Persent");
+		dump_summary_line(o, "----", "------", "-----", "-------", "-------");
+		dump_line_summary(o);
+		dump_depart_line(o);
+		dump_line_detail(o);
+	}
 }
 
-BasicRep::~BasicRep(){
-	delete toggle_num_;
-	delete stat_num_;
-	delete path_num_;
-	delete branch_num_;
+void ScopeRep::dump_path_summary(ostream& o)
+{
+	unsigned hit = 0;
+	unsigned total = 0;
+	map<unsigned, PathRep*>::iterator pos = path_.begin();
+	for(; pos != path_.end(); pos++) {
+		pos->second->dump_summary(o);
+		hit += pos->second->get_hit();
+		total += pos->second->get_total();
+	}
+	dump_summary_line(o, "TOTAL", 0, total, hit);
 }
 
-ModuleRep::ModuleRep(Module* mod)
+void ScopeRep::dump_path_detail(ostream& o)
 {
-	module_ = mod;
-	toggle_ = new ToggleRep;
-	fsm_ = new FsmRep;
-	statement_ = new StatRep(module_->get_cfg());
-	path_ = new PathRep(module_);
-	branch_ = new BranchRep(module_->get_cfg());
-	combine_ = new CombineRep(module_->get_cfg());
+	map<unsigned, PathRep*>::iterator pos = path_.begin();
+	for(; pos != path_.end(); pos++) {
+		pos->second->dump(o);
+		dump_line(o, "\n");
+	}
 }
 
-ModuleRep::~ModuleRep()
+void ScopeRep::dump_path_report(ostream& o)
 {
-	delete toggle_;
-	delete fsm_;
-	delete statement_;
-	delete path_;
-	delete branch_;
-	delete combine_;
+	if(!path_.empty()) {
+		dump_coverage_line(o, scope_, "Path");
+		dump_summary_line(o, "Type", "Lineno", "Total", "Covered", "Persent");
+		dump_summary_line(o, "----", "------", "-----", "-------", "-------");
+		dump_path_summary(o);
+		dump_depart_line(o);
+		dump_path_detail(o);
+	}
 }
 
-void ModuleRep::add_toggle(const VcdVar* var)
+void ScopeRep::dump_branch_summary(ostream& o)
 {
-	toggle_->add(var);
+	unsigned total = 0;
+	unsigned hit = 0;
+	map<unsigned, BranchRep*>::iterator pos = branch_.begin();
+	for(; pos != branch_.end(); pos++) {
+		pos->second->dump_summary(o);
+		total += pos->second->get_total();
+		hit += pos->second->get_hit();
+	}
+	dump_summary_line(o, "TOTAL", 0, total, hit);
+	dump_line(o, "\n");
 }
 
-void ModuleRep::add_fsm(const VcdVar* var)
+void ScopeRep::dump_branch_detail(ostream& o)
 {
-	fsm_->add(var);
+	map<unsigned, BranchRep*>::iterator pos = branch_.begin();
+	for(; pos != branch_.end(); pos++) {
+		dump_branch_line(o, pos->first);
+		dump_depart_line(o);
+		pos->second->dump(o);
+		dump_line(o, "\n");
+	}
 }
 
-void ModuleRep::add_stat(const set<unsigned, less<unsigned> >& paths)
+void ScopeRep::dump_branch_report(ostream& o)
 {
-	statement_->add(paths);
+	if(!branch_.empty()) {
+		dump_coverage_line(o, scope_, "Branch");
+		dump_summary_line(o, "Type", "Lineno", "Total", "Covered", "Persent");
+		dump_summary_line(o, "----", "------", "-----", "-------", "-------");
+		dump_branch_summary(o);
+		dump_branch_detail(o);
+	}
 }
 
-void ModuleRep::add_path(const set<unsigned, less<unsigned> >& paths, unsigned time, Cfg* cfg)
+void ScopeRep::dump_cond_summary(ostream& o)
 {
-	path_->add(time, cfg, paths);
+	unsigned hit = 0;
+	unsigned total = 0;
+	map<PExpr*, CondRep*>::iterator pos = cond_.begin();
+	for(; pos != cond_.end(); pos++) {
+		hit += pos->second->get_hit();
+		total += pos->second->get_total();
+	}
+	dump_summary_line(o, "TOTAL", total, hit);
 }
 
-void ModuleRep::add_branch(const set<unsigned, less<unsigned> >& paths)
+void ScopeRep::dump_cond_detail(ostream& o)
 {
-	branch_->add(paths);
+	map<PExpr*, CondRep*>::iterator pos = cond_.begin();
+	for(; pos != cond_.end(); pos++) {
+		pos->second->dump(o);
+		dump_line(o,"");
+	}
 }
 
-void ModuleRep::add_combine(Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items)
+void ScopeRep::dump_cond_report(ostream& o)
 {
-	combine_->add(node, value, items);
+	if(!cond_.empty()) {
+		dump_coverage_line(o, scope_, "Cond");
+		dump_summary_line(o, "Lineno", "Total", "Covered", "Persent");
+		dump_summary_line(o, "------", "-----", "-------", "-------");
+		dump_cond_summary(o);
+		dump_depart_line(o);
+		dump_line(o, "\n");
+		dump_cond_detail(o);
+	}
 }
 
-void ModuleRep::dump_toggle(ostream& o)
+ToggleRep::ToggleRep(VcdVar* var)
 {
-	o << "Toggle Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	o << "------------------------------------------------------------------------------" << endl;
-	o << left << setw(25) << "Node Type" << right << setw(10) << "0H->1H" << right << setw(10) << "1H->0H" << endl;
-	o << left << setw(25) << "---------" << right << setw(10) << "------" << right << setw(10) << "------" << endl;
-	toggle_->dump(o);
-	o << "------------------------------------------------------------------------------" << endl;
-	toggle_num_->add(toggle_->get_num());
-	o << left << setw(10) << module_->pscope_name();
-	o << left << setw(10) << "Toggle Coverage = " << double(toggle_num_->hit_*100)/double(toggle_num_->total_);
-	o << "%(" << toggle_num_->hit_ << " of " << toggle_num_->total_ << " bits" << ")";
+	var_ = var;
+	pos_bits_ = vector<bool> (var->width, false);
+	neg_bits_ = vector<bool> (var->width, false);
+}
+
+ToggleRep::~ToggleRep()
+{
+
+}
+
+void ToggleRep::add()
+{
+	for(unsigned idx = 0; idx < var_->width; ++idx) {
+		//Toggle bit change from 0 to 1
+		if((var_->pre_val[idx] == verinum::V0) && (var_->cur_val[idx] == verinum::V1)) {
+			pos_bits_[idx] = true;
+		}
+		//Toggle bit change from 1 to 0
+		if((var_->pre_val[idx] == verinum::V1) && (var_->cur_val[idx] == verinum::V0)) {
+			neg_bits_[idx] = true;
+		}
+	}
+}
+
+unsigned ToggleRep::get_pos_num()
+{
+	return count(pos_bits_.begin(), pos_bits_.end(), true);
+}
+
+unsigned ToggleRep::get_neg_num()
+{
+	return count(neg_bits_.begin(), neg_bits_.end(), true);
+}
+
+void ToggleRep::dump_detail(ostream& o)
+{
+	ostringstream name;
+	name << var_->name;
+	bool posedge = get_pos_num()==var_->width;
+	bool negedge = get_neg_num()==var_->width;
+	dump_toggle_detail(o, name, posedge, negedge, var_->type);
+}
+
+void ToggleRep::dump_bit(ostream& o)
+{
+	ostringstream name, bits;
+	name << var_->name;
+	for(unsigned i = 0; i < var_->width; i++) {
+		if(pos_bits_[i] && neg_bits_[i]) bits << "*";
+		else if(pos_bits_[i]) bits << "1";
+		else if(neg_bits_[i]) bits << "0";
+		else bits << "?";
+	}
+	dump_toggle_bit(o, name, bits);
+}
+
+FsmRep::FsmRep(VcdVar* var)
+{
+	var_ = var;
+}
+
+FsmRep::~FsmRep()
+{
+
+}
+
+void FsmRep::add()
+{
+	//Add State.
+	if(states_.find(var_->cur_val) == states_.end())
+		states_[var_->cur_val] = true;
+	//Add Transition.
+	if(var_->pre_val.is_defined()) {
+		pair<verinum, verinum> tran = make_pair(var_->pre_val, var_->cur_val);
+		if(trans_.find(tran) == trans_.end())
+			trans_[tran] = true;
+	}
+}
+
+unsigned FsmRep::get_state()
+{
+	return states_.size();
+}
+
+unsigned FsmRep::get_transition()
+{
+	return trans_.size();
+}
+
+void FsmRep::dump_state(ostream& o)
+{
+	dump_line(o, "State Details for FSM::" + var_->name);
+	dump_depart_line(o);
+	unsigned i = 1;
+	map<verinum, bool>::iterator pos = states_.begin();
+	for(; pos != states_.end(); pos++) {
+		o << "State[" << i++ << "] : ";
+		dump_fsm_state(o, pos->first);
+		dump_line(o, " ");
+	}
+}
+
+void FsmRep::dump_transition(ostream& o)
+{
+	dump_line(o, "Transition Details for FSM::" + var_->name);
+	dump_depart_line(o);
+	unsigned i = 1;
+	map<pair<verinum, verinum>, bool >::iterator pos = trans_.begin();
+	for(; pos != trans_.end(); pos++) {
+		o << "Transition[" << i++ << "] : ";
+		dump_fsm_transtate(o, pos->first.first, pos->first.second);
+	}
+}
+
+LineRep::LineRep(Cfg* cfg, VcdScope* scope)
+{
+	cfg_ = cfg;
+	file_ = scope->pdesign_->get_lines();
+	module_ = scope->module_;
+	initial();
+}
+
+LineRep::~LineRep()
+{
+
+}
+
+void LineRep::initial()
+{
+	for(unsigned i = 0; i < cfg_->root->count(); i++) {
+		Cfg_Node* node = (*(cfg_->root))[i];
+		if((node->type.find("ISCONTROL") == 0
+		 && node->type.compare("ISCONTROL.EVENT") != 0)
+		 || node->assign_type.find("NOCONTROL") == 0) {
+			stats_[node->lineno] = false;
+		}
+	}
+}
+
+void LineRep::add(set<unsigned>& lines)
+{
+	for(unsigned lineno : lines) {
+		if(stats_.find(lineno) != stats_.end())
+		stats_[lineno] = true;
+	}
+}
+
+unsigned LineRep::get_total()
+{
+	return stats_.size();
+}
+
+unsigned LineRep::get_hit()
+{
+	unsigned res = 0;
+	unordered_map<unsigned, bool>::iterator pos;
+	for(pos = stats_.begin(); pos != stats_.end(); pos++) {
+		if(pos->second)	res++;
+	}
+	return res;
+}
+
+void LineRep::dump_summary(ostream& o)
+{
+	dump_summary_line(o, "ALWAYS", cfg_->lineno, get_total(), get_hit());
+}
+
+void LineRep::dump(ostream& o)
+{
+	unsigned min_line = INT32_MAX;
+	unsigned max_line = 0;
+	for(unsigned i = 0; i < cfg_->root->count(); i++) {
+		Cfg_Node* node = (*(cfg_->root))[i];
+		if(node->lineno > 0) {
+			min_line = min_line < node->lineno ? min_line : node->lineno;
+			max_line = max_line > node->lineno ? max_line : node->lineno;
+		}
+	}
+	min_line--;
+	for(unsigned i = min_line; i <= max_line; i++) {
+		if(stats_.find(i+1) == stats_.end())
+			dump_line_detail(o, i+1, false, false, (*file_)[module_->get_file()][i]);
+		else
+			dump_line_detail(o, i+1, true, stats_[i+1], (*file_)[module_->get_file()][i]);
+	}
+}
+
+PathRep::PathRep(Cfg* cfg, VcdScope* scope)
+{
+	cfg_ = cfg;
+	scope_ = scope;
+	file_ = scope->pdesign_->get_lines();
+	paths_ = vector<bool>(scope_->module_->paths_[cfg_->id].size(), false);
+}
+
+PathRep::~PathRep()
+{
+
+}
+
+unsigned PathRep::get_total()
+{
+	return paths_.size();
+}
+
+unsigned PathRep::get_hit()
+{
+	return count(paths_.begin(), paths_.end(), true);
+}
+
+void PathRep::add(set<unsigned>& lines)
+{
+	if(get_hit() == get_total())
+		return;
+	bool found = false;
+	for(unsigned i = 0; i < scope_->module_->routes_[cfg_].size(); i++) {
+		if(equal(lines, scope_->module_->routes_[cfg_][i])) {
+			paths_[i] = true;
+			found = true;
+			break;
+		}
+	}
+	if(!found) {
+		cerr << "Problem in path coverage" << endl;
+	}
+}
+
+void PathRep::dump_summary(ostream& o)
+{
+	dump_summary_line(o, "ALWAYS", cfg_->lineno, get_total(), get_hit());
+}
+
+void PathRep::dump(ostream& o)
+{
+	dump_path_line(o, cfg_->lineno);
+	dump_line(o, "\n");
+	for(unsigned i = 0; i < paths_.size(); i++) {
+		ostringstream s1;
+		string res = paths_[i] ? "Covered" : "Not Covered";
+		s1 << "Path[" << i << "] " << res;
+		dump_line(o, s1);
+		dump_depart_line(o);
+		set<unsigned>& path = scope_->module_->routes_[cfg_][i];
+		for(unsigned lineno : path) {
+			ostringstream s2;
+			s2 << left << setw(10) << (lineno) << (*(file_))[scope_->module_->get_file()][lineno-1];
+			dump_line(o, s2);
+		}
+		dump_line(o, "\n");
+	}
+}
+
+BranchRep::BranchRep(BranchTree* tree, VcdScope* scope)
+{
+	tree_ = tree;
+	scope_ = scope;
+}
+
+BranchRep::~BranchRep()
+{
+
+}
+
+void BranchRep::add(vector<unsigned>& values)
+{
+	unsigned idx = 0;
+	tree_->add(values, scope_, idx);
+}
+
+unsigned BranchRep::get_hit()
+{
+	return tree_->get_hit(scope_);
+}
+
+unsigned BranchRep::get_total()
+{
+	return tree_->get_total();
+}
+
+void BranchRep::dump(ostream& o)
+{
+	tree_->dump(o, scope_);
+}
+
+void BranchRep::dump_summary(ostream& o)
+{
+	tree_->dump_summary(o, scope_);
+}
+
+CondRep::CondRep(PExpr* cond, set<PExpr*> items)
+{
+	assert(items.size() < INT32_WIDTH);
+	cond_ = cond;
+	for(PExpr* item : items) {
+		items_.push_back(item);
+	}
+	if(items.size() == 1) type_ = SINGEL;
+	else {
+		PEBinary* expr = dynamic_cast<PEBinary*>(cond);
+		assert(expr);
+		switch (expr->get_op()) {
+		case 'a':
+			type_ = AND;
+			break;
+		case 'o':
+			type_ = OR;
+			break;
+		default:
+			cerr << expr->get_fileline() << "Option " << expr->get_op() << " is unsupported now!" << endl;
+			expr->dump(cerr);
+			exit(1);
+			break;
+		}
+	}	
+}
+
+CondRep::~CondRep()
+{
+
+}
+
+void CondRep::add(map<PExpr*, bool>& values)
+{
+	unsigned val = 0;
+	for(unsigned i = 0; i < items_.size(); i++) {
+		val += values[items_[i]] ? 1 << i : 0;
+	}
+	combs_[val] = true;
+}
+
+unsigned CondRep::get_total()
+{
+	return (items_.size() + 1);
+}
+
+unsigned CondRep::get_hit()
+{
+	unsigned n = 0;
+	if(type_ == SINGEL) {
+		n += combs_.find(0) != combs_.end() ? 1 : 0;
+		n += combs_.find(1) != combs_.end() ? 1 : 0;
+	} else if(type_ == AND) {
+		unsigned res = (1 << items_.size()) - 1;
+		n += combs_.find(res) != combs_.end() ? 1 : 0;
+		for(unsigned i = 0; i < items_.size(); i++) {
+			if(combs_.find(res - (1 << i)) != combs_.end())
+				n++;
+		}
+	} else {
+		n += combs_.find(0) != combs_.end() ? 1 : 0;
+		for(unsigned i = 0; i < items_.size(); i++) {
+			if(combs_.find(1 << i) != combs_.end())
+				n++;
+		}
+	}
+	return n;
+}
+
+void CondRep::dump_summary(ostream& o)
+{
+	dump_summary_line(o, to_string(cond_->get_lineno()), get_total(), get_hit());
+}
+
+void CondRep::dump(ostream& o)
+{
+	dump_line(o, "EXPRESSION LINE " + to_string(cond_->get_lineno()));
+	ostringstream c;
+	cond_->dump(c);
+	dump_line(o, c);
+	dump_depart_line(o);
+	for(unsigned i = 0; i < items_.size(); i++) {
+		ostringstream s;
+		s << "[" << i+1 << "] ";
+		items_[i]->dump(s);
+		dump_line(o, s); 
+	}
+	dump_depart_line(o);
+	dump_cond_line(o, items_.size());
+	if(type_ == CondType::SINGEL) {
+		dump_cond_detail(o, type_, 1, 0, combs_.find(0)!= combs_.end());
+		dump_cond_detail(o, type_, 1, 1, combs_.find(1)!= combs_.end());
+	} else {
+		unsigned base = type_ == CondType::AND ? (1<<items_.size())-1 : 0;
+		if(type_ == CondType::OR)
+			dump_cond_detail(o, type_, items_.size(), 0, combs_.find(base) != combs_.end());
+		for(unsigned i = 0; i < items_.size(); i++) {
+			unsigned value = type_ == CondType::AND ? base - (1 << i) : 1 << i; 
+			dump_cond_detail(o, type_, items_.size(), i+1, combs_.find(value) != combs_.end());
+		}
+		if(type_ == CondType::AND)
+			dump_cond_detail(o, type_, items_.size(), 0, combs_.find(base) != combs_.end());
+	}
+}
+
+void dump_coverage_line(ostream& o, VcdScope* scope, string type)
+{
+	dump_depart_line(o);
+	o << type << " Coverage for Module " << scope->module_->pscope_name() << " " << scope->name_ << endl;
+	dump_depart_line(o);
+}
+
+void dump_depart_line(ostream& o)
+{
+	for(unsigned i = 0; i < 100; i++) o << "_";
 	o << endl;
-	o << "------------------------------------------------------------------------------" << endl;
 }
 
-void ModuleRep::dump_fsm(ostream& o)
+void dump_summary_line(ostream& o, string s1, string s2, string s3, string s4)
 {
-	o << "Fsm Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	o << "------------------------------------------------------------------------------" << endl;
-	fsm_->dump(o);
-	o << "------------------------------------------------------------------------------" << endl;
-}
-
-void ModuleRep::dump_stat(ostream& o)
-{
-	o << "Statement Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	o << "------------------------------------------------------------------------------" << endl;
-	o << left << setw(10) << "Line" << left << setw(25) << "Node Type" << left << setw(10) << "Hit Time" << endl;
-	o << left << setw(10) << "----" << left << setw(25) << "---------" << left << setw(10) << "--------" << endl;
-	statement_->dump(o);
-	o << "------------------------------------------------------------------------------" << endl;
-	stat_num_->add(statement_->get_num());
-	o << left << setw(10) << module_->pscope_name();
-	o << left << setw(10) << "Statement Coverage = " << double(stat_num_->hit_*100)/double(stat_num_->total_);
-	o << "%(" << stat_num_->hit_ << " of " << stat_num_->total_ << " lines" << ")";
+	o << left << setw(20) << s1;
+	o << left << setw(10) << s2;
+	o << left << setw(10) << s3;
+	o << left << setw(10) << s4;
 	o << endl;
-	o << "------------------------------------------------------------------------------" << endl;
 }
 
-void ModuleRep::dump_path(ostream& o)
+void dump_summary_line(ostream& o, string head, unsigned total, unsigned covered)
 {
-	o << "Path Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	path_->dump(o);
-	o << "------------------------------------------------------------------------------" << endl;
-	path_num_->add(path_->get_num());
-	o << left << setw(10) << module_->pscope_name();
-	o << left << setw(10) << "Path Coverage = " << double(path_num_->hit_*100)/double(path_num_->total_);
-	o << "%(" << path_num_->hit_ << " of " << path_num_->total_ << " paths" << ")";
+	o.setf(ios::fixed);
+	o << setprecision(2);
+	o << left << setw(20) << head;
+	o << left << setw(10) << total;
+	o << left << setw(10) << covered;
+	o << left << setw(10) << double(covered*100)/double(total);
 	o << endl;
-	o << "------------------------------------------------------------------------------" << endl;
 }
 
-void ModuleRep::dump_branch(ostream& o)
+void dump_summary_line(ostream& o, string s1, string s2, string s3, string s4, string s5)
 {
-	o << "Branch Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	branch_->dump(o);
-	o << "------------------------------------------------------------------------------" << endl;
-	branch_num_->add(branch_->get_num());
-	o << left << setw(10) << module_->pscope_name();
-	o << left << setw(10) << "Branch Coverage = " << double(branch_num_->hit_*100)/double(branch_num_->total_);
-	o << "%(" << branch_num_->hit_ << " hit of " << branch_num_->total_ << " branches" << ")";
+	o << left << setw(10) << s1;
+	o << left << setw(10) << s2;
+	o << left << setw(10) << s3;
+	o << left << setw(10) << s4;
+	o << left << setw(10) << s5;
 	o << endl;
-	o << "------------------------------------------------------------------------------" << endl;
 }
 
-void ModuleRep::dump_combine(ostream& o)
+void dump_summary_line(ostream& o, string head, unsigned lineno, unsigned total, unsigned covered)
 {
-	o << "Combine Coverage for " << module_->get_file() << " " << module_->pscope_name() << endl;
-	combine_->dump(o);
-	o << "-------------------------------------------------------------------------------" << endl;
+	o.setf(ios::fixed);
+	o << setprecision(2);
+	o << left << setw(10) << head;
+	o << left << setw(10) << lineno;
+	o << left << setw(10) << total;
+	o << left << setw(10) << covered;
+	o << left << setw(10) << double(covered*100)/double(total);
+	o << endl;
 }
 
-//Select the cover fuctions.
-FinalRep::FinalRep(bool t, bool f, bool s, bool p, bool b, bool c)
+void dump_toggle_detail(ostream& o, string s1, string s2, string s3, string s4, string s5)
 {
-	toggle_flag_ = t;
-	fsm_flag_ = f;
-	stat_flag_ = s;
-	path_flag_ = p;
-	branch_flag_ = b;
-	combine_flag_ = c;
-	new_path = ofstream("../datas/cover-comb/cov_comb.txt");
+	o << left << setw(50) << s1;
+	o << left << setw(10) << s2;
+	o << left << setw(12) << s3;
+	o << left << setw(12) << s4;
+	o << left << setw(10) << s5;
+	o << endl;
 }
 
-FinalRep::~FinalRep()
+void dump_toggle_detail(ostream& o, ostringstream& name, bool posedge, bool negedge, VcdVar::Type type)
 {
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++){
-		delete pos->second;
-	}
-}
-
-void FinalRep::check(Module* mod)
-{
-	if(reports_.find(mod) == reports_.end()){
-		reports_[mod] = new ModuleRep(mod);
-	}
-}
-
-void FinalRep::add_toggle(Module* mod, const VcdVar* var)
-{
-	check(mod);
-	reports_[mod]->add_toggle(var);
-}
-
-void FinalRep::add_fsm(Module* mod, const VcdVar* var)
-{
-	check(mod);
-	reports_[mod]->add_fsm(var);
-}
-
-void FinalRep::add_stat(Module* mod, const set<unsigned, less<unsigned> >& path_)
-{
-	check(mod);
-	reports_[mod]->add_stat(path_);
-}
-
-void FinalRep::add_path(Module* mod, const set<unsigned, less<unsigned> >& path_, unsigned time, Cfg* cfg)
-{
-	check(mod);
-	reports_[mod]->add_path(path_, time, cfg);
-}
-
-void FinalRep::add_branch(Module* mod, const set<unsigned, less<unsigned> >& path_)
-{
-	check(mod);
-	reports_[mod]->add_branch(path_);
-}
-
-void FinalRep::add_combine(Module* mod, Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items)
-{
-	check(mod);
-	reports_[mod]->add_combine(node, value, items);
-}
-
-void FinalRep::dump(ostream& o)
-{
-	if(toggle_flag_){
-		cout << "Generate the toggle coverage report..." << endl;
-		dump_toggle(o);
-	}
-
-	if(fsm_flag_){
-		cout << "Generate the fsm coverage report..." << endl;
-		dump_fsm(o);
-	}
-
-	if(stat_flag_){
-		cout << "Generate the statement coverage report..." << endl;
-		dump_stat(o);
-	}
-
-	if(path_flag_){
-		cout << "Generate the path coverage report..." << endl;
-		dump_path(o);
-	}
-
-	if(branch_flag_){
-		cout << "Generate the branch coverage report..." << endl;
-		dump_branch(o);
-	}
-
-	if(combine_flag_){
-		cout << "Generate the combine coverage report..." << endl;
-		dump_combine(o);
-	}
-
-	cout << "Genetate the summary Date by files..." << endl;
-	dump_summary(cout);
-	dump_summary(o);
-}
-
-void FinalRep::dump_summary(ostream& o)
-{
-	o << "Coverage BasicRep Summary Data by files" << endl;
+	o << left << setw(50) << name.str();
+	o << left << setw(10) << (posedge && negedge ? "YES" : "NO");
+	o << left << setw(12) << (posedge ? "YES" : "NO");
+	o << left << setw(12) << (negedge ? "YES" : "NO");
 	o << left << setw(10);
-	o << left << setw(20) << "Enabled Coverage";
-	o << left << setw(10) << "Active";
-	o << left << setw(10) << "Total";
-	o << left << setw(10) << "Misses";
-	o << left << setw(10) << "Hits";
-	o << left << setw(10) << "Covered%";
-	o << endl;
-	o << left << setw(10);
-	o << left << setw(20) << "----------------";
-	o << left << setw(10) << "------";
-	o << left << setw(10) << "-----";
-	o << left << setw(10) << "------";
-	o << left << setw(10) << "----";
-	o << left << setw(10) << "-------";
-	o << endl;
-
-	if(toggle_flag_){
-		toggle_num_->dump(o, "Toggle");
-	}
-
-	if(stat_flag_){
-		stat_num_->dump(o, "Statement");
-	}
-
-	if(branch_flag_)
-	{
-		branch_num_->dump(o, "Branch");
-	}
-
-	if(path_flag_){
-		path_num_->dump(o, "Path");
-	}
-
-	if(fsm_flag_){
-		o << left << setw(10);
-		o << left << setw(20) << "Fsm";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << endl;
-	}
-
-	if(combine_flag_){
-		o << left << setw(10);
-		o << left << setw(20) << "Combine";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << left << setw(10) << "none";
-		o << endl;
-	}
-}
-
-void FinalRep::dump_toggle(ostream& o)
-{
-	o << "================================Toggle Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_toggle(o);
-		toggle_num_ ->add(pos->second->toggle_num_);
-	}
-	o << left << setw(10) << "Total";
-	o << left << setw(10) << "Toggle Coverage = " << double(toggle_num_->hit_*100)/double(toggle_num_->total_) 
-	<< "%(" << toggle_num_->hit_ << " hit of " << toggle_num_->total_ << " bits" << ")" << endl;
-	o << endl;
-}
-
-void FinalRep::dump_fsm(ostream& o)
-{
-	o << "================================Fsm Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_fsm(o);
+	switch (type) {
+	case VcdVar::INPUT :
+		o << "INPUT";
+		break;
+	case VcdVar::OUTPUT : 
+		o << "OUTPUT";
+		break;
+	case VcdVar::INOUT : 
+		o << "INOUT";
+		break;
+	default:
+		o << "NULL";
+		break;
 	}
 	o << endl;
 }
 
-void FinalRep::dump_stat(ostream& o)
+void dump_item_line(ostream& o, string item)
 {
-	o << "================================Statement Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_stat(o);
-		stat_num_ ->add(pos->second->stat_num_);
-	}
-	o << left << setw(10) << "Total";
-	o << left << setw(10) << "Statement Coverage = " << double(stat_num_->hit_*100)/double(stat_num_->total_) 
-	<< "%(" << stat_num_->hit_ << " hit of " << stat_num_->total_ << " lines" << ")" << endl;
+	dump_depart_line(o);
+	o << item << endl;
+	dump_depart_line(o);
+}
+
+void dump_line(ostream& o, string s)
+{
+	o << s << endl;
+}
+
+void dump_line(ostream& o, ostringstream& s)
+{
+	o << s.str() << endl;
+}
+
+void dump_toggle_bit(ostream& o, string s1, string s2)
+{
+	o << left << setw(50) << s1;
+	o << s2 << endl;
+}
+
+void dump_toggle_bit(ostream& o, ostringstream& name, ostringstream& bits)
+{
+	o << left << setw(50) << name.str();
+	o << bits.str() << endl;
+}
+
+void dump_fsm_state(ostream& o, const verinum& v)
+{
+	o << "{";
+	v.dump(o);
+	o << "}";
+}
+
+void dump_fsm_transtate(ostream& o, const verinum& pre_val, const verinum& cur_val)
+{
+	dump_fsm_state(o, pre_val);
+	o << "->";
+	dump_fsm_state(o, cur_val);
 	o << endl;
 }
 
-void FinalRep::dump_path(ostream& o)
+void dump_line_detail(ostream& o, unsigned lineno, bool select, bool hit, string& s)
 {
-	o << "================================Path Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_path(o);
-		path_num_ ->add(pos->second->path_num_);
-	}
-	o << left << setw(10) << "Total";
-	o << left << setw(10) << "Path Coverage = " << double(path_num_->hit_*100)/double(path_num_->total_) 
-	<< "%(" << path_num_->hit_ << " hit of " << path_num_->total_ << " paths" << ")" << endl;
+	string s1 = select ? (hit ? "1/1" : "0/1") : " ";
+	string s2 = s1 == " " ? " " : "==>";
+	o << left << setw(8) << lineno;
+	o << left << setw(10) << s1;
+	o << left << setw(10) << s2;
+	o << s << endl;
+}
+
+void dump_line_detail(ostream& o, bool select, bool hit, PExpr* expr)
+{
+	string s1 = select ? (hit ? "1/1" : "0/1") : " ";
+	string s2 = s1 == " " ? " " : "==>";
+	o << left << setw(10) << s1;
+	o << left << setw(10) << s2;
+	expr->dump(o);
 	o << endl;
 }
 
-void FinalRep::dump_branch(ostream& o)
+void dump_path_line(ostream& o, unsigned lineno)
 {
-	o << "================================Branch Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_branch(o);
-		branch_num_ ->add(pos->second->branch_num_);
-	}
-	o << left << setw(10) << "Total";
-	o << left << setw(10) << "Branch Coverage = " << double(branch_num_->hit_*100)/double(branch_num_->total_) 
-	<< "%(" << branch_num_->hit_ << " hit of " << branch_num_->total_ << " branchs" << ")" << endl;
-	o << endl;
+	o << "PATH COVERAGE DETAIL FOR ALWAYS IN LINE " << lineno << endl;
 }
 
-void FinalRep::dump_combine(ostream& o)
+void dump_cond_line(ostream& o, unsigned num)
 {
-	o << "================================Combine Details================================" << endl;
-	map<Module*, ModuleRep*>::iterator pos;
-	for(pos = reports_.begin(); pos != reports_.end(); pos++)
-	{
-		pos->second->dump_combine(o);
+	for(unsigned i = 0; i < num; i++) {
+		string s = "-" + to_string(i+1) + "-";
+		o << left << setw(5) << s;
 	}
-	o << endl;
+	o << "Status" << endl;
+}
+
+void dump_cond_detail(ostream& o, CondRep::CondType type, unsigned num, unsigned idx, bool covered)
+{
+	ostringstream s;
+	string status = covered ? "Covered" : "Not Covered";
+	if(type == CondRep::SINGEL) {
+		s << left << setw(5) << idx << status;
+		dump_line(o, s);
+	} else {
+		bool state;
+		for(unsigned i = 0; i < num; i++) {
+			if(!idx || idx != (i+1))
+				state = type == CondRep::AND;
+			else
+				state = type == CondRep::OR;
+			s << left << setw(5) << state;
+	}
+		s << status;
+		dump_line(o, s);
+	}
+}
+
+void dump_branch_detail(ostream& o, unsigned lineno, string head, bool covered, ostringstream& expr)
+{
+	o << left << setw(10) << lineno;
+	o << left << setw(10) << head;
+	o << left << setw(15) << (covered ? "Covered" : "Not Covered");
+	o << expr.str() << endl;
+}
+
+void dump_branch_line(ostream& o, unsigned lineno)
+{
+	o << "BRANCH COVEREGE DETAIL IN LINE " << lineno << endl;
+}
+
+bool equal(const set<unsigned>& l1, const set<unsigned>& l2)
+{
+	if(l1.size() != l2.size()) return false;
+	set<unsigned>::iterator pos1 = l1.begin();
+	set<unsigned>::iterator pos2 = l2.begin();
+	while(pos1 != l1.end() && pos2 != l2.end()) {
+		if((*pos1) != (*pos2)) return false;
+		pos1++;
+		pos2++;
+	}
+	return true;
 }

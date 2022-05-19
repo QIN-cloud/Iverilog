@@ -1,36 +1,22 @@
 #ifndef __VCDVAR_H
 #define __VCDVAR_H
-
+#define  BRANCH_TRUE_VALUE 1
+#define  BRANCH_FALSE_VALUE 2
 #include <map>
 #include <set>
 #include <vector>
+#include <unordered_map>
 #include "Module.h"
 #include "verinum.h"
 #include "CfgNode.h"
 #include "PExpr.h"
+#include "PGate.h"
+#include "StringHeap.h"
 
 class VcdScope;
-class CoverNum;
+class VcdVar;
 
-/* 
-* Collect statistics for coverage functions.
-* For example, a data set{1,2,3,4} and a statistic collector{1,1,2}.
-* Total states  {1,2,3,4} -> total  = 4;
-* Active states {1,1,2}   -> active = 3;
-* Hit states    {1,2}     -> hit    = 2;
-* Miss states   {3,4}     -> miss   = 2;
-*/
-class CoverNum{
-public:
-	CoverNum():total_(0), active_(0), hit_(0), miss_(0){};
-	~CoverNum();
-	void add(const CoverNum* num);
-	void dump(ostream& o, string s);                    
-	unsigned total_;					
-	unsigned active_;
-	unsigned hit_;
-	unsigned miss_;
-};
+typedef map<perm_string, vector<string> > Filelines;
 
 /* 
 * Variables defined in an instantion module scope of VCD file.
@@ -39,10 +25,13 @@ public:
 */
 class VcdVar{
 public:
-	VcdVar(){};
+	typedef enum Type{INPUT, OUTPUT, INOUT, SIGNAL};
+	VcdVar();
+	~VcdVar();
 	void dump(ostream& o);
 	VcdScope* scope; 				//The instantiated module where this variable is located in.
 	string name;      				//Variable name.
+	Type type;						//Signal or Port.
 	string symbol;					//Symbol in VCD file.
 	bool little_endia; 				//True as var[3:0], false as var[0:3].
 	unsigned width;   		    	//Bit width.
@@ -52,277 +41,256 @@ public:
 	verinum sim_val;                //Real value in simulation replay.
 };
 
-/*
-* This structure represents a toggle analysis report of a variable.
-* Note that the results of mutiple instantiations of the same variable
-* will eventually be merged.
-*/
-class VarToggle{
-public:
-	VarToggle(const VcdVar* var);
-	~VarToggle();
-	void add(const VcdVar* var);
-	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
-private:
-	string name_;
-	unsigned width_;
-	long lsb_;
-	long msb_;
-	bool little_endia_;
-	CoverNum* num_;
-	map<long, unsigned> toggle01_; 						//Results of bit index which has toggle "0" to "1".
-	map<long, unsigned> toggle10_; 						//Results of bit index which has toggle "1" to "0".
-};
-
-/*
-* Represent the toggle report for a module.
-*/
 class ToggleRep{
 public:
-	ToggleRep();
+	ToggleRep(VcdVar* var);
 	~ToggleRep();
-	void add(const VcdVar* var);
-	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
+	void add();
+	unsigned get_pos_num();
+	unsigned get_neg_num();
+	void dump_bit(ostream& o);
+	void dump_detail(ostream& o);
 private:
-	CoverNum* num_;
-	map<string, VarToggle*> vars_;
+	VcdVar* var_;
+	vector<bool> pos_bits_;
+	vector<bool> neg_bits_;
 };
 
-/*
-* Represent the FSM analysis report for a selected variable.
-* Including the variable reached states and transitions.
-*/
 class FsmRep{
 public:
-	//Record the states of a variable.
-	typedef struct StateRep{
-	public:
-		StateRep():num_(0){};
-		unsigned num_;
-		vector<pair<unsigned, verinum> > states_;
-	}CoverState;
-	//Record the transtations of a variable.
-	typedef struct TranRep{
-		TranRep() : num_(0){};
-		unsigned num_;
-		vector<pair<unsigned, pair<verinum, verinum> > > trans_;
-	}CoverTran;
-public:
-	FsmRep();
+	FsmRep(VcdVar* var);
 	~FsmRep();
-	void add(const VcdVar* var);
-	void dump(ostream& o);
+	void add();
+	unsigned get_state();
+	unsigned get_transition();
+	void dump_state(ostream& o);
+	void dump_transition(ostream& o);
 private:
-	map<string, CoverState*>  var_states_;   //The format is {var name , {states num , {state , number}}}
-	map<string, CoverTran*> var_trans_;      //The format is {var name , {total num , {tran , number}}}
+	VcdVar* var_;
+	map<verinum, bool> states_;
+	map<pair<verinum, verinum> , bool> trans_;
 };
 
-/*
-* Represent the statement analysis report for a module.
-* This report is based on the cfg, the output is the 
-* number of executions of each row of statements.
-*/
-class StatRep{
+class LineRep{
 public:
-	StatRep(Module_Cfgs* cfgs);
-	~StatRep();
-	void add(const set<unsigned>& path);
+	LineRep(Cfg* cfg, VcdScope* scope);
+	~LineRep();
+	void initial();
+	void add(set<unsigned>& lines);
+	unsigned get_total();
+	unsigned get_hit();
 	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
+	void dump_summary(ostream& o);
 private:
-	CoverNum* num_;
-	map<unsigned, unsigned> stmts_; 				//Count the covered times of each line of statement.
-	map<unsigned, Cfg_Node*> nodes_;			    //Using for output the type of lines.
-};
-
-class ProcessRep{
-public:
-	ProcessRep(Module* mod, Cfg* cfg);
-	~ProcessRep();
-	void add(unsigned time, const set<unsigned>& path);
-	void dump_time_paths(ostream& o);
-	void dump_cover_paths(ostream& o);
-	inline CoverNum* get_num(){return num_;}
-private:
-	bool equal(const set<unsigned>& p1, const set<unsigned>& p2);
-	Module* module_;
 	Cfg* cfg_;
-	CoverNum* num_;
-	map<unsigned, vector<unsigned> > time_paths_;  //The format is {clk time, {paths address(get from Module)}}.
-	map<unsigned, unsigned> paths_;                //The format is {path, cover number}.
+	Module* module_;
+	Filelines* file_;
+	unordered_map<unsigned, bool> stats_;
 };
 
-/*
-* Represent the path analysis report for a module.
-*/
 class PathRep{
 public:
-	PathRep(Module* mod);
+	PathRep(Cfg* cfg, VcdScope* scope);
 	~PathRep();
-	void add(unsigned time, Cfg* cfg, const set<unsigned>& path);
+	void add(set<unsigned>& lines);
+	unsigned get_total();
+	unsigned get_hit();
 	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
+	void dump_summary(ostream& o);
 private:
-	CoverNum* num_;
-	Module* module_;
-	map<Cfg*, ProcessRep*> procs_;
+	Cfg* cfg_;
+	VcdScope* scope_;
+	Filelines* file_;
+	vector<bool> paths_;
 };
 
-/*
-* Represent the branch analysis report for a control node.
-*/
-class ExprBranch{
+class BranchTree{
 public:
-	ExprBranch(Cfg* cfg, Cfg_Node* node, map<unsigned, ExprBranch*>& branchs);
-	~ExprBranch();
-	void add(unsigned lineno);
-	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
-private:
-	CoverNum* num_;
-	Cfg_Node* node_;									//Control node.
-	map<unsigned, unsigned> branch_;					//The format is {lineno of branch, hit times}.
+	typedef enum TreeType{TERNARY, IF, CASE, CASEX, CASEZ, BLOCK, EXPRLEAF, STATLEAF};
+	BranchTree(Module* md, TreeType type);
+	virtual ~BranchTree();
+	virtual void dump(ostream& o, VcdScope* scope) = 0;
+	virtual void dump_summary(ostream& o, VcdScope* scope) = 0;
+	virtual void add(vector<unsigned>& values, VcdScope* scope, unsigned& idx) = 0;
+	virtual unsigned get_total() = 0;
+	virtual unsigned get_hit(VcdScope* scope) = 0;
+public:
+	Module* module_;
+	TreeType type_;
+	map<VcdScope*, bool> cover_;
 };
 
-/*
-* Represent the branch analysis report for a module.
-*/
+class BrCondit : public BranchTree{
+public:
+	BrCondit(Module* md, TreeType type);
+	virtual ~BrCondit();
+	virtual void dump(ostream& o, VcdScope* scope);
+	virtual void dump_summary(ostream& o, VcdScope* scope);
+	virtual void add(vector<unsigned>& values, VcdScope* scope, unsigned& idx);
+	virtual unsigned get_total();
+	virtual unsigned get_hit(VcdScope* scope);
+public:
+	unsigned lineno_;
+	PExpr* cond_;
+	BranchTree* tru_;
+	BranchTree* fal_;
+};
+
+class BrCase : public BranchTree{
+public:
+	BrCase(Module* md, TreeType type);
+	virtual ~BrCase();
+	virtual void dump(ostream& o, VcdScope* scope);
+	virtual void dump_summary(ostream& o, VcdScope* scope);
+	virtual void add(vector<unsigned>& values, VcdScope* scope, unsigned& idx);
+	virtual unsigned get_total();
+	virtual unsigned get_hit(VcdScope* scope);
+public:
+	unsigned lineno_;
+	PExpr* cond_;
+	vector<pair<PExpr*, BranchTree*> > items_;
+};
+
+class BrBlock : public BranchTree{
+public:
+	BrBlock(Module* md, TreeType type);
+	virtual ~BrBlock();
+	virtual void dump(ostream& o, VcdScope* scope);
+	virtual void dump_summary(ostream& o, VcdScope* scope);
+	virtual void add(vector<unsigned>& values, VcdScope* scope, unsigned& idx);
+	virtual unsigned get_total();
+	virtual unsigned get_hit(VcdScope* scope);
+public:
+	list<BranchTree*> stats_;
+};
+
+class BrLeaf : public BranchTree{
+public:
+	BrLeaf(Module* md, TreeType type);
+	virtual ~BrLeaf();
+	virtual void dump(ostream& o, VcdScope* scope);
+	virtual void dump_summary(ostream& o, VcdScope* scope);
+	virtual void add(vector<unsigned>& values, VcdScope* scope, unsigned& idx);
+	virtual unsigned get_total();
+	virtual unsigned get_hit(VcdScope* scope);
+public:
+	union{
+		PExpr* expr_;
+		unsigned lineno;
+	}node_;
+};
+
 class BranchRep{
 public:
-	BranchRep(Module_Cfgs* cfgs);
+	BranchRep(BranchTree* tree, VcdScope* scope);
 	~BranchRep();
-	void add(const set<unsigned>& path);
+	void add(vector<unsigned>& values);
+	unsigned get_hit();
+	unsigned get_total();
 	void dump(ostream& o);
-	inline CoverNum* get_num(){return num_;}
-private:
-	CoverNum* num_;
-	map<unsigned, ExprBranch*> locations_;		      //The format is {lineno , branch location}.
-	vector<ExprBranch*> branchs_;
-};
-
-/*
-* Record the value of different items in a condit expression.
-* For example , a expression (a[7:0]+b[7:0])/2.
-* a[7:0] and b[7:0] are two items and their value is recorded.
-*/
-struct CondValue{
-public:
-	CondValue(const vector<pair<PExpr*, verinum> >& items);
-	~CondValue();
-	void dump(ostream& o);
-	vector<pair<PExpr*, verinum> > items_;
-	unsigned num_;
-};
-extern bool operator == (const vector<pair<PExpr*, verinum> >& v1, const vector<pair<PExpr*, verinum> >& v2);
-
-/*
-* Represent the combine analysis report for a cond expression of control cfgnode.
-*/
-class ExprCombine{	
-public:
-	ExprCombine(Cfg_Node* node);
-	~ExprCombine();
-	void add(verinum value, const map<PExpr*, verinum>& items);
-	void dump(ostream& o);
-private:
-	Cfg_Node* node_;
-	unsigned num_;
-	map<verinum, pair<unsigned, vector<CondValue*> > > cond_items_; 	//The format is {{value}, vector{times, items}}.
-};
-
-/*
-* Represent the combine analysis for a module.
-*/
-class CombineRep{
-public:
-	CombineRep(Module_Cfgs* cfgs);
-	~CombineRep();
-	void add(Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items);
-	void dump(ostream& o);
-private:
-	map<Cfg_Node*, ExprCombine*> exprs_;					   		   //All of combines in this module.
-};
-
-class BasicRep{
-public:
-	BasicRep();
-	~BasicRep();
-	CoverNum* toggle_num_;
-	CoverNum* stat_num_;
-	CoverNum* path_num_;
-	CoverNum* branch_num_;
-};
-
-/*
-* Store selected coverage analysis for one module.
-*/
-class ModuleRep : public BasicRep{
-public:
-	ModuleRep(Module* mod);
-	~ModuleRep();
-
-	void add_toggle(const VcdVar* var);
-	void add_fsm(const VcdVar* var);
-	void add_stat(const set<unsigned, less<unsigned> >& paths);
-	void add_path(const set<unsigned, less<unsigned> >& paths, unsigned time, Cfg* cfg);
-	void add_branch(const set<unsigned, less<unsigned> >& paths);
-	void add_combine(Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items);
-
-	void dump_toggle(ostream& o);
-	void dump_fsm(ostream& o);
-	void dump_stat(ostream& o);
-	void dump_path(ostream& o);
-	void dump_branch(ostream& o);
-	void dump_combine(ostream& o);
-
-private:
-	Module* module_;
-	ToggleRep* toggle_;
-	FsmRep* fsm_;
-	StatRep* statement_;
-	BranchRep* branch_;
-	PathRep* path_;
-	CombineRep* combine_;
-};
-
-/*
-* This class collects the coverage analysis of all modules.
-*/
-class FinalRep : public BasicRep{
-public:
-	FinalRep(bool t, bool f, bool s, bool p, bool b, bool c);
-	~FinalRep();
-
-public:
-	void add_toggle(Module* mod, const VcdVar* var);
-	void add_fsm(Module* mod_, const VcdVar* var);
-	void add_stat(Module* mod_, const set<unsigned, less<unsigned> >& paths);
-	void add_path(Module* mod, const set<unsigned, less<unsigned> >& paths, unsigned time, Cfg* cfg);
-	void add_branch(Module* mod, const set<unsigned, less<unsigned> >& paths);
-	void add_combine(Module* mod, Cfg_Node* node, verinum value, const map<PExpr*, verinum>& items);
-	void dump(ostream& o);
-
-private:
-	void check(Module* mod);
-	void dump_toggle(ostream& o);
-	void dump_fsm(ostream& o);
-	void dump_stat(ostream& o);
-	void dump_path(ostream& o);
-	void dump_branch(ostream& o);
-	void dump_combine(ostream& o);
 	void dump_summary(ostream& o);
-
 private:
-	bool toggle_flag_;
-	bool fsm_flag_;
-	bool stat_flag_;
-	bool path_flag_;
-	bool branch_flag_;
-	bool combine_flag_;
-
-private:
-	map<Module*, ModuleRep*> reports_;
+	BranchTree* tree_;
+	VcdScope* scope_;
 };
+
+class CondRep{
+public:
+	CondRep(PExpr* cond, set<PExpr*> items);
+	~CondRep();
+	enum CondType {SINGEL, OR, AND};
+	void add(map<PExpr*, bool>& values);
+	void dump_summary(ostream& o);
+	void dump(ostream& o);
+	unsigned get_total();
+	unsigned get_hit();
+private:
+	PExpr* cond_;
+	vector<PExpr*> items_;
+	map<unsigned, bool> combs_;
+	CondType type_;
+};
+
+/*
+* ScopeRep stores the coverage report for a instantiated module.
+*/
+
+class ScopeRep{
+public:
+	ScopeRep(bool t, bool f, bool l, bool p, bool b, bool c, VcdScope* scope);
+	~ScopeRep();
+public:
+	void dump(ostream& o);
+	void initial();
+	void add_tgl_report(set<VcdVar*> vars);
+	void add_fsm_report(VcdVar* var);
+	void add_line_report(Cfg* cfg, set<unsigned>& lines);
+	void add_path_report(Cfg* cfg, set<unsigned>& lines);
+	void add_branch_report(unsigned lineno, vector<unsigned>& values);
+	void add_cond_report(map<PExpr*, map<PExpr*, bool> > values);
+private:
+	void toggle_initial();
+	void fsm_initial();
+	void line_initial();
+	void path_initial();
+	void branch_initial();
+	void cond_initial();
+	void dump_tgl_summary(ostream& o, string type);
+	void dump_tgl_detail(ostream& o, string type);
+	void dump_tgl_bit(ostream& o, string type);
+	void dump_tgl_report(ostream& o);
+	void dump_fsm_report(ostream& o);
+	void dump_line_summary(ostream& o);
+	void dump_line_detail(ostream & o);
+	void dump_line_report(ostream & o);
+	void dump_path_summary(ostream& o);
+	void dump_path_detail(ostream& o);
+	void dump_path_report(ostream& o);
+	void dump_branch_summary(ostream& o);
+	void dump_branch_detail(ostream& o);
+	void dump_branch_report(ostream& o);
+	void dump_cond_summary(ostream &o);
+	void dump_cond_detail(ostream& o);
+	void dump_cond_report(ostream& o);
+private:
+	bool cover_t;
+	bool cover_f;
+	bool cover_l;
+	bool cover_p;
+	bool cover_b;
+	bool cover_c;
+private:
+	VcdScope* scope_;
+	map<VcdVar*, ToggleRep*> toggle_;
+	map<VcdVar*, FsmRep*> fsm_;
+	map<unsigned, LineRep*> line_;
+	map<unsigned, PathRep*> path_;
+	map<unsigned, BranchRep*> branch_;
+	map<PExpr*, CondRep*> cond_;
+};
+
+extern bool equal(const set<unsigned>& l1, const set<unsigned>& l2);
+extern void dump_coverage_line(ostream& o, VcdScope* scope, string type);
+extern void dump_depart_line(ostream& o);
+extern void dump_line(ostream& o, string s);
+extern void dump_line(ostream& o, ostringstream& s);
+extern void dump_summary_line(ostream& o, string s1, string s2, string s3, string s4);
+extern void dump_summary_line(ostream& o, string head, unsigned total, unsigned covered);
+extern void dump_summary_line(ostream& o, string s1, string s2, string s3, string s4, string s5);
+extern void dump_summary_line(ostream& o, string head, unsigned lineno, unsigned total, unsigned covered);
+extern void dump_toggle_detail(ostream& o, string s1, string s2, string s3, string s4, string s5);
+extern void dump_toggle_detail(ostream& o, ostringstream& name, bool posedge, bool negedge, VcdVar::Type type);
+extern void dump_item_line(ostream& o, string item);
+extern void dump_toggle_bit(ostream& o, string s1, string s2);
+extern void dump_toggle_bit(ostream& o, ostringstream& name, ostringstream& bits);
+extern void dump_fsm_state(ostream& o, const verinum& v);
+extern void dump_fsm_transtate(ostream& o, const verinum& pre_val, const verinum& cur_val);
+extern void dump_line_detail(ostream& o, unsigned lineno, bool select, bool hit, string& s);
+extern void dump_line_detail(ostream& o, bool select, bool hit, PExpr* expr);
+extern void dump_path_line(ostream& o, unsigned lineno);
+extern void dump_cond_detail(ostream& o, CondRep::CondType type, unsigned num, unsigned idx, bool covered);
+extern void dump_cond_line(ostream& o, unsigned num);
+extern void dump_branch_detail(ostream& o, unsigned lineno, string head, bool covered, ostringstream& expr);
+extern void dump_branch_line(ostream& o, unsigned lineno);
+
 #endif

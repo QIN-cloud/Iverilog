@@ -29,6 +29,7 @@
 # include  "vcdvar.h"
 # include  <map>
 # include  <list>
+# include  <set>
 # include  <vector>
 # include  <string>
 
@@ -39,6 +40,7 @@ class PDelays;
 class PDesign;
 class VcdScope;
 class VcdVar;
+class BranchTree;
 
 /*
  * A PGate represents a Verilog gate. The gate has a name and other
@@ -159,7 +161,10 @@ class PGAssign  : public PGate {
             return *tmp;
       };
       void dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned time) const;
-      VcdVar* evaluate(Design* des, NetScope* scope, VcdScope* instan);
+      void evaluate(Design* des, NetScope* scope, VcdScope* instan, bool combine, bool branch);
+      void parse_bits(Design* design, NetScope* scope, VcdScope* instan);
+      void build_expr(map<PExpr*, set<PExpr*> >& exprs) const;
+      void build_branch(Module* md, map<unsigned, BranchTree*>& branchs);
 
     private:
       void elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval) const;

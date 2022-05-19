@@ -239,6 +239,11 @@ svector<unsigned>& PCase::get_linenos()
 	return *tmp;
 }
 
+unsigned PCase::get_lineno() const
+{
+	return expr_->get_lineno();
+}
+
 set<string>& PCAssign::get_funcs()
 {
 	set<string>* tmp = new set<string>;

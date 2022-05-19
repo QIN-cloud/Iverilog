@@ -183,33 +183,6 @@ class CondNode : public CfgNode{
     CfgNode* else_;
 };
 
-class DelayNode : public CfgNode{
-  public:
-    DelayNode();
-    DelayNode(int ln);
-    ~DelayNode();
-    void add_node(CfgNode* node, int type);    
-    CfgNode* get_node(int type);
-
-    virtual set<string>& get_funcs();
-	  virtual set<string>& get_mods();
-	  virtual void add_dsucc(int dsucc);    
-    virtual set<string>& get_refs();    
-    virtual set<string>& get_defs();    
-    virtual void dump(std::ostream&o);
-
-    virtual void Ndump(std::ostream&o, int&nNo);
-    virtual void Pdump(std::ostream&o, int&pNo);
-
-    virtual svector<Node*>& construct_node(int);
-
-  	virtual void set_caseitem(list<PExpr*> caseitem){root->set_caseitem(caseitem);};
-
-  private:
-    CfgNode* root;
-    CfgNode* st;
-};
-
 class EventNode : public CfgNode{
   public:
     EventNode();
