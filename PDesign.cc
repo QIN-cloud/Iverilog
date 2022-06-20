@@ -234,7 +234,6 @@ ModuleTreeNode* PDesign::build_module_tree(Module* module_)
 
 void PDesign::fsm_var_parse(const char* fsm_selects)
 {
-	cout << "Select fsm variables : " ;
 	unsigned i = 0;
 	string tmp;
 	while(i < strlen(fsm_selects)){
@@ -423,7 +422,6 @@ void PDesign::vcd_parse_def_var( FILE* vcd )
 	
 	if( fscanf( vcd, "%s %d %s %s %s", type, &size, id_code, ref, tmp ) == 5 )
 	{
-		if(string(type).find("wire") != 0 && string(type).find("reg") != 0) return;
 		/* Make sure that we have not exceeded array boundaries */
 		assert( strlen( type )    <= 256 );
 		assert( strlen( ref )     <= 256 );
@@ -456,7 +454,7 @@ void PDesign::vcd_parse_def_var( FILE* vcd )
 			msb = size - 1;
 			lsb = 0;
 		}
-
+		if(string(type).find("wire") != 0 && string(type).find("reg") != 0) return;
 		if(select_mod.find(cur_scope->module_) != select_mod.end() || cur_scope->module_ == top_){
 			VcdVar* vv = new VcdVar;
 			vv->name = ref;
@@ -933,7 +931,7 @@ void PDesign::add_branch(VcdScope* scope, map<unsigned, vector<unsigned> >& bval
 	}
 }
 
-int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned, vector<unsigned> >& bvalues, unsigned blineno)
+int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned, vector<unsigned> >& bvalues, unsigned& blineno)
 {	
 	int index = -1; /* Next node position. */
 	hname_t name(vs->module_->pscope_name()); 
@@ -971,13 +969,14 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned
 	else{
 		for(unsigned idx = 0; idx < node->dsuc.count(); ++idx){
 			if(index > 0) break;
+			value = idx;
 			set<PExpr*>::const_iterator pos = node->dsuc[idx]->caseitem.begin();
 			for(; pos != node->dsuc[idx]->caseitem.end(); ++pos){
 				verinum* ci = (*pos)->evaluate(des, scope, vs, combine_, cvalues);
 				if(node->type == "ISCONTROL.CASE"){
 					if(*vn == *ci){
 						index = node->dsuc[idx]->index;
-						}
+					}
 				}
 				else{
 					if(case_x_or_z(*vn, *ci, node->type)){
@@ -989,17 +988,15 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned
 			if(idx == node->dsuc.count()-1 && node->dsuc[idx]->caseitem.size() == 0){
 				index = node->dsuc[idx]->index;
 			}
-			value = idx;
 		}
 	}
 
 	if(branch_){
-		if(vs->module_->branchs_.find(node->lineno) != vs->module_->branchs_.end()){
+		cout << node->lineno << " " << value << endl;
+		if(vs->module_->branchs_.find(node->lineno) != vs->module_->branchs_.end())
 			blineno = node->lineno;
-			if(bvalues.find(blineno) == bvalues.end())
-				bvalues[blineno] = vector<unsigned>();
-			bvalues[blineno].push_back(value);
-		}
+		cout << blineno << endl;
+		bvalues[blineno].push_back(value);
 	}
 
 	/*Dump evaluate information.

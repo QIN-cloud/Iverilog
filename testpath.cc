@@ -82,26 +82,11 @@ void TestGen::get_stats()
 	NetProcTop* proc = design_->find_process();
 	while(proc)
 	{
-		cout << proc->get_id() << endl;
 		NetStats proc_stats;
 		proc->gen_stats(&proc_stats);
 		stats_[pdesign_->get_modules()[proc->scope()->basename()]][proc->get_id()] = proc_stats;
 		proc = design_->find_next_process(proc);
 	}
-	/*
-	for(auto i : stats_)
-	{
-		cout << i.first->pscope_name() << endl;
-		for(auto j : i.second)
-		{
-			cout << "ID : " << j.first << endl;
-			for(auto k : j.second)
-			{
-				cout << k.first << " " << k.second.size() << endl;
-			}
-		}
-	}
-	*/
 }
 
 void TestGen::get_vartab()
@@ -274,6 +259,7 @@ void TestGen::gen_body(ostream& o)
 			}
 		}
 		changed.clear();
+
 	}
 }
 
@@ -449,7 +435,7 @@ void bv_compare_zero(ostringstream& expr, string op, unsigned width, ostringstre
 */
 void int_compare_zero(ostringstream& expr, string op, ostringstream& target)
 {
-	target << "(" << op << " " << expr.str() << " " << "0";
+	target << "(" << op << " " << expr.str() << " " << "0)";
 }
 
 void RefVar::dump(ostream& o)

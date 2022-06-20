@@ -1,7 +1,7 @@
 #ifndef __VCDVAR_H
 #define __VCDVAR_H
 #define  BRANCH_TRUE_VALUE 1
-#define  BRANCH_FALSE_VALUE 2
+#define  BRANCH_FALSE_VALUE 0
 #include <map>
 #include <set>
 #include <vector>

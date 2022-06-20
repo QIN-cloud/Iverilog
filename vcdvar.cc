@@ -149,10 +149,11 @@ unsigned BrLeaf::get_hit(VcdScope* scope)
 void BrCondit::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 {
 	cout << typeid(this).name() << " " << idx << endl;
+	cout << lineno_ << " " << idx << " " << values.size() << endl;
 	assert(idx < values.size());
 	cover_[scope] = true;
 	if(values[idx]) tru_->add(values, scope, ++idx);
-	else fal_->add(values, scope, ++idx);
+	else if(fal_) fal_->add(values, scope, ++idx);
 }
 
 void BrCase::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
@@ -344,7 +345,6 @@ void ScopeRep::path_initial()
 
 void ScopeRep::branch_initial()
 {
-	cout << scope_->module_->branchs_.size() << endl;
 	map<unsigned, BranchTree*>::iterator pos = scope_->module_->branchs_.begin();
 	for(; pos != scope_->module_->branchs_.end(); pos++) {
 		BranchRep* rep = new BranchRep(pos->second, scope_);

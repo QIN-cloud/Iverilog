@@ -1412,7 +1412,7 @@ int main(int argc, char*argv[])
  
 		select_md->build_paths();
 
-		if(atoi(smt_time) == 0){
+		if(atoi(smt_time) == 0) {
 			ofstream enums("../verilog-files/dump/combs.txt");
 			ofstream paths("../verilog-files/dump/paths.txt");
 			ofstream report("../verilog-files/dump/report.txt");

@@ -145,7 +145,7 @@ private:
     void cfg_replay(Cfg* cfg, VcdScope* scope, set<string>& defs);
 
     /*Evaluate the conditional expression, then select the next node by evaluating value.*/
-    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned, vector<unsigned> >& bvalues, unsigned blineno);
+    int eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned, vector<unsigned> >& bvalues, unsigned& blineno);
 
     /*After replaying a cfg, we get a list of linenos named paths, this will be the result 
     of statement, path and branch coverage.*/

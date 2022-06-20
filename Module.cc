@@ -673,8 +673,8 @@ void Module::gen_assign_smt(set<string>& defs, bool type, ostream& o, map<string
 	list<PGAssign*>::iterator assign = assigns_.begin();
 	for(assign; assign != assigns_.end(); assign++){
 		if(type || select_assigns.find(*assign) != select_assigns.end()){
-			(*assign)->dump_smt(design_, o, vars, used, this, cur_time);
 			(*assign)->dump(cout);
+			(*assign)->dump_smt(design_, o, vars, used, this, cur_time);
 		}
 	}
 
@@ -858,20 +858,37 @@ void Module::dump_vartab(ostream& o) const
 
 void Module::initialize(bool line, bool path, bool branch, bool cond, bool smt)
 {
+	cout << pscope_name() << endl;
+	cout << "build vartable" << endl;
 	build_vartab(design_);
-	if(smt) parse_wires();
-	if(line || path || branch || cond) {
+	if(smt){ 
+		parse_wires();
+		cout << "build assign" << endl;
 		parse_assigns();
+		cout << "sort assign" << endl;
 		sort_assigns();
+		cout << "sort cfg" << endl;
 		sort_cfgs();
+	}
+	if(line || path || branch || cond) {
+		cout << "build assign" << endl;
+		parse_assigns();
+		cout << "sort assign" << endl;
+		sort_assigns();
+		cout << "sort cfg" << endl;
+		sort_cfgs();
+		cout << "build branch" << endl;
 		if(branch) build_branchs();
+		cout << "build expr" << endl;
 		if(cond) build_exprs();
+		cout << "build path" << endl;
 		if(path) build_paths();
 	}
 }
 
 void Module::enumrate(ostream& enums, ostream& paths, ostream& report)
 {
+
 	for(map<Cfg*, vector<set<unsigned> > >::iterator pos = routes_.begin(); pos != routes_.end(); pos++)
 	{
 		paths << "id: " << pos->first->id << endl;
@@ -906,8 +923,10 @@ void Module::enumrate(ostream& enums, ostream& paths, ostream& report)
 void Module::dfs_paths(ostream& o, list<unsigned>& path, unsigned index)
 {
 	if(index < paths_.size()){
+		cout << index << endl;
 		for(unsigned i = 0; i < paths_[index].size(); i++)
 		{
+			cout << "[" << i << "]" << endl;
 			path.push_back(i);
 			dfs_paths(o, path, index + 1);
 			if(index == (paths_.size() - 1))

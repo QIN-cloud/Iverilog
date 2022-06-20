@@ -41,7 +41,6 @@ static unordered_map<char, const char*> SMT_Vec_Div = {{'/', "bvudiv"}, {'%', "b
 static unordered_map<char, const char*> SMT_Vec_Bits = {{'^', "bvxor"}, {'|', "bvor"}, {'&', "bvand"}, {'O', "bvnor"}, {'A', "bvnand"}, {'X', "bvxor"}};
 static unordered_map<char, const char*> SMT_Vec_Comp = {{'>', "bvugt"}, {'<', "bvult"}, {'L', "bvule"}, {'G', "bvuge"}, {'e', "="}, {'n', "distinct"}};
 static unordered_map<char, const char*> SMT_Int_Comp = {{'>', ">"}, {'<', "<"}, {'L', "<="}, {'G', ">="}, {'e', "="}, {'n', "distinct"}};
-static unordered_map<char, const char*> SMT_Vec_Logic = {{'a', "bvand"}, {'o', "bvor"}};
 static unordered_map<char, const char*> SMT_Bool_Logic = {{'a', "and"}, {'o', "or"}};
 static unordered_map<char, const char*> SMT_Vec_Mult = {{'*', "bvmul"}};
 

@@ -247,6 +247,9 @@ int PEBinary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& va
 	l_width = left_->dump_smt(design, scope, vars, used, l_expr, md, type, cur_time);
 	r_width = right_->dump_smt(design, scope, vars, used, r_expr, md, type, cur_time);
 
+	cout << l_expr.str() << " " << r_expr.str() << endl;
+	cout << l_width << " " << r_width << endl;
+
 	if(SMT_Vec_Add[op_])
 	{
 		assert(l_width >= SMT_INT);
@@ -390,26 +393,30 @@ int PEBinary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& va
 		return width;
 	}
 
-	if(SMT_Vec_Logic[op_])
+	if(SMT_Bool_Logic[op_])
 	{
 		if(l_width == r_width && l_width == SMT_BOOL)
 		{
-			expr << "(" << SMT_Vec_Logic[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
+			expr << "(" << SMT_Bool_Logic[op_] << " " << l_expr.str() << " " << r_expr.str() << ")";
 		}
 
 		else
 		{
 			ostringstream l_bool, r_bool;
 
-			if(l_width != SMT_INT)
-				bv_compare_zero(l_expr, "distinct", l_width, l_bool);
-			else
-				int_compare_zero(l_expr, "distinct", l_bool);
+			if(l_width != SMT_BOOL) {
+				if(l_width == SMT_INT)
+					int_compare_zero(l_expr, "distinct", l_bool);
+				else
+					bv_compare_zero(l_expr, "distinct", l_width, l_bool);
+			}
 
-			if(r_width != SMT_INT)
-				bv_compare_zero(r_expr, "distinct", r_width, r_bool);
-			else
-				int_compare_zero(r_expr, "distinct", r_bool);
+			if(r_width != SMT_BOOL) {
+				if(r_width == SMT_INT)
+					int_compare_zero(r_expr, "distinct", r_bool);
+				else
+					bv_compare_zero(r_expr, "distinct", r_width, r_bool);
+			}
 			
 			expr << "(" << SMT_Bool_Logic[op_] << " " << l_bool.str() << " " << r_bool.str() << ")";
 		}
@@ -486,7 +493,7 @@ int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& v
 		case SMT_BOOL : 
 			i_expr_bool << i_expr.str(); 
 			break;
-		//The format is like "2 - 1 > t_expr : e_expr", usually the format like this is not allowed
+		//The format is like "2 - 1 ? t_expr : e_expr", usually the format like this is not allowed
 		case SMT_INT  : 
 			i_expr_bool << "(ite " << "(distinct " << i_expr.str() << " 0) true false)"; 
 			break;
@@ -494,7 +501,7 @@ int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& v
 		default : 
 			i_expr_bool << "(ite ";
 			bv_compare_zero(i_expr, "distinct", i_width, i_expr_bool);
-			i_expr_bool << " 0) true false)";
+			i_expr_bool << " true false)";
 			break;
 	}
 
