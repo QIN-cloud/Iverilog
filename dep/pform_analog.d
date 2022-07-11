@@ -208,4 +208,5 @@ pform_analog.o: pform_analog.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/deque.tcc /usr/include/c++/7/bits/stl_queue.h \
  /usr/include/c++/7/stack /usr/include/c++/7/bits/stl_stack.h \
  /usr/include/c++/7/stdlib.h PGate.h PDelays.h vcdvar.h PExpr.h \
- Statement.h AStatement.h PTask.h PWire.h discipline.h parse_misc.h
+ Statement.h smt_generator.h AStatement.h PTask.h PWire.h discipline.h \
+ parse_misc.h

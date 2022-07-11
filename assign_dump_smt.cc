@@ -540,6 +540,17 @@ int PETernary::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& v
 
 int PEConcat::dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool type, unsigned cur_time) const
 {
-	cerr << "PEConcat is unsupported now!" << endl;
-	exit(1);
+	int res = 0;
+	if(basevec.empty()) {
+		PEConcat* p = const_cast<PEConcat*>(this);
+		p->parse_concat_expr(md->get_design(), md->get_scope(), vars);
+	}
+	expr << "(concat";
+	for(ConcatItem* item : basevec) {
+		ostringstream cc;
+		res += item->dump_smt(cc, vars);
+		expr << " " << cc.str();
+	}
+	expr << ")";
+	return res;
 }

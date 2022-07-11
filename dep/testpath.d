@@ -208,7 +208,8 @@ testpath.o: testpath.cc /usr/include/stdc-predef.h testpath.h \
  /usr/include/c++/7/bits/mask_array.h \
  /usr/include/c++/7/bits/indirect_array.h verireal.h Attrib.h PUdp.h \
  slice.h CfgNode.h vcdvar.h PExpr.h PGate.h PDelays.h Statement.h \
- /usr/include/c++/7/sstream /usr/include/c++/7/bits/sstream.tcc \
- /usr/include/c++/7/math.h /usr/include/string.h /usr/include/strings.h \
+ smt_generator.h /usr/include/c++/7/sstream \
+ /usr/include/c++/7/bits/sstream.tcc /usr/include/c++/7/math.h \
+ /usr/include/string.h /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h

@@ -23,6 +23,7 @@
 # include  <string>
 # include  <vector>
 # include  <valarray>
+# include  <unordered_map>
 # include  "netlist.h"
 # include  "verinum.h"
 # include  "LineInfo.h"
@@ -42,9 +43,27 @@ class VcdScope;
 struct symbol_search_results;
 class PEBinary;
 class BranchTree;
+class SmtDefine;
 
-typedef pair<VcdVar*, vector<unsigned> > Wires;
-
+struct ConcatItem{
+public:
+  enum ConcatType{VARIABLE, STABLE};
+  ConcatType type_;
+  struct ConcatOfVcdVar{
+    string name_;
+    unsigned lwidth_;
+    unsigned rwidth_;
+  };
+  union{
+    ConcatOfVcdVar* variable_;
+    verinum* stable_;
+  }baseitem_;
+  vector<pair<VcdVar*, unsigned> > get_asleft(VcdScope* instan);
+  verinum* get_asright(VcdScope* instan);
+  unsigned dump_smt(ostringstream& out, map<string, RefVar*>& vars);
+  unsigned dump_smt(ostringstream& out, unordered_map<string, SmtDefine*>& symbols);
+  void dump(ostream& out);
+};
 
 /*
  * The PExpr class hierarchy supports the description of
@@ -208,12 +227,11 @@ class PExpr : public LineInfo {
         set<string>* tmp = new set<string>;
         return *tmp;
       };
-
+      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
       virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values);
       virtual set<string> get_var_names();
       virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, 
       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
-      virtual vector<Wires> parse_bits(Design* des, NetScope*scope, VcdScope* instan);
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
       virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
 
@@ -265,6 +283,11 @@ class PEConcat : public PExpr {
       explicit PEConcat(const list<PExpr*>&p, PExpr*r =0);
       ~PEConcat();
 
+    public:
+      vector<ConcatItem*> basevec;
+      vector<pair<VcdVar*, unsigned> > get_asleft(VcdScope* instan);
+    
+    public:
       virtual verinum* eval_const(Design*des, NetScope*sc) const;
       virtual void dump(ostream&) const;
 
@@ -315,12 +338,11 @@ class PEConcat : public PExpr {
 
         return *tmp;
       };
-
+      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
       virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values);
       virtual set<string> get_var_names();
       virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
-      virtual vector<Wires> parse_bits(Design* des, NetScope*scope, VcdScope* instan);
 
 
     private:
@@ -416,7 +438,6 @@ class PEFNumber : public PExpr {
       virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values);
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
-
     private:
       verireal*value_;
 };
@@ -507,11 +528,10 @@ class PEIdent : public PExpr {
       };
 
       virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values);
-
+      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
       virtual set<string> get_var_names();
       virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
        ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
-      virtual vector<Wires> parse_bits(Design* des, NetScope*scope, VcdScope* instan);
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
 
@@ -773,8 +793,8 @@ class PENumber : public PExpr {
         return *tmp;
       };
 
+      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
       virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, map<PExpr*, map<PExpr*, bool> >& values);
-
       virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
        ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
 
@@ -1267,5 +1287,8 @@ class PEVoid : public PExpr {
 				     unsigned expr_wid,
                                      unsigned flags) const;
 };
+
+extern void verinum_equal(verinum* v1, verinum* v2);
+extern void verinum_equal(vector<pair<VcdVar*, unsigned> >& v1, verinum* v2);
 
 #endif /* IVL_PExpr_H */

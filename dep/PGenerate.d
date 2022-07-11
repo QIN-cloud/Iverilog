@@ -206,5 +206,5 @@ PGenerate.o: PGenerate.cc /usr/include/stdc-predef.h PGenerate.h \
  /usr/include/c++/7/bits/hashtable_policy.h \
  /usr/include/c++/7/bits/unordered_map.h Module.h svector.h netlist.h \
  ivl_target_priv.h verireal.h Attrib.h PUdp.h testpath.h cfg.h slice.h \
- CfgNode.h vcdvar.h PExpr.h PGate.h PDelays.h Statement.h PWire.h \
- ivl_assert.h
+ CfgNode.h vcdvar.h PExpr.h PGate.h PDelays.h Statement.h smt_generator.h \
+ PWire.h ivl_assert.h

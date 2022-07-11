@@ -205,8 +205,8 @@ Module.o: Module.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h PWire.h /usr/include/string.h \
- /usr/include/strings.h \
+ PDelays.h vcdvar.h PExpr.h PWire.h Statement.h smt_generator.h \
+ /usr/include/string.h /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/unistd.h /usr/include/x86_64-linux-gnu/bits/posix_opt.h \

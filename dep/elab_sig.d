@@ -206,6 +206,7 @@ elab_sig.o: elab_sig.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h PClass.h PGenerate.h Statement.h PPackage.h \
- PTask.h PWire.h compiler.h netmisc.h netclass.h netenum.h netvector.h \
- netdarray.h netparray.h netqueue.h netscalar.h util.h ivl_assert.h
+ PDelays.h vcdvar.h PExpr.h PClass.h PGenerate.h Statement.h \
+ smt_generator.h PPackage.h PTask.h PWire.h compiler.h netmisc.h \
+ netclass.h netenum.h netvector.h netdarray.h netparray.h netqueue.h \
+ netscalar.h util.h ivl_assert.h

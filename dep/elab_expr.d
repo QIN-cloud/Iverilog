@@ -212,6 +212,6 @@ elab_expr.o: elab_expr.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/deque.tcc /usr/include/c++/7/bits/stl_queue.h \
  /usr/include/c++/7/stack /usr/include/c++/7/bits/stl_stack.h \
  /usr/include/c++/7/stdlib.h PGate.h PDelays.h vcdvar.h PExpr.h \
- Statement.h AStatement.h PTask.h PWire.h discipline.h netclass.h \
- netenum.h netparray.h netvector.h netmisc.h netdarray.h netqueue.h \
- netscalar.h util.h ivl_assert.h
+ Statement.h smt_generator.h AStatement.h PTask.h PWire.h discipline.h \
+ netclass.h netenum.h netparray.h netvector.h netmisc.h netdarray.h \
+ netqueue.h netscalar.h util.h ivl_assert.h

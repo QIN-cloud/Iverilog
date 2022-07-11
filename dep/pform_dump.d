@@ -207,9 +207,9 @@ pform_dump.o: pform_dump.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h PClass.h PEvent.h PGenerate.h PPackage.h PSpec.h \
- /usr/include/c++/7/iomanip /usr/include/c++/7/locale \
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h PClass.h PEvent.h PGenerate.h PPackage.h \
+ PSpec.h /usr/include/c++/7/iomanip /usr/include/c++/7/locale \
  /usr/include/c++/7/bits/locale_facets_nonio.h /usr/include/c++/7/ctime \
  /usr/include/x86_64-linux-gnu/c++/7/bits/time_members.h \
  /usr/include/x86_64-linux-gnu/c++/7/bits/messages_members.h \

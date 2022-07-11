@@ -203,4 +203,9 @@ net_expr.o: net_expr.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/hashtable.h \
  /usr/include/c++/7/bits/hashtable_policy.h \
  /usr/include/c++/7/bits/unordered_map.h cfg.h netenum.h netclass.h \
- netdarray.h netscalar.h compiler.h netmisc.h ivl_assert.h
+ netdarray.h netscalar.h compiler.h netmisc.h ivl_assert.h PExpr.h \
+ Module.h PScope.h slice.h CfgNode.h PDesign.h /usr/include/c++/7/queue \
+ /usr/include/c++/7/deque /usr/include/c++/7/bits/stl_deque.h \
+ /usr/include/c++/7/bits/deque.tcc /usr/include/c++/7/bits/stl_queue.h \
+ /usr/include/c++/7/stack /usr/include/c++/7/bits/stl_stack.h \
+ /usr/include/c++/7/stdlib.h PGate.h PDelays.h vcdvar.h

@@ -5843,6 +5843,8 @@ bool PProcess::elaborate(Design*des, NetScope*scope) const
       }
 
       NetProcTop *top=new NetProcTop(scope, type(), cur);
+	  top->event = statement_;
+	  top->cfg = cfg;
       ivl_assert(*this, top);
 
 	// Evaluate the attributes for this process, if there

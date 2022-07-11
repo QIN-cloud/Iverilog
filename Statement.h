@@ -32,6 +32,8 @@
 # include  "LineInfo.h"
 # include  "slice.h"     //2020.2.4
 # include  "PDesign.h"
+# include  "smt_generator.h"
+
 class PExpr;
 class PChainConstructor;
 class PPackage;
@@ -50,6 +52,7 @@ class NetScope;
  * and a pointer to the single statement that is the process. A module
  * may have several concurrent processes.
  */
+
 class PProcess : public LineInfo {
 
     public:
@@ -75,6 +78,8 @@ class PProcess : public LineInfo {
       inline void set_id(unsigned id){id_ = id;};
       inline bool is_synchronous(){return sync_;};
       void set_synchronous();
+    public:
+      Cfg* cfg;
     private:
       ivl_process_type_t type_;
       Statement*statement_;
@@ -101,7 +106,6 @@ class Statement : virtual public LineInfo {
       virtual set<string>& get_funcname();
       virtual void dump_slice(std::ostream&out, unsigned ind, slicer*) const;
       virtual set<string>& get_funcs();
-
       virtual void dump(ostream&out, unsigned ind) const;
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
@@ -514,6 +518,7 @@ class PEventStatement  : public Statement {
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
+      void dump_design_smt(ostream& o, InstanModule* instan, Cfg* cfg, list<pair<string, bool> >& condit, unsigned tempid) const;
 
       bool has_aa_term(Design*des, NetScope*scope);
 

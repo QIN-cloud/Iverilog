@@ -192,6 +192,7 @@ void TestGen::arrange_testpath()
 
 void TestGen::gen_body(ostream& o)
 {
+	/*
 	set<string> refs;
 	unordered_map<string, bool> changed;
 
@@ -261,6 +262,7 @@ void TestGen::gen_body(ostream& o)
 		changed.clear();
 
 	}
+	*/
 }
 
 void TestGen::update_refs(set<string>& refs, unsigned cur_time)
@@ -317,9 +319,7 @@ void TestGen::gen_proc_smt(TestPath* tp, ostream& o, set<string>& refs, unsigned
 			}
 		}
 	}
-
 	o << endl;
-
 }
 
 void TestGen::gen_head(ostream& o)
@@ -400,6 +400,19 @@ void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target)
 	target << "((_ int2bv " << width << ")" << "((_ bv2int)" << expr.str() << "))";
 }
 
+void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostringstream& target)
+{
+	if(width > finalwidth) {
+		target << "(concat #b";
+		for(unsigned i = 0; i < width - finalwidth; i++) {
+			target << "0";
+		}
+		target << " " << expr.str() << ")";
+	} else {
+		target << "(extract " << width-1 << " " << 0 << " " << expr.str() << ")";
+	}
+}
+
 /*
 * Convert a Bool expression to a BitVec.
 * First convert Bool to Int type, then Int to BitVec.
@@ -409,6 +422,21 @@ void bool_to_bv(ostringstream& expr, ostringstream& target)
 	ostringstream i_expr;
 	i_expr << "(ite " << expr.str() << " 1 0 )";
 	int_to_bv(i_expr, 1, target);  
+}
+
+void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	ostringstream expr_bool;
+	if(width == SMT_INT) expr_bool << "(distinct " << expr.str() << " 0)";
+	else bv_compare_zero(expr, "distinct", width, expr_bool);
+}
+
+void bv_or_bool_to_int(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	if(width == SMT_BOOL)
+		target << "(ite " << expr.str() << " 1 0)";
+	else 
+		target << "((_ bv2int)" << expr.str() << ")";
 }
 
 /*

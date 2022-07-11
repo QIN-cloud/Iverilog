@@ -207,5 +207,5 @@ pform_pclass.o: pform_pclass.cc /usr/include/stdc-predef.h pform.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h PClass.h parse_misc.h compiler.h
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h PClass.h parse_misc.h compiler.h

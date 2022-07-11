@@ -207,7 +207,7 @@ pform_package.o: pform_package.cc /usr/include/stdc-predef.h pform.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h PPackage.h parse_misc.h compiler.h parse_api.h \
- /usr/include/c++/7/sstream /usr/include/c++/7/bits/sstream.tcc \
- ivl_assert.h
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h PPackage.h parse_misc.h compiler.h \
+ parse_api.h /usr/include/c++/7/sstream \
+ /usr/include/c++/7/bits/sstream.tcc ivl_assert.h

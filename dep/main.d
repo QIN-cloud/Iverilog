@@ -218,7 +218,7 @@ main.o: main.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/unordered_map.h cfg.h Module.h PScope.h slice.h \
  CfgNode.h PDesign.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h parse_api.h PGenerate.h target.h compiler.h t-dll.h \
- /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h parse_api.h PGenerate.h target.h compiler.h \
+ t-dll.h /usr/include/dlfcn.h /usr/include/x86_64-linux-gnu/bits/dlfcn.h \
  ivl_alloc.h

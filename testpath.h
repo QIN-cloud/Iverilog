@@ -84,9 +84,12 @@ typedef struct RefVar{
 
 extern void bv_to_int(ostringstream& expr, ostringstream& target);
 extern void int_to_bv(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostringstream& target);
 extern void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target);
 extern void bool_to_bv(ostringstream& expr, ostringstream& target);
 extern void extract(ostringstream& expr, int msi, int lsi, ostringstream& target);
+extern void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_or_bool_to_int(ostringstream& expr, unsigned width, ostringstream& target);
 extern void bv_compare_zero(ostringstream& expr, string op, unsigned width, ostringstream& target);
 extern void int_compare_zero(ostringstream& expr, string op, ostringstream& target);
 

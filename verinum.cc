@@ -82,6 +82,15 @@ void verinum::dump(ostream& o) const
 	}
 }
 
+string verinum::dumpstring() const
+{
+	string res;
+	for(int i = 0; i < nbits_; i++) {
+		res = (bits_[i] == V1 ? '1' : '0') + res;
+	}
+	return res;
+}
+
 static string process_verilog_string_quotes(const string&str)
 {
       string res;
@@ -385,7 +394,6 @@ verinum& verinum::operator= (const verinum&that)
 
 verinum::V verinum::get(unsigned idx) const
 {
-	//cout << nbits_ << " " << idx << endl;
       assert(idx < nbits_);
       return bits_[idx];
 }

@@ -227,7 +227,7 @@ public:
 	void add_line_report(Cfg* cfg, set<unsigned>& lines);
 	void add_path_report(Cfg* cfg, set<unsigned>& lines);
 	void add_branch_report(unsigned lineno, vector<unsigned>& values);
-	void add_cond_report(map<PExpr*, map<PExpr*, bool> > values);
+	void add_cond_report(map<PExpr*, map<PExpr*, bool> >& values);
 private:
 	void toggle_initial();
 	void fsm_initial();

@@ -212,7 +212,7 @@ elaborate.o: elaborate.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h PClass.h PEvent.h PGenerate.h PPackage.h PSpec.h netenum.h \
- netvector.h netdarray.h netparray.h netclass.h netmisc.h util.h \
- parse_api.h compiler.h ivl_assert.h
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h PClass.h PEvent.h PGenerate.h PPackage.h \
+ PSpec.h netenum.h netvector.h netdarray.h netparray.h netclass.h \
+ netmisc.h util.h parse_api.h compiler.h ivl_assert.h

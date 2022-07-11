@@ -42,11 +42,6 @@ void PDesign::set_udps(map<perm_string, PUdp*>& udps)
 void PDesign::set_design(Design* design)
 {
 	des = design;
-	map<perm_string, Module*>::iterator md = modules_.begin();
-	for(md; md != modules_.end(); md++)
-	{
-		md->second->set_design(design);
-	}
 }
 
 map<perm_string, Module*> PDesign::get_modules()
@@ -66,107 +61,10 @@ map<perm_string, vector<string> >* PDesign::get_lines()
 
 void PDesign::dump(ostream&o)
 {
-	for(map<perm_string, Module*>::iterator pos = modules_.begin(); pos != modules_.end(); ++pos)
+	for(map<perm_string, Module*>::iterator pos = modules_.begin(); pos != modules_.end(); ++pos){
 		pos->second->dump(o);
-}
-
-/*
-void PDesign::dump_module_tree(ostream& o)
-{
-	o << "----------------module tree information----------------" << endl;
-	map<perm_string, ModuleTreeNode*>::iterator mt_node;
-	for(mt_node = mt_nodes.begin(); mt_node != mt_nodes.end(); mt_node++)
-	{
-		o << "module " << mt_node->first <<endl;
-		o << "{" << endl;
-		map<perm_string, ModuleTreeNode*>::iterator module_gate;
-		for(module_gate = mt_node->second->next_.begin(); module_gate != mt_node->second->next_.end(); module_gate++)
-		{
-			o << module_gate->second->get_module()->pscope_name() << " " << module_gate->first << endl;
-		}
-		o<< "}" << endl;
 	}
 }
-
-void PDesign::dump_symbol_vars(ostream& o)
-{
-	o << "----------------symbol vars----------------" << endl;
-	unordered_map<string, vector<pair<string, VcdScope*> > >::iterator symbol_var;
-	for(symbol_var = symbol_vars.begin(); symbol_var != symbol_vars.end(); symbol_var++)
-	{
-		o << "symbol " << symbol_var->first <<endl;
-		o << "{" << endl;
-		vector<pair<string, VcdScope*> >::iterator var;
-		for(var = symbol_var->second.begin(); var != symbol_var->second.end(); var++)
-		{
-			o << "module " << var->second->module_->pscope_name() << " " << "var " << var->first << endl;
-		}
-		o<< "}" << endl;
-	}
-}
-
-void PDesign::dump_module_vars(ostream& o)
-{
-	map<perm_string, Module*>::iterator module_;
-	for(module_ = modules_.begin(); module_ != modules_.end(); module_++)
-	{
-		o << "module " << module_->first << endl;
-		o << "{" << endl;
-		module_->second->dump_vars(o);
-		o << "}" << endl;
-		o << "endmodule" << endl;
-	}
-}
-
-void PDesign::dump_everytime_vars(ostream& o)
-{
-	o << "Current time : " << cur_sim_time << endl;
-	map<perm_string, Module*>::iterator module_;
-	for(module_ = modules_.begin(); module_ != modules_.end(); module_++)
-	{
-		module_->second->dump_values(o);
-	}
-	 map<string, verinum>::iterator variety_symbol;
-	 for(variety_symbol = variety_symbols.begin(); variety_symbol != variety_symbols.end(); variety_symbol++)
-	 {
-		o << "symbol : " << variety_symbol->first;
-		variety_symbol->second.dump(o);
-		o << endl;
-	 }
-	 o << endl;
-}
-
-void PDesign::dump_def_information()
-{
-	cout << "Dump the module trees..." << endl;
-
-	const char* mt_path = "dump/module_tree.txt";
-	ofstream mt_out(mt_path);
-	dump_module_tree(mt_out);
-	
-	cout << "Dump the map of relationship between symbol and variables..." << endl;
-
-	const char* symbol_vars_path = "dump/symbol_vars.txt";
-	ofstream symbol_vars_out(symbol_vars_path);
-	dump_symbol_vars(symbol_vars_out);
-
-	cout << "Dump the variables of modules..." << endl;
-
-	const char* module_vars_path = "dump/module_vars.txt";
-	ofstream module_vars_out(module_vars_path);
-	dump_module_vars(module_vars_out);
-
-	cout << "Dump the cfgs..." << endl;
-
-	const char* module_cfgs_path = "dump/module_cfgs.txt";
-	ofstream module_cfgs_out(module_cfgs_path);
-	for(map<perm_string, Module*>::iterator module = modules_.begin(); module != modules_.end(); module++)
-	{
-		module->second->dump_cfg(module_cfgs_out);
-	}
-
-}
-*/
 
 void PDesign::initialize(const char* fsm_selects)
 {
@@ -234,27 +132,11 @@ ModuleTreeNode* PDesign::build_module_tree(Module* module_)
 
 void PDesign::fsm_var_parse(const char* fsm_selects)
 {
-	unsigned i = 0;
-	string tmp;
-	while(i < strlen(fsm_selects)){
-		if(fsm_selects[i] == ','){
-			if(!tmp.empty()){
-				fsm_names[tmp] = true;
-				tmp.clear();
-			}
-		}
-		else
-			tmp = tmp + fsm_selects[i];
-		i++;
+	char* v = strtok(strdup(fsm_selects), ",");
+	while(v != NULL) {
+		fsm_names[string(v)] = true;
+		v = strtok(NULL, ",");
 	}
-	if(!tmp.empty())
-		fsm_names[tmp] = true;
-	/*
-	map<string, bool>::iterator fsm_name;
-	for(fsm_name = fsm_names.begin(); fsm_name != fsm_names.end(); fsm_name++)
-		cout << fsm_name->first << " ";
-	cout << endl;
-	*/
 }
 
 void PDesign::function_cover(perm_string top_module, perm_string select_module, const char* fsm_selects, const char* vcd_file, ostream& target_file, 
@@ -768,25 +650,15 @@ void PDesign::sim_timestep()
 				control_out << "---------------------------------------------------------------------------------" << endl;
 				//Initialize for assign statements.
 				scope->initialize(variety_symbols, control_out, combine_);
-				//At first, synchorous process should be replayed at the same time.
-				list<Cfg*>::iterator pos1 = md->first->sync_cfgs_.begin();
+				list<list<Cfg*> >::iterator pos = md->first->cfg_list.begin();
 				set<string> defs;
-				for(; pos1 != md->first->sync_cfgs_.end(); pos1++)
-				{
-					cfg_replay(*pos1, scope, defs);
-				}
-				//Then replay combine process by order of def list.
-				list<Cfg*>::iterator pos2 = md->first->combine_cfgs_.begin();
-				for(; pos2 != md->first->combine_cfgs_.end(); pos2++)
-				{
-					//Update the change of variables which decided by last process.
+				for(; pos != md->first->cfg_list.end(); pos++) {
+					for(Cfg* cfg : (*pos)) {
+						cfg_replay(cfg, scope, defs);
+					}
 					if(!defs.empty())
 						scope->update(defs, control_out, combine_);
-					cfg_replay(*pos2, scope, defs);
 				}
-				//Finally update.
-				if(!defs.empty())
-					scope->update(defs, control_out, combine_);
 				control_out << "---------------------------------------------------------------------------------" << endl << endl;
 			}
 		}
@@ -815,8 +687,10 @@ void PDesign::cfg_replay(Cfg* cfg, VcdScope* scope, set<string>& defs)
 		else if(node->type.find("ISCONTROL") != 0){
 			path.insert(node->lineno);
 			index = node->dsuc[0]->index;
-			for(string def : node->defs)
-				defs.insert(def);
+			for(string def : node->defs){
+				if(variety_symbols.find(scope->defines_[def]->symbol) != variety_symbols.end())
+					defs.insert(def);
+			}
 		}
 		//For a control node, evaluate the condit expression and get the next node, then record.
 		else{
@@ -992,10 +866,8 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned
 	}
 
 	if(branch_){
-		cout << node->lineno << " " << value << endl;
 		if(vs->module_->branchs_.find(node->lineno) != vs->module_->branchs_.end())
 			blineno = node->lineno;
-		cout << blineno << endl;
 		bvalues[blineno].push_back(value);
 	}
 

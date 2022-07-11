@@ -148,8 +148,6 @@ unsigned BrLeaf::get_hit(VcdScope* scope)
 
 void BrCondit::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 {
-	cout << typeid(this).name() << " " << idx << endl;
-	cout << lineno_ << " " << idx << " " << values.size() << endl;
 	assert(idx < values.size());
 	cover_[scope] = true;
 	if(values[idx]) tru_->add(values, scope, ++idx);
@@ -158,13 +156,6 @@ void BrCondit::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 
 void BrCase::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 {
-	cout << typeid(this).name() << " " << idx << endl;
-	for(size_t i = 0; i < items_.size(); i++) {
-		if(items_[i].first)
-			cout << i << " " << (*(items_[i].first)) << " " << items_[i].second << endl;
-		else
-			cout << i << " " << "default" << " " << items_[i].second << endl;
-	}
 	assert(idx < values.size());
 	cover_[scope] = true;
 	assert(values[idx] < items_.size());
@@ -173,7 +164,6 @@ void BrCase::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 
 void BrBlock::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 {
-	cout << typeid(this).name() << " " << idx << " " << this << endl;
 	cover_[scope] = true;
 	for(BranchTree* stat : stats_) {
 		stat->add(values, scope, idx);
@@ -182,7 +172,6 @@ void BrBlock::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 
 void BrLeaf::add(vector<unsigned>& values, VcdScope* scope, unsigned& idx)
 {
-	cout << typeid(this).name() << " " << idx << " " << this << endl;
 	cover_[scope] = true;
 }
 
@@ -323,7 +312,7 @@ void ScopeRep::fsm_initial()
 
 void ScopeRep::line_initial()
 {
-	if(!scope_->module_->sync_cfgs_.empty() || !scope_->module_->combine_cfgs_.empty()) {
+	if(!scope_->module_->cfg_list.empty()) {
 		for(unsigned i = 0; i < scope_->module_->get_cfg()->cfgs->count(); i++) {
 			Cfg* cfg = (*(scope_->module_->get_cfg()->cfgs))[i];
 			LineRep* rep = new LineRep(cfg, scope_);
@@ -334,7 +323,7 @@ void ScopeRep::line_initial()
 
 void ScopeRep::path_initial()
 {
-	if(!scope_->module_->sync_cfgs_.empty() || !scope_->module_->combine_cfgs_.empty()) {
+	if(!scope_->module_->cfg_list.empty()) {
 		for(unsigned i = 0; i < scope_->module_->get_cfg()->cfgs->count(); i++) {
 			Cfg* cfg = (*(scope_->module_->get_cfg()->cfgs))[i];
 			PathRep* rep = new PathRep(cfg, scope_);
@@ -429,17 +418,11 @@ void ScopeRep::add_path_report(Cfg* cfg, set<unsigned>& lines)
 
 void ScopeRep::add_branch_report(unsigned lineno, vector<unsigned>& values)
 {
-	cout << lineno << " ";
-	cout << "<";
-	for(unsigned value : values) {
-		cout << " [" << value << "]";
-	}
-	cout << " >" << endl;
 	assert(branch_.find(lineno) != branch_.end());
 	branch_[lineno]->add(values);
 }
 
-void ScopeRep::add_cond_report(map<PExpr*, map<PExpr*, bool> > values)
+void ScopeRep::add_cond_report(map<PExpr*, map<PExpr*, bool> >& values)
 {
 	map<PExpr*, map<PExpr*, bool> >::iterator pos = values.begin();
 	for(; pos != values.end(); pos++) {
@@ -744,7 +727,7 @@ void ToggleRep::dump_bit(ostream& o)
 {
 	ostringstream name, bits;
 	name << var_->name;
-	for(unsigned i = 0; i < var_->width; i++) {
+	for(int i = var_->width-1; i >= 0; i--) {
 		if(pos_bits_[i] && neg_bits_[i]) bits << "*";
 		else if(pos_bits_[i]) bits << "1";
 		else if(neg_bits_[i]) bits << "0";

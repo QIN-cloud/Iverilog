@@ -155,30 +155,13 @@ private:
 
     /*Dump the final coverage analysis report.*/
     void report_coverage(ostream& o);
-    
-    /*Dump the module and module gates structure.*/
-    //void dump_module_tree(ostream& o);
-
-    /*Dump the variables and symbols prasing in vcd file.*/
-    //void dump_symbol_vars(ostream& o);
-
-    /*Dump the cfgs and instantiation modules for every module type.*/
-    //void dump_module_vars(ostream& o);
-
-    /*Dump the value of all variables at current moment.*/
-    //void dump_everytime_vars(ostream& o);
-
-    /*Dump the dates before starting the simulation replay process, excluding 
-    the conditon expressions and their cfgs in every modules, vcd symbols and 
-    the variables they matched,module instantiate informations.*/
-    //void dump_def_information();
 
 private:
     Design* des;
     map<perm_string, Module*> modules_;
     map<perm_string, PUdp*> udps_; 
     map<perm_string, ModuleTreeNode*> mt_nodes;    //Each module type only has one ModuleTreeNode.
-    map<perm_string, vector<string> > lines_;                       //File lines.
+    map<perm_string, vector<string> > lines_;      //File lines.
     ofstream evaluate_out;                         //Record the value of condit expression at every time.                     
     ofstream control_out;                          //Record the value changed.
 

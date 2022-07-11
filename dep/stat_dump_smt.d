@@ -216,4 +216,4 @@ stat_dump_smt.o: stat_dump_smt.cc /usr/include/stdc-predef.h config.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h PGate.h \
- PDelays.h vcdvar.h PExpr.h
+ PDelays.h vcdvar.h PExpr.h smt_generator.h Statement.h

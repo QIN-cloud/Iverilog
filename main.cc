@@ -93,6 +93,8 @@ static void signals_handler(int sig)
 # include  "cfg.h"
 # include  "slice.h"
 # include "testpath.h"
+# include "smt_generator.h"
+
 using namespace std;
 /* Count errors detected in flag processing. */
 unsigned flag_errors = 0;
@@ -909,7 +911,8 @@ int main(int argc, char*argv[])
       bool times_flag = false;
       bool version_flag = false;
 	  bool covered_flag = false;
-	  bool smt_flag = false;
+	  bool path_smt_flag = false;
+	  bool design_smt_flag = false;
 
 	  const char* slice_module = 0;
 	  const char* slice_criterion = NULL;
@@ -945,7 +948,7 @@ int main(int argc, char*argv[])
 	  char *tmp0;
 	  //unsigned i;
 
-      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:S:Vv")) != EOF) switch (opt) {
+      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:S:VvD:")) != EOF) switch (opt) {
 	  case 'A':
 	  	  printf("optarg:%s\n",optarg);
 		  /*tmp0 = strdup(optarg);
@@ -972,6 +975,9 @@ int main(int argc, char*argv[])
 	  case 'C':
 	    read_iconfig_file(optarg);
 	    break;
+	  case 'D':
+		design_smt_flag = true;
+		break;
 	  case 'F':
 	    read_sources_file(optarg);
 	    break;
@@ -991,7 +997,7 @@ int main(int argc, char*argv[])
 	    parm_to_flagmap(optarg);
 	    break;
 	  case 'S':
-	  	smt_flag = true;
+	  	path_smt_flag = true;
 		smt_time = optarg;
 		break;
 	  case 'v':
@@ -1063,6 +1069,7 @@ int main(int argc, char*argv[])
 
 	perm_string top_module;
 	perm_string select_module;
+	map<string, set<unsigned> > priority_process;
 
 	if(covered_flag){
 		int covered_argc = optind - 3;
@@ -1072,13 +1079,26 @@ int main(int argc, char*argv[])
 		}
 		optind = 0;
 		string covered_option = "covered";
+		char* p;
+		vector<string> select_process;
 
 		if(covered_option.compare(covered_argv[optind]) != 0){
 			cerr<<"When using the coverage simulation analysis,you must use the option ""covered""! "<<endl;
 			return 1;
 		}
 
-		while ((opt = getopt(covered_argc, covered_argv, "AM:TFCPBSV:ht:o:v:")) != EOF) switch (opt) {
+		while ((opt = getopt(covered_argc, covered_argv, "a:AM:TFCPBSV:ht:o:v:")) != EOF) switch (opt) {
+		case 'a':
+			select_process.clear();
+		 	p = strtok(optarg, "-");
+			while(p != NULL) {
+				select_process.push_back(string(p));
+				p = strtok(NULL, "-");
+			}
+			for(size_t i = 1; i < select_process.size(); i++) {
+				priority_process[select_process[0]].insert(stoi(select_process[i]));
+			}
+			break;
 		case 'A':
 			all = true;
 			break;
@@ -1137,20 +1157,21 @@ int main(int argc, char*argv[])
 			cout << "Simulation Coverage Analysis 1.0 " << endl <<
 				"usage: covered <options>\n"
 				"options:\n"
-				"\t-M<module>	    Indicate which module to be analysized.\n"
-				"\t-Toggle          Do Toggle coverage report.\n"
-				"\t-Combine         Do Combination coverage report.\n"
-				"\t-Fsm             Do FSM coverage report, must with -v option.\n"
-				"\t-Statement       Do Statement coverage report.\n"
-				"\t-Path            Do Path coverage report.\n"
-				"\t-Branch          Do Branch coverage report.\n"
-				"\t-All             Do All coverage report.\n"
-				"\t-help            Print usage information.\n"
-				"\t-v{v1,...vn}     Variables of FSM to be analysized\n"
-				"\t-o<file>         Write coverage analysis results output to <file>.\n"
-				"\t-t<module>       Select the top-level module.\n"
-				"\t-V<file>         Read VCD file information from <file>.\n"
-				"\t-s{s1,...sn}     Select the simulation time to be analysized.\n"
+				"\t-M<module>	      Indicate which module to be analysized.\n"
+				"\t-Toggle            Do Toggle coverage report.\n"
+				"\t-Combine           Do Combination coverage report.\n"
+				"\t-Fsm               Do FSM coverage report, must with -v option.\n"
+				"\t-Statement         Do Statement coverage report.\n"
+				"\t-Path              Do Path coverage report.\n"
+				"\t-Branch            Do Branch coverage report.\n"
+				"\t-All               Do All coverage report.\n"
+				"\t-a<module>-<line>  Add priority process before sync process.\n"
+				"\t-help              Print usage information.\n"
+				"\t-v{v1,...vn}       Variables of FSM to be analysized\n"
+				"\t-o<file>           Write coverage analysis results output to <file>.\n"
+				"\t-t<module>         Select the top-level module.\n"
+				"\t-V<file>           Read VCD file information from <file>.\n"
+				"\t-s{s1,...sn}       Select the simulation time to be analysized.\n"
 				;
 			return 1;
 		}
@@ -1316,7 +1337,8 @@ int main(int argc, char*argv[])
 	PDesign design;
 	design.set_modules(pform_modules);
 	design.set_udps(pform_primitives);
-	if(smt_flag || covered_flag){
+
+	if(path_smt_flag || covered_flag){
 		design.build_nodes();
 		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
 			module_->second->build_cfgs();
@@ -1398,8 +1420,14 @@ int main(int argc, char*argv[])
 
 	design.set_design(des);
 
+	for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++) {
+			module_->second->set_design(des);
+			if(priority_process.find(module_->second->pscope_name().str()) != priority_process.end())
+				module_->second->priority_line = priority_process[module_->second->pscope_name().str()];
+	}
+
 	/*Generate SMT-LIB2.*/
-	if(smt_flag){
+	if(path_smt_flag){
 		
 		if(pform_modules.size() > 1){
 			cerr << "If you use the Smt-Generator, there must be only one Verilog Module." << endl;
@@ -1461,6 +1489,12 @@ int main(int argc, char*argv[])
 			design.function_cover(top_module, select_module, fsm_selects, vcd_file, report, toggle, fsm, statement, path, branch, combine);
 		}
 
+	}
+
+	if(design_smt_flag) {
+		SmtGenerator generator;
+		generator.setModule(pform_modules);
+		generator.generateSmt(pform_modules[perm_string("test")], cout, des);
 	}
 
 	/* Done with all the pform data. Delete the modules. */

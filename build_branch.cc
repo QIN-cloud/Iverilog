@@ -16,7 +16,6 @@ void Module::build_branchs()
 
 void PGAssign::build_branch(Module* md, map<unsigned, BranchTree*>& branchs)
 {
-    cout << get_lineno() << endl;
     pin(1)->build_branch(md, branchs, nullptr);
 }
 
@@ -43,7 +42,6 @@ BranchTree* PETernary::build_branch(Module* md, map<unsigned, BranchTree*>& bran
 
 void PProcess::build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root)
 {
-    cout << get_lineno() << endl;
     if(statement_) statement_->build_branch(md, branchs, root);
 }
 
@@ -54,16 +52,13 @@ BranchTree* Statement::build_branch(Module* md, map<unsigned, BranchTree*>& bran
 
 BranchTree* PEventStatement::build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root)
 {
-    cout << get_lineno() << endl;
     if(statement_) statement_->build_branch(md, branchs, root);
     return nullptr;
 }
 
 BranchTree* PBlock::build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root)
 {
-    cout << get_lineno() << endl;
     BrBlock* node = nullptr;
-    cout << root << endl;
     if(root) {
         node = new BrBlock(md, BranchTree::BLOCK);
         for(Statement* st : list_) {
@@ -89,7 +84,6 @@ BranchTree* PBlock::build_branch(Module* md, map<unsigned, BranchTree*>& branchs
             st->build_branch(md, branchs, root);
         }
     }
-    cout << "block end" << endl;
     return node;
 }
 
@@ -105,7 +99,6 @@ BranchTree* PAssign_::build_branch(Module* md, map<unsigned, BranchTree*>& branc
 
 BranchTree* PCondit::build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root)
 {
-    cout << get_lineno() << endl;
     BrCondit* node = new BrCondit(md, BranchTree::IF);
     node->lineno_ = get_lineno();
     node->cond_ = expr_;
@@ -122,7 +115,6 @@ BranchTree* PCondit::build_branch(Module* md, map<unsigned, BranchTree*>& branch
 
 BranchTree* PCase::build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root)
 {
-    cout << get_lineno() << endl;
     BranchTree::TreeType type;
     switch (type_) {
     case NetCase::EQ :
@@ -141,9 +133,7 @@ BranchTree* PCase::build_branch(Module* md, map<unsigned, BranchTree*>& branchs,
     node->cond_ = expr_;
     node->lineno_ = get_lineno();
     for(unsigned i = 0; i < items_->count(); i++) {
-        cout << "case1" << endl;
         BranchTree* sn = (*(items_))[i]->stat->build_branch(md, branchs, node);
-        cout << "case2" << endl;
         if(!(*(items_))[i]->expr.empty()) {
             if(i == (items_->count()-1)) {
                 cerr << get_fileline() << " MISSING DEFAULT" << endl;
@@ -152,7 +142,6 @@ BranchTree* PCase::build_branch(Module* md, map<unsigned, BranchTree*>& branchs,
         } else {
             node->items_.push_back(make_pair(nullptr, sn));
         }
-        cout << "case3" << endl;
     }
     if(!root) branchs[get_lineno()] = node;
     return node;

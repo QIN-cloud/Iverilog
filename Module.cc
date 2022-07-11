@@ -23,6 +23,7 @@
 # include  "PGate.h"
 # include  "PWire.h"
 # include  "PExpr.h"
+# include  "Statement.h"
 # include  <cassert>
 # include  "string.h"
 # include  <stack>
@@ -185,7 +186,15 @@ PNamedItem::SymbolType Module::symbol_type() const
 
 void Module::build_cfgs()
 {
-      cfg_ = mn_->build_cfgs();
+	bool build = true;
+	for(PGate* gate : gates_) {
+		if(gate->ty == PGate::MODULE) {
+			build = false;
+			break;
+		}
+	}
+	if(build)
+		cfg_ = mn_->build_cfgs();
 }
 
 void Module::build_var_cfgs()
@@ -255,38 +264,15 @@ void Module::dump_values(ostream& o) const
 
 void Module::dump_sort_cfg(ostream& o) const
 {
-	o << "-----------synchorous process-----------" << endl;
-	for(Cfg* cfg : sync_cfgs_) {
-		o << "ID" << " " << cfg->id << " " << "line" << " " << cfg->lineno << endl;
-		o << "defs" << endl;
-		o << "{";
-		for(string def : cfg->defs) {
-			o << " " << def;
+	list<list<Cfg*> >::const_iterator pos = cfg_list.begin();
+	for(; pos != cfg_list.end(); pos++) {
+		o << "[ ";
+		for(Cfg* cfg : (*pos)) {
+			o << cfg->lineno << " ";
 		}
-		o << " " << "}" << endl;
-		o << "refs" << endl;
-		o << "{";
-		for(string ref : cfg->refs) {
-			o << " " << ref;
-		}
-		o << " " << "}" << endl << endl;	
+		o << "] ";
 	}
-	o << "-----------combination process-----------" << endl;
-	for(Cfg* cfg : combine_cfgs_) {
-		o << "ID" << " " << cfg->id << " " << "line" << " " << cfg->lineno << endl;
-		o << "defs" << endl;
-		o << "{";
-		for(string def : cfg->defs) {
-			o << " " << def;
-		}
-		o << " " << "}" << endl;
-		o << "refs" << endl;
-		o << "{";
-		for(string ref : cfg->refs) {
-			o << " " << ref;
-		}
-		o << " " << "}" << endl << endl;	
-	}
+	o << endl;
 }
 
 void Module::dump_sort_assign(ostream& o) const
@@ -309,6 +295,23 @@ void Module::dump_exprs(ostream& o) const
 		}
 		o << "}" << endl;
 	}
+}
+
+NetScope* Module::get_scope() const
+{
+	assert(design_);
+	NetScope* scope;
+	perm_string s = pscope_name();
+	list<NetScope*> scopes = design_->find_root_scopes();
+
+	for(list<NetScope*>::const_iterator pos = scopes.begin();
+	pos != scopes.end(); ++pos){
+		if(s == (*pos)->basename()) {
+			scope = *pos;
+			break;
+		}
+	}
+	return scope;
 }
 
 void Module::build_vartab(Design* d)
@@ -694,21 +697,18 @@ void Module::sort_cfgs()
 {
 	unordered_map<Cfg*, unordered_map<string, bool> > cfg_used;
 	set<pair<Cfg*, Cfg*> > compares;
+	list<Cfg*> sync_cfgs;
+	list<Cfg*> comb_cfgs;
 	vector<Cfg*> cfgs;
 
 	//Complete defs with assigns for every cfg.
 	for(int i = 0; i < (*(cfg_->cfgs)).count(); i++)
 	{
 		Cfg* cfg = (*(cfg_->cfgs))[i];
-
-		if(!cfg->always)
-			continue;
-
-		if(cfg->sync)
-			sync_cfgs_.push_back(cfg);
-
-		else
-		{
+		if(!cfg->always) continue;
+		if(cfg->sync) {
+			sync_cfgs.push_back(cfg);
+		} else {
 			complete_defs(cfg, cfg_used);
 			cfgs.push_back(cfg);
 		}
@@ -716,75 +716,101 @@ void Module::sort_cfgs()
 
 	if(cfgs.size() == 1)
 	{
-		combine_cfgs_.push_back(cfgs.front());
-		return;
-	}
-
-	//Compare the excuted order of cfgs.
-	for(int i = 0; i < cfgs.size(); i++)
-	{
-		for(int j = i + 1; j < cfgs.size(); j++)
+		if(!sync_cfgs.empty())
+			cfg_list.push_back(sync_cfgs);
+		if(priority_line.find(cfgs[0]->lineno) != priority_line.end()) 
+			cfg_list.push_front(list<Cfg*>(1, cfgs[0]));
+		else
+			cfg_list.push_back(list<Cfg*>(1, cfgs[0]));
+	} else {
+		//Compare the excuted order of combine cfgs.
+		for(int i = 0; i < cfgs.size(); i++)
 		{
-			if(Cfg* pre_cfg = compare_cfgs(cfgs[i], cfgs[j], cfg_used))
+			for(int j = i + 1; j < cfgs.size(); j++)
 			{
-				Cfg* next_cfg = pre_cfg == cfgs[i] ? cfgs[j] : cfgs[i];
-				compares.insert(make_pair(pre_cfg, next_cfg));
-			}
-		}
-	}
-
-	//Build a Direct Graph by cfg orders.
-	unordered_map<Cfg*, CfgTPNode*> d_graph;
-
-	for(pair<Cfg*, Cfg*> cp : compares)
-	{
-		CfgTPNode* pre_nd;
-		CfgTPNode* next_nd;
-
-		if(d_graph.find(cp.first) == d_graph.end())
-		{
-			pre_nd = new CfgTPNode(cp.first);
-			d_graph[cp.first] = pre_nd;
-		}
-
-		if(d_graph.find(cp.second) == d_graph.end())
-		{
-			next_nd = new CfgTPNode(cp.second);
-			d_graph[cp.second] = next_nd;
-		}
-
-		pre_nd = d_graph[cp.first];
-		next_nd = d_graph[cp.second];
-
-		pre_nd->next_.push_back(cp.second);
-		pre_nd->out_ += 1;
-		next_nd->in_ += 1;
-	}
-
-	//Top-logic sort by Direct Graph.
-	unordered_map<Cfg*, bool> delete_nodes;
-	while(delete_nodes.size() != d_graph.size())
-	{
-		unordered_map<Cfg*, CfgTPNode*>::iterator pos = d_graph.begin();
-		for(pos; pos != d_graph.end(); pos++)
-		{
-			if(delete_nodes.find(pos->first) == delete_nodes.end())
-			{
-				if(pos->second->in_ == DELETE_INDEGREE)
+				if(Cfg* pre_cfg = compare_cfgs(cfgs[i], cfgs[j], cfg_used))
 				{
-					list<Cfg*>::iterator direct_pos = pos->second->next_.begin();
-					for(direct_pos; direct_pos != pos->second->next_.end(); direct_pos++)
-					{
-						d_graph[(*direct_pos)]->in_ -= 1;
-						pos->second->out_ -= 1;
-					}
-					delete_nodes[pos->first] = true;
-					combine_cfgs_.push_back(pos->first);
+					Cfg* next_cfg = pre_cfg == cfgs[i] ? cfgs[j] : cfgs[i];
+					compares.insert(make_pair(pre_cfg, next_cfg));
 				}
 			}
 		}
+
+		//Build a Direct Graph by combine cfg orders.
+		unordered_map<Cfg*, CfgTPNode*> d_graph;
+
+		for(pair<Cfg*, Cfg*> cp : compares)
+		{
+			CfgTPNode* pre_nd;
+			CfgTPNode* next_nd;
+
+			if(d_graph.find(cp.first) == d_graph.end())
+			{
+				pre_nd = new CfgTPNode(cp.first);
+				d_graph[cp.first] = pre_nd;
+			}
+
+			if(d_graph.find(cp.second) == d_graph.end())
+			{
+				next_nd = new CfgTPNode(cp.second);
+				d_graph[cp.second] = next_nd;
+			}
+
+			pre_nd = d_graph[cp.first];
+			next_nd = d_graph[cp.second];
+
+			pre_nd->next_.push_back(cp.second);
+			pre_nd->out_ += 1;
+			next_nd->in_ += 1;
+		}
+
+		//Build node for others combine cfg.
+		for(Cfg* cfg : cfgs) {
+			if(d_graph.find(cfg) == d_graph.end()) {
+				CfgTPNode* node = new CfgTPNode(cfg);
+				d_graph[cfg] = node;
+			}
+		}
+
+		//Top-logic sort the combine process by Direct Graph.
+		unordered_map<Cfg*, bool> delete_nodes;
+		while(delete_nodes.size() != d_graph.size())
+		{
+			unordered_map<Cfg*, CfgTPNode*>::iterator pos = d_graph.begin();
+			for(pos; pos != d_graph.end(); pos++)
+			{
+				if(delete_nodes.find(pos->first) == delete_nodes.end())
+				{
+					if(pos->second->in_ == DELETE_INDEGREE)
+					{
+						list<Cfg*>::iterator direct_pos = pos->second->next_.begin();
+						for(direct_pos; direct_pos != pos->second->next_.end(); direct_pos++)
+						{
+							d_graph[(*direct_pos)]->in_ -= 1;
+							pos->second->out_ -= 1;
+						}
+						delete_nodes[pos->first] = true;
+						comb_cfgs.push_back(pos->first);
+					}
+				}
+			}
+		}
+
+		//Sort for sync and comb cfgs.
+		list<Cfg*>::reverse_iterator pos;
+		for(pos = comb_cfgs.rbegin(); pos != comb_cfgs.rend(); pos++) {
+			if(priority_line.find((*pos)->lineno) == priority_line.end())
+				cfg_list.push_front(list<Cfg*>(1, *pos));
+		}
+		cfg_list.push_front(sync_cfgs);
+		for(pos = comb_cfgs.rbegin(); pos != comb_cfgs.rend(); pos++) {
+			if(priority_line.find((*pos)->lineno) != priority_line.end())
+				cfg_list.push_front(list<Cfg*>(1, *pos));
+		}
 	}
 
+	cout << pscope_name() << " sorted: ";
+	dump_sort_cfg(cout);
 }
 
 void Module::complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, bool> >& used)
@@ -802,7 +828,8 @@ void Module::complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, b
 		}
 	}
 
-	for(string def : assign_defs){
+	for(string def : assign_defs)
+	{
 		defs.insert(def);
 	}
 
@@ -846,7 +873,7 @@ Cfg* Module::compare_cfgs(Cfg* lcfg, Cfg* rcfg, unordered_map<Cfg*, unordered_ma
 		}
 	}
 
-	return lcfg;
+	return nullptr;
 }
 
 void Module::dump_vartab(ostream& o) const
@@ -858,30 +885,19 @@ void Module::dump_vartab(ostream& o) const
 
 void Module::initialize(bool line, bool path, bool branch, bool cond, bool smt)
 {
-	cout << pscope_name() << endl;
-	cout << "build vartable" << endl;
 	build_vartab(design_);
-	if(smt){ 
+	if(smt) { 
 		parse_wires();
-		cout << "build assign" << endl;
 		parse_assigns();
-		cout << "sort assign" << endl;
 		sort_assigns();
-		cout << "sort cfg" << endl;
 		sort_cfgs();
 	}
 	if(line || path || branch || cond) {
-		cout << "build assign" << endl;
 		parse_assigns();
-		cout << "sort assign" << endl;
 		sort_assigns();
-		cout << "sort cfg" << endl;
 		sort_cfgs();
-		cout << "build branch" << endl;
 		if(branch) build_branchs();
-		cout << "build expr" << endl;
 		if(cond) build_exprs();
-		cout << "build path" << endl;
 		if(path) build_paths();
 	}
 }
@@ -923,10 +939,8 @@ void Module::enumrate(ostream& enums, ostream& paths, ostream& report)
 void Module::dfs_paths(ostream& o, list<unsigned>& path, unsigned index)
 {
 	if(index < paths_.size()){
-		cout << index << endl;
 		for(unsigned i = 0; i < paths_[index].size(); i++)
 		{
-			cout << "[" << i << "]" << endl;
 			path.push_back(i);
 			dfs_paths(o, path, index + 1);
 			if(index == (paths_.size() - 1))
@@ -972,7 +986,6 @@ void Module::assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostr
 			}
 		}
 	}
-	set<VcdVar*> vars;
 	list<PGAssign*> assigns;
 	list<PGAssign*>::iterator pos = assigns_.begin();
 	for(; pos != assigns_.end(); pos++)
@@ -980,11 +993,6 @@ void Module::assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostr
 		if(type || select_assigns.find(*pos) != select_assigns.end())
 		{
 			(*pos)->evaluate(design_, design_->find_scope(hname_t(pscope_name())), scope, combine, true);
-
-			for(Wires w : scope->bits_[*pos]){
-				vars.insert(w.first);
-			}
-
 			assigns.push_back(*pos);
 		}
 	}
@@ -997,31 +1005,17 @@ void Module::assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostr
 			assign->dump(o);
 		}
 		o << "}" << endl;
-		o << "$Change Values$" << endl;
-		o << "{" << endl;
-		for(VcdVar* var : vars)
-		{
-			o << "\t" << var->name << " -> ";
-			var->sim_val.dump(o);
-			o << endl;
-		}
-		o << "}" << endl;
 	}
 }
 
 vector<unsigned> split_path(string path)
 {
 	vector<unsigned> res;
-	string num;
-	for(char c : path){
-		if(c <= '9' && c >= '0')
-			num = num + c;
-		else{
-			res.push_back(atoi(num.c_str()));
-			num.clear();
-		}
+	char* p = strtok(strdup(path.c_str()), " ");
+	while(p != NULL) {
+		res.push_back(atoi(p));
+		p = strtok(NULL, " ");
 	}
-	res.push_back(atoi(num.c_str()));
 	return res;
 }
 
@@ -1036,6 +1030,13 @@ void Module::get_lines(map<perm_string, vector<string> >& lines) const
 			getline(in, temp);
 			location.push_back(temp);
 		}
+	}
+}
+
+void Module::set_cfg_process()
+{
+	for(PProcess* proc : behaviors) {
+		proc->cfg = (*(cfg_->cfgs))[proc->get_id()];
 	}
 }
 

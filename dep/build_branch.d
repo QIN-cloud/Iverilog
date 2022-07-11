@@ -204,4 +204,5 @@ build_branch.o: build_branch.cc /usr/include/stdc-predef.h Module.h \
  /usr/include/c++/7/bits/stl_deque.h /usr/include/c++/7/bits/deque.tcc \
  /usr/include/c++/7/bits/stl_queue.h /usr/include/c++/7/stack \
  /usr/include/c++/7/bits/stl_stack.h /usr/include/c++/7/stdlib.h Module.h \
- PGate.h PDelays.h vcdvar.h PExpr.h Statement.h PExpr.h PGate.h vcdvar.h
+ PGate.h PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h PExpr.h \
+ PGate.h vcdvar.h

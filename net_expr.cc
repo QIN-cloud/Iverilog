@@ -27,6 +27,7 @@
 # include  "netmisc.h"
 # include  <iostream>
 # include  "ivl_assert.h"
+# include  "PExpr.h"
 
 NetExpr::NetExpr(unsigned w)
 : net_type_(0), width_(w), signed_flag_(false)

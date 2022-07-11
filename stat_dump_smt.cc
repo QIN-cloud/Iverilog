@@ -9,9 +9,9 @@
 #include <math.h>
 #include "netlist.h"
 #include "cfg.h"
-#include "testpath.h"
 #include "Module.h"
-
+#include "smt_generator.h"
+#include "Statement.h"
 
 void NetProcTop::set_id(unsigned id)
 {
@@ -36,144 +36,137 @@ bool NetProcTop::get_sync()
 /*
 * Traverse the netlist and record the statements which can be generated to SMT-LIB2 format. 
 */
-void NetProc::gen_stats(NetStats* proc_stats)
+void NetProc::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-
-void NetProcTop::gen_stats(NetStats* proc_stats)
+void NetProcTop::gen_stats(NetStats *proc_stats)
 {
 	statement_->gen_stats(proc_stats);
 }
 
-void NetBlock::gen_stats(NetStats* proc_stats)
+void NetBlock::gen_stats(NetStats *proc_stats)
 {
-	if(last_){
-		NetProc*cur = last_;
-		do{
+	if (last_)
+	{
+		NetProc *cur = last_;
+		do
+		{
 			cur = cur->next_;
 			cur->gen_stats(proc_stats);
-			
-		}while(cur != last_);
+
+		} while (cur != last_);
 	}
 }
 
-void NetCase::gen_stats(NetStats* proc_stats)
+void NetCase::gen_stats(NetStats *proc_stats)
 {
-	(*proc_stats)[get_lineno()].insert(this); 
-	for(unsigned idx = 0; idx < items_.size(); idx += 1) 
+	(*proc_stats)[get_lineno()].insert(this);
+	for (unsigned idx = 0; idx < items_.size(); idx += 1)
 	{
-		if(items_[idx].statement) 
+		if (items_[idx].statement)
 		{
 			items_[idx].statement->gen_stats(proc_stats);
-		} 
-    }
+		}
+	}
 }
 
-void NetCondit::gen_stats(NetStats* proc_stats)
+void NetCondit::gen_stats(NetStats *proc_stats)
 {
-	(*proc_stats)[get_lineno()].insert(this); 
-	if(if_) if_->gen_stats(proc_stats);
-    if(else_) else_->gen_stats(proc_stats);
+	(*proc_stats)[get_lineno()].insert(this);
+	if (if_)
+		if_->gen_stats(proc_stats);
+	if (else_)
+		else_->gen_stats(proc_stats);
 }
 
-void NetEvWait::gen_stats(NetStats* proc_stats)
+void NetEvWait::gen_stats(NetStats *proc_stats)
 {
-	if(statement_) statement_->gen_stats(proc_stats);
+	if (statement_)
+		statement_->gen_stats(proc_stats);
 }
 
-void NetRepeat::gen_stats(NetStats* proc_stats)
+void NetRepeat::gen_stats(NetStats *proc_stats)
 {
-	(*proc_stats)[get_lineno()].insert(this); 
-	if(statement_) statement_->gen_stats(proc_stats);
+	(*proc_stats)[get_lineno()].insert(this);
+	if (statement_)
+		statement_->gen_stats(proc_stats);
 }
 
-void NetWhile::gen_stats(NetStats* proc_stats)
+void NetWhile::gen_stats(NetStats *proc_stats)
 {
-	(*proc_stats)[get_lineno()].insert(this); 
-	if(proc_) proc_->gen_stats(proc_stats);
+	(*proc_stats)[get_lineno()].insert(this);
+	if (proc_)
+		proc_->gen_stats(proc_stats);
 }
 
-void NetAssignBase::gen_stats(NetStats* proc_stats)
+void NetAssignBase::gen_stats(NetStats *proc_stats)
 {
-	(*proc_stats)[get_lineno()].insert(this); 
+	(*proc_stats)[get_lineno()].insert(this);
 }
 
-void NetCAssign::gen_stats(NetStats* proc_stats)
+void NetCAssign::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetDeassign::gen_stats(NetStats* proc_stats)
+void NetDeassign::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetDisable::gen_stats(NetStats* proc_stats)
+void NetDisable::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetEvTrig::gen_stats(NetStats* proc_stats)
+void NetEvTrig::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetForce::gen_stats(NetStats* proc_stats)
+void NetForce::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetForever::gen_stats(NetStats* proc_stats)
+void NetForever::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetPDelay::gen_stats(NetStats* proc_stats)
+void NetPDelay::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetRelease::gen_stats(NetStats* proc_stats)
+void NetRelease::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetSTask::gen_stats(NetStats* proc_stats)
+void NetSTask::gen_stats(NetStats *proc_stats)
 {
-
 }
 
-void NetUTask::gen_stats(NetStats* proc_stats)
+void NetUTask::gen_stats(NetStats *proc_stats)
 {
-
 }
 
 /*
 * Generate SMT-LIB2 statement for control statement type.
 */
-void NetProc::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
+void NetProc::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, bool result, int caseitemidx, Module *md, set<string> &refs) const
 {
-
 }
 
 /*
 * Generate SMT-LIB2 statement for a assign statement type in always.
 */
-void NetProc::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
+void NetProc::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, Module *md, set<string> &refs, unsigned cur_time) const
 {
-	
 }
 
 /*
 * Generate SMT-LIB2 statement for a base assign statement in always.
 * For example, "a[1] = 0" or "a[1:0] = 2'b00" or "a = 0".
 */
-void NetAssignBase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
+void NetAssignBase::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, Module *md, set<string> &refs, unsigned cur_time) const
 {
 	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
-	if(l_val_count() > 1)
+	if (l_val_count() > 1)
 	{
 		cerr << get_fileline() << " : Concatation expression isn't supported now" << endl;
 		exit(0);
@@ -185,7 +178,7 @@ void NetAssignBase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*
 	ostringstream l_expr;
 	int r_width = rval_->dump_smt(vars, used, r_expr, md);
 	int l_width = lval_->dump_smt(vars, used, l_expr, md, true, refs, cur_time);
-	if(l_width == SMT_WRONG)
+	if (l_width == SMT_WRONG)
 	{
 		cerr << get_fileline() << " Can't find left variable in lrefences." << endl;
 		exit(0);
@@ -197,23 +190,27 @@ void NetAssignBase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*
 	//If the bit widths of the left and right expressions are different,
 	//convert the right expression according to the width of left expression.
 	ostringstream r_equal;
-	if(l_width == r_width) r_equal << r_expr.str();
+	if (l_width == r_width)
+		r_equal << r_expr.str();
 	else
 	{
 		//Right expression is a int number, then convert it to a bitvec.
 		//For example, "a = 3" or "a = 2'b11(Convert to Int)".
-		if(r_width == SMT_INT) int_to_bv(r_expr, l_width, r_equal);
+		if (r_width == SMT_INT)
+			int_to_bv(r_expr, l_width, r_equal);
 		//The width of right is unequal to left, convert to fit the left width.
 		//For example, "a = b" with a.width = 3 and b.width = 4.
-		else bv_int_bv(r_expr, l_width, r_equal);
+		else
+			bv_int_bv(r_expr, l_width, r_equal);
 	}
-	o << "(assert" << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;;
+	o << "(assert"
+	  << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;
 }
 
-void NetAssignNB::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const
+void NetAssignNB::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, Module *md, set<string> &refs, unsigned cur_time) const
 {
 	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
-	if(l_val_count() > 1)
+	if (l_val_count() > 1)
 	{
 		cerr << get_fileline() << " : Concatation expression isn't supported now" << endl;
 		exit(0);
@@ -225,7 +222,7 @@ void NetAssignNB::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>&
 	ostringstream l_expr;
 	int r_width = rval()->dump_smt(vars, used, r_expr, md);
 	int l_width = lval()->dump_smt(vars, used, l_expr, md, false, refs, cur_time);
-	if(l_width == SMT_WRONG)
+	if (l_width == SMT_WRONG)
 	{
 		cerr << get_fileline() << " Can't find left variable in lrefences." << endl;
 		exit(0);
@@ -237,36 +234,40 @@ void NetAssignNB::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>&
 	//If the bit widths of the left and right expressions are different,
 	//convert the right expression according to the width of left expression.
 	ostringstream r_equal;
-	if(l_width == r_width) r_equal << r_expr.str();
+	if (l_width == r_width)
+		r_equal << r_expr.str();
 	else
 	{
 		//Right expression is a int number, then convert it to a bitvec.
 		//For example, "a = 3" or "a = 2'b11(Convert to Int)".
-		if(r_width == SMT_INT) int_to_bv(r_expr, l_width, r_equal);
+		if (r_width == SMT_INT)
+			int_to_bv(r_expr, l_width, r_equal);
 		//The width of right is unequal to left, convert to fit the left width.
 		//For example, "a = b" with a.width = 3 and b.width = 4.
-		else bv_int_bv(r_expr, l_width, r_equal);
+		else
+			bv_int_bv(r_expr, l_width, r_equal);
 	}
-	o << "(assert" << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;;
+	o << "(assert"
+	  << "(= " << l_expr.str() << " " << r_equal.str() << "))" << endl;
 }
 
 /*
 * Generate SMT-LIB2 statement for left expression of assign statement.
 */
-int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool base_type, set<string>& refs, unsigned cur_time) const
+int NetAssign_::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostringstream &expr, Module *md, bool base_type, set<string> &refs, unsigned cur_time) const
 {
-	if(sig_)
+	if (sig_)
 	{
 		int width;
 		//Find the variable from the references set.
-		if(vars.find(sig_->name().str()) != vars.end())
+		if (vars.find(sig_->name().str()) != vars.end())
 		{
 			ostringstream name;
 			unsigned temp_space, temp_time;
 
-			RefVar* var = vars[sig_->name().str()];
-			SmtVar* sv = new SmtVar;
-			
+			RefVar *var = vars[sig_->name().str()];
+			SmtVar *sv = new SmtVar;
+
 			width = lwid_;
 
 			temp_space = var->time == cur_time ? temp_space + 1 : 1;
@@ -282,21 +283,21 @@ int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 			sv->temp_flag = false;
 			var->record = true;
 
-			if(base_type)
+			if (base_type)
 			{
 				var->space = temp_space;
 				var->time = temp_time;
 			}
-				
+
 			used.insert(sv);
 			refs.insert(sv->basename);
 			//
-			if(width != sv->width)
+			if (width != sv->width)
 			{
-				if(const NetEConst* lsi_ = dynamic_cast<const NetEConst*>(base_))
+				if (const NetEConst *lsi_ = dynamic_cast<const NetEConst *>(base_))
 				{
 					long lsi = lsi_->value().as_ulong();
-					expr << "((_ extract " << lsi+lwid_-1 << " " << lsi << ")" << name.str() << ")";
+					expr << "((_ extract " << lsi + lwid_ - 1 << " " << lsi << ")" << name.str() << ")";
 				}
 				else
 				{
@@ -324,19 +325,17 @@ int NetAssign_::dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostring
 	}
 }
 
-
-
 /*
   Generate SMT-LIB2 statement for a if-else cond expression.
 */
-void NetCondit::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
+void NetCondit::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, bool result, int caseitemidx, Module *md, set<string> &refs) const
 {
 	ostringstream expr;
 	int width = expr_->dump_smt(vars, used, expr, md);
 	assert(width != SMT_NULL);
 	//condit expression is a bool
 	string res;
-	if(width == SMT_BOOL)
+	if (width == SMT_BOOL)
 	{
 		res = result ? "true" : "false";
 		o << "(assert(= " << expr.str() << " " << res << "))" << endl;
@@ -345,8 +344,10 @@ void NetCondit::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& u
 	{
 		ostringstream expr_bool;
 		res = result ? "distinct" : "=";
-		if(width == SMT_INT) expr_bool << "(" << res << " " << expr.str() << " 0)";
-		else bv_compare_zero(expr, res, width, expr_bool);
+		if (width == SMT_INT)
+			expr_bool << "(" << res << " " << expr.str() << " 0)";
+		else
+			bv_compare_zero(expr, res, width, expr_bool);
 		o << "(assert" << expr_bool.str() << ")" << endl;
 	}
 }
@@ -354,14 +355,14 @@ void NetCondit::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& u
 /*
   Generate SMT-LIB2 statement for a while cond expression.
 */
-void NetWhile::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
+void NetWhile::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, bool result, int caseitemidx, Module *md, set<string> &refs) const
 {
 	ostringstream expr;
 	int width = cond_->dump_smt(vars, used, expr, md);
 	assert(width != SMT_NULL);
 	//condit expression is a bool
 	string res;
-	if(width == SMT_BOOL)
+	if (width == SMT_BOOL)
 	{
 		res = result ? "true" : "false";
 		o << "(assert(= " << expr.str() << " " << res << "))" << endl;
@@ -370,8 +371,10 @@ void NetWhile::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& us
 	{
 		ostringstream expr_bool;
 		res = result ? "distinct" : "=";
-		if(width == SMT_INT) expr_bool << "(" << res << " " << expr.str() << " 0)";
-		else bv_compare_zero(expr, res, width, expr_bool);
+		if (width == SMT_INT)
+			expr_bool << "(" << res << " " << expr.str() << " 0)";
+		else
+			bv_compare_zero(expr, res, width, expr_bool);
 		o << "(assert" << expr_bool.str() << ")" << endl;
 	}
 }
@@ -379,14 +382,14 @@ void NetWhile::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& us
 /*
   Generate SMT-LIB2 statement for a repeat cond expression.
 */
-void NetRepeat::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
+void NetRepeat::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, bool result, int caseitemidx, Module *md, set<string> &refs) const
 {
 	ostringstream expr;
 	int width = expr_->dump_smt(vars, used, expr, md);
 	assert(width != SMT_NULL);
 	//condit expression is a bool
 	string res;
-	if(width == SMT_BOOL)
+	if (width == SMT_BOOL)
 	{
 		res = result ? "true" : "false";
 		o << "(assert(= " << expr.str() << " " << res << "))" << endl;
@@ -395,8 +398,10 @@ void NetRepeat::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& u
 	{
 		ostringstream expr_bool;
 		res = result ? "distinct" : "=";
-		if(width == SMT_INT) expr_bool << "(" << res << " " << expr.str() << " 0)";
-		else bv_compare_zero(expr, res, width, expr_bool);
+		if (width == SMT_INT)
+			expr_bool << "(" << res << " " << expr.str() << " 0)";
+		else
+			bv_compare_zero(expr, res, width, expr_bool);
 		o << "(assert" << expr_bool.str() << ")" << endl;
 	}
 }
@@ -404,59 +409,336 @@ void NetRepeat::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& u
 /*
   Generate SMT-LIB2 statement for a case cond expression.
 */
-void NetCase::dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const
+void NetCase::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &used, bool result, int caseitemidx, Module *md, set<string> &refs) const
 {
-	ostringstream  c_expr;
+	ostringstream c_expr;
 	int c_width;
 	c_width = expr_->dump_smt(vars, used, c_expr, md);
 	assert(c_width != SMT_NULL && c_width != SMT_BOOL);
 	//Line of case item, build a equal smt assert for this case item with cond expression.
-	if(caseitemidx >= 0)
+	if (caseitemidx >= 0)
 	{
 		ostringstream i_expr;
 		int i_width;
 		i_width = items_[caseitemidx].guard->dump_smt(vars, used, i_expr, md);
 		ostringstream c_equal, i_equal;
-		if(c_width == i_width && c_width != SMT_INT)
+		if (c_width == i_width && c_width != SMT_INT)
 		{
 			c_equal << c_expr.str();
 			i_equal << i_expr.str();
 		}
 		else
 		{
-			if(c_width != SMT_INT) bv_to_int(c_expr, c_equal);
-			else c_equal << c_expr.str();
-			if(i_width != SMT_INT) bv_to_int(i_expr, i_equal);
-			else i_equal << i_expr.str();
+			if (c_width != SMT_INT)
+				bv_to_int(c_expr, c_equal);
+			else
+				c_equal << c_expr.str();
+			if (i_width != SMT_INT)
+				bv_to_int(i_expr, i_equal);
+			else
+				i_equal << i_expr.str();
 		}
 		o << "(assert(= " << c_equal.str() << " " << i_equal.str() << "))" << endl;
 	}
 	//Default line, build not equal SMT asserts for every case item with cond expression.
 	else
 	{
-		SmtVar* sv = new SmtVar;
+		SmtVar *sv = new SmtVar;
 		sv->smtname = "Temp_" + to_string(used.size());
 		sv->type = "None";
 		sv->temp_flag = true;
 		used.insert(sv);
 		ostringstream c_expr_int;
-		if(c_width == SMT_INT) c_expr_int << c_expr.str();
-		else bv_to_int(c_expr, c_expr_int);
+		if (c_width == SMT_INT)
+			c_expr_int << c_expr.str();
+		else
+			bv_to_int(c_expr, c_expr_int);
 		o << "(assert(= " << sv->smtname << " " << c_expr_int.str() << "))" << endl;
 
-		for(int idx = 0; idx < items_.size(); idx++)
+		for (int idx = 0; idx < items_.size(); idx++)
 		{
-			if(items_[idx].guard)
+			if (items_[idx].guard)
 			{
 				ostringstream i_expr;
 				int i_width;
 				i_width = items_[idx].guard->dump_smt(vars, used, i_expr, md);
 				ostringstream i_expr_int;
-				if(i_width != SMT_INT) bv_to_int(i_expr, i_expr_int);
-				else i_expr_int << i_expr.str();
+				if (i_width != SMT_INT)
+					bv_to_int(i_expr, i_expr_int);
+				else
+					i_expr_int << i_expr.str();
 				o << "(assert(distinct " << sv->smtname << " " << i_expr_int.str() << "))" << endl;
 			}
 		}
 	}
 }
+
+void NetProc::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+{
+}
+
+void NetProcTop::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, unsigned &tempid) const
+{
+	list<pair<string, bool>> condit;
+	statement_->dump_design_smt(o, instan, change, condit, tempid);
+}
+
+void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg, list<pair<string, bool>> &condit, unsigned tempid) const
+{
+	string name = "Temp" + to_string(tempid++);
+	list<string> conds;
+	if (cfg->sync)
+	{
+		for (unsigned i = 0; i < expr_.count(); i++)
+		{
+			PEEvent *event = dynamic_cast<PEEvent *>(expr_[i]);
+			perm_string name = dynamic_cast<PEIdent *>(event->expr())->path().front().name;
+			PEEvent::edge_t tp = event->type();
+
+			assert(instan->symbol_.find(name.str()) != instan->symbol_.end());
+			SmtDefine *var = instan->symbol_[name.str()];
+			ostringstream s;
+
+			if (tp == PEEvent::edge_t::POSEDGE)
+			{
+				if (var->state == var->laststate)
+					s << "false";
+				else
+					s << "(and "
+					  << "(= " << var->getLastName() << " #b0)"
+					  << "(= " << var->getName() << " #b1) )";
+			}
+			else if (tp == PEEvent::edge_t::NEGEDGE)
+			{
+				if (var->state == var->laststate)
+					s << "false";
+				else
+					s << "(and "
+					  << "(= " << var->getLastName() << " #b1)"
+					  << "(= " << var->getName() << " #b0) )";
+			}
+			else
+			{
+				cerr << event->get_fileline() << " ";
+				event->dump(cerr);
+				cerr << " is unsupported now!\n";
+				exit(1);
+			}
+			conds.push_back(s.str());
+		}
+	}
+	//Always like always@(a or b) or always@(*)
+	else
+	{
+		//Get refs in cfg, if this process need to replay, one signal or port changed at least.
+		for (string ref : cfg->refs)
+		{
+			assert(instan->symbol_.find(ref) != instan->symbol_.end());
+			SmtDefine *var = instan->symbol_[ref];
+			ostringstream s;
+			if (var->state == var->laststate && var->type == SmtDefine::INPUT)
+				s << "true";
+			else if (var->state != var->laststate)
+				s << "(distinct " << var->getName() << " " << var->getLastName() << ")";
+		}
+	}
+	if (conds.size() == 1)
+	{
+		assertSingelStatement(o, name, conds.front(), "=");
+	}
+	else
+	{
+		o << "(assert (= " << name << " (or";
+		for(string c : conds)
+		{
+			o << " " << c;
+		}
+		o << ") ) )\n";
+	}
+	condit.push_back(make_pair(name, true));
+}
+
+void NetBlock::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+{
+	if (last_)
+	{
+		NetProc *cur = last_;
+		do
+		{
+			cur = cur->next_;
+			cur->dump_design_smt(o, instan, change, condit, tempid);
+
+		} while (cur != last_);
+	}
+}
+
+void NetCondit::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+{
+	ostringstream expr;
+	int width = expr_->dump_design_smt(expr, instan, change, condit, tempid);
+	string name = "Temp" + to_string(tempid++);
+	assertConditStatement(o, expr, width, name);
+	condit.push_back(make_pair(name, true));
+	if_->dump_design_smt(o, instan, change, condit, tempid);
+	condit.back().second = false;
+	else_->dump_design_smt(o, instan, change, condit, tempid);
+	condit.pop_back();
+}
+
+void NetCase::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+{
+	unsigned n;
+	ostringstream c_expr;
+	int c_width = expr_->dump_design_smt(c_expr, instan, change, condit, tempid);
+	for (int idx = 0; idx < items_.size(); idx++)
+	{
+		if (items_[idx].guard)
+		{
+			ostringstream i_expr;
+			int i_width = items_[idx].guard->dump_design_smt(i_expr, instan, change, condit, tempid);
+			ostringstream compare;
+			assertEqual(compare, c_expr, c_width, i_expr, i_width, "=");
+			string name = "Temp" + to_string(tempid++);
+			condit.push_back(make_pair(name, true));
+			assertSingelStatement(o, name, compare.str(), "=");
+			n++;
+		}
+		if (items_[idx].statement)
+			items_[idx].statement->dump_design_smt(o, instan, change, condit, tempid);
+		condit.back().second = false;
+	}
+	while (n)
+	{
+		condit.pop_back();
+		n--;
+	}
+}
+
+int NetAssign_::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid, bool base) const
+{
+	if (sig_)
+	{
+		int width;
+		//Find the variable from the references set.
+		if (instan->symbol_.find(sig_->name().str()) != instan->symbol_.end())
+		{
+			ostringstream name;
+			SmtDefine* var = instan->symbol_[sig_->name().str()];
+
+			if(base)
+				var->update(out, SmtDefine::UpdateType::SPACEUPDATE, 0, nullptr);
+			else
+				change.insert(var);
+
+			name << var->getName();
+			width = lwid_;
+
+			if (width != var->getWidth())
+			{
+				if (const NetEConst *lsi_ = dynamic_cast<const NetEConst *>(base_))
+				{
+					long lsi = lsi_->value().as_ulong();
+					out << "((_ extract " << lsi + lwid_ - 1 << " " << lsi << ")" << name.str() << ")";
+				}
+				else
+				{
+					cerr << get_fileline() << " : Non-const part select is unsupported now!" << endl;
+					exit(0);
+				}
+			}
+			//
+			else
+			{
+				out << name.str();
+			}
+		}
+		else
+		{
+			cerr << sig_->name().str() << " can't find!\n";
+			exit(1);
+		}
+		return width;
+	}
+	//We can't generate memory temporarily.
+	else
+	{
+		cerr << get_fileline() << " Memory is unsopport now!" << endl;
+		exit(0);
+	}
+}
+
+void NetAssignBase::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
+{
+	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
+	if (l_val_count() > 1)
+	{
+		cerr << get_fileline() << " : Concatation expression in left isn't supported now" << endl;
+		exit(0);
+	}
+
+	//Generate the respective SMT formats for left and right expressions.
+	//Then verify the formats of expressions are correctly.
+	ostringstream r_expr;
+	ostringstream l_expr;
+
+	int r_width = rval_->dump_design_smt(r_expr, instan, change, condit, tempid);
+	int l_width = lval_->dump_design_smt(l_expr, instan, change, condit, tempid, true);
+
+	assert(r_width != SMT_INT);
+
+	//Establish an equality relationship between the left and right expressions.
+	//If the bit widths of the left and right expressions are different,
+	//convert the right expression according to the width of left expression.
+	ostringstream r_bv;
+	if(r_width == SMT_BOOL){
+		bool_to_bv(r_expr, r_bv);
+		r_width = 1;
+	}
+	
+	ostringstream r_equal;
+	if(r_width != l_width)
+		bv_to_bv(r_bv, r_width, l_width, r_equal);
+	else
+		r_equal << r_bv.str();
+
+	assertSingelStatement(out, l_expr.str(), r_equal.str(), "=");
+}
+
+void NetAssignNB::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
+{
+	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
+	if (l_val_count() > 1)
+	{
+		cerr << get_fileline() << " : Concatation expression in left isn't supported now" << endl;
+		exit(0);
+	}
+
+	//Generate the respective SMT formats for left and right expressions.
+	//Then verify the formats of expressions are correctly.
+	ostringstream r_expr;
+	ostringstream l_expr;
+
+	int r_width = rval()->dump_design_smt(r_expr, instan, change, condit, tempid);
+	int l_width = lval()->dump_design_smt(l_expr, instan, change, condit, tempid, false);
+
+	assert(r_width != SMT_INT);
+
+	//Establish an equality relationship between the left and right expressions.
+	//If the bit widths of the left and right expressions are different,
+	//convert the right expression according to the width of left expression.
+	ostringstream r_bv;
+	if(r_width == SMT_BOOL){
+		bool_to_bv(r_expr, r_bv);
+		r_width = 1;
+	}
+	
+	ostringstream r_equal;
+	if(r_width != l_width)
+		bv_to_bv(r_bv, r_width, l_width, r_equal);
+	else
+		r_equal << r_bv.str();
+
+	assertSingelStatement(out, l_expr.str(), r_equal.str(), "=");
+}
+
 

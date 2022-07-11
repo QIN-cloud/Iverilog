@@ -114,6 +114,7 @@ class verinum {
       string as_string() const;
 
       void dump(ostream& o) const;
+      string dumpstring() const;
       unsigned get_nbits(){return nbits_;}
 
     private:
@@ -240,5 +241,4 @@ extern verinum lshift(const verinum& l, const verinum& r);
 extern verinum rshift(const verinum& l, const verinum& r);
 
 extern bool case_x_or_z(const verinum& left, const verinum& right, string type);
-
 #endif /* IVL_verinum_H */

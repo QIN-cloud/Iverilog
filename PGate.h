@@ -162,7 +162,6 @@ class PGAssign  : public PGate {
       };
       void dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned time) const;
       void evaluate(Design* des, NetScope* scope, VcdScope* instan, bool combine, bool branch);
-      void parse_bits(Design* design, NetScope* scope, VcdScope* instan);
       void build_expr(map<PExpr*, set<PExpr*> >& exprs) const;
       void build_branch(Module* md, map<unsigned, BranchTree*>& branchs);
 
@@ -296,6 +295,8 @@ class PGModule  : public PGate {
             set<string>* tmp = new set<string>;
             return *tmp;
       };
+      named<PExpr*>* get_port_pins();
+      unsigned get_npins();
 
     private:
       Module*bound_type_;

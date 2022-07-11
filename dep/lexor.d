@@ -211,9 +211,9 @@ lexor.o: lexor.cc /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/c++/7/deque /usr/include/c++/7/bits/stl_deque.h \
  /usr/include/c++/7/bits/deque.tcc /usr/include/c++/7/bits/stl_queue.h \
  /usr/include/c++/7/stack /usr/include/c++/7/bits/stl_stack.h PGate.h \
- PDelays.h vcdvar.h PExpr.h Statement.h AStatement.h PTask.h PWire.h \
- discipline.h parse_api.h parse.h /usr/include/c++/7/cstring \
- lexor_keyword.h /usr/include/unistd.h \
+ PDelays.h vcdvar.h PExpr.h Statement.h smt_generator.h AStatement.h \
+ PTask.h PWire.h discipline.h parse_api.h parse.h \
+ /usr/include/c++/7/cstring lexor_keyword.h /usr/include/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
  /usr/include/x86_64-linux-gnu/bits/environments.h \
  /usr/include/x86_64-linux-gnu/bits/confname.h \

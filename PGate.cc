@@ -322,6 +322,16 @@ perm_string PGModule::get_type() const
       return type_;
 }
 
+named<PExpr*>* PGModule::get_port_pins()
+{
+	return pins_;
+}
+
+unsigned PGModule::get_npins()
+{
+	return npins_;
+}
+
 set<string>& PGAssign::get_funcname()
 {
 	set<string>* tmp = new set<string>;

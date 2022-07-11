@@ -88,7 +88,6 @@ public:
       map<string, VcdVar*> defines_;                   //{var name, var}.
       vector<VcdScope*> instans_;                      //Next instan level.
       set<VcdVar*> fsm_vars_;                          //Select for fsm coverage.
-      map<PGAssign*, vector<pair<VcdVar*, vector<unsigned> > > > bits_;  //{assign, {defs}}.
 };
 
 /* This struct is used for assign sorting. */
@@ -261,7 +260,6 @@ class Module : public PScopeExtra, public PNamedItem {
 
             /* Generate all paths at a clock. */
             void enumrate(ostream& enums, ostream& paths, ostream& report);
-            set<string> enumrate_id(set<string> enums, unsigned index);
 
             /* Get the struct for expression coverage.*/
             void build_exprs();
@@ -328,11 +326,17 @@ class Module : public PScopeExtra, public PNamedItem {
 
             void get_lines(map<perm_string, vector<string> >& lines) const;
 
+            void set_cfg_process();
+
+            inline void set_design(Design* design){design_ = design;};
+
+            inline Design* get_design() const{return design_;};
+
+            NetScope* get_scope() const;
+
             inline void set_cfg(Module_Cfgs* cfg){cfg_ = cfg;}
 
             inline void set_modulenode(ModuleNode* mn){mn_  = mn;}
-
-            inline void set_design(Design* design){design_ = design;}
 
             inline Module_Cfgs* get_cfg(){return cfg_;};
 
@@ -346,14 +350,15 @@ class Module : public PScopeExtra, public PNamedItem {
 
             map<string, RefVar*> vartab_;               /* Defined variables. */
 
-            list<Cfg*> sync_cfgs_;                      /* Synchoronous process. */
+            set<unsigned> priority_line;                  /* Priority process id. */
 
-            list<Cfg*> combine_cfgs_;                   /* Combination process sorted by refs and defs. */ 
+            list<list<Cfg*> > cfg_list;                 /* The sorted process list. */
 
             map<unsigned, BranchTree*> branchs_;        /* Branchs for coverage. */
 
             map<PExpr*, set<PExpr*> > exprs_;           /* Using for expression coverage. */
-            map<PExpr*, PExpr*> reverse_exprs_;
+            
+            map<PExpr*, PExpr*> reverse_exprs_;         
 
             map<unsigned, vector<string> > paths_;      /* All paths for every process. */
 
