@@ -62,7 +62,7 @@ O = sys_table.o sys_convert.o sys_countdrivers.o sys_darray.o sys_deposit.o \
     table_mod.o table_mod_parse.o table_mod_lexor.o
 OPP = vcd_priv2.o
 
-ifeq (no,yes)
+ifeq (yes,yes)
 ifeq (no,yes)
 O += sys_lxt.o lxt_write.o
 endif
@@ -131,7 +131,7 @@ libvpi.a: libvpi.c ../vpi_user.h
 	$(AR) cqv libvpi.a libvpi.o
 	$(RANLIB) libvpi.a
 
-LIBS = -lm -lpthread 
+LIBS = -lm -lz -lpthread -lreadline -ltermcap 
 SYSTEM_VPI_LDFLAGS = $(LIBS)
 VA_MATH_LDFLAGS =
 ifeq (no,yes)

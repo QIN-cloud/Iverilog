@@ -53,7 +53,7 @@ endif
 CPPFLAGS = $(INCLUDE_PATH)  -DHAVE_CONFIG_H
 CXXFLAGS = -Wall -Wextra -Wshadow   -g -O2
 LDFLAGS =  
-LIBS = -lm -lpthread  
+LIBS = -lm -lz -lpthread -lreadline -ltermcap  
 
 M = StringHeap.o LineInfo.o
 

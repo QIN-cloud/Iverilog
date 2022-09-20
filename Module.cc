@@ -186,15 +186,7 @@ PNamedItem::SymbolType Module::symbol_type() const
 
 void Module::build_cfgs()
 {
-	bool build = true;
-	for(PGate* gate : gates_) {
-		if(gate->ty == PGate::MODULE) {
-			build = false;
-			break;
-		}
-	}
-	if(build)
-		cfg_ = mn_->build_cfgs();
+	cfg_ = mn_->build_cfgs();
 }
 
 void Module::build_var_cfgs()
@@ -553,8 +545,9 @@ void Module::parse_assigns()
 	list<PGate*>::iterator gate = gates_.begin();
 	for(gate; gate != gates_.end(); gate++)
 	{
-		if(PGAssign* assign = dynamic_cast<PGAssign*>(*gate))
+		if((*gate)->ty == PGate::ASSIGN)
 		{
+			PGAssign* assign = dynamic_cast<PGAssign*>(*gate);
 			//Parsing the string names for every variable in assign statement.
 			set<string> lnames = assign->pin(0)->get_var_names();
 			set<string> rnames = assign->pin(1)->get_var_names();
@@ -573,6 +566,8 @@ void Module::parse_assigns()
 				//Build node for rref.
 				for(string rname : rnames)
 				{
+					if(rname.compare(lname) == 0)
+						continue;
 					if(assign_pos_.find(rname) == assign_pos_.end())
 					{
 						AssignNode* node = new AssignNode(rname);
@@ -593,6 +588,7 @@ void Module::parse_assigns()
 
 void Module::sort_assigns()
 {
+	if(assign_pos_.empty()) return;
 	//Build a unordered map for sorting the assign statements.
 	unordered_map<string, AssignNode*> node_map;
 	map<string, AssignNode*>::iterator pos = assign_pos_.begin();
@@ -700,10 +696,10 @@ void Module::sort_cfgs()
 	list<Cfg*> sync_cfgs;
 	list<Cfg*> comb_cfgs;
 	vector<Cfg*> cfgs;
-
 	//Complete defs with assigns for every cfg.
 	for(int i = 0; i < (*(cfg_->cfgs)).count(); i++)
 	{
+
 		Cfg* cfg = (*(cfg_->cfgs))[i];
 		if(!cfg->always) continue;
 		if(cfg->sync) {
@@ -885,7 +881,7 @@ void Module::dump_vartab(ostream& o) const
 
 void Module::initialize(bool line, bool path, bool branch, bool cond, bool smt)
 {
-	build_vartab(design_);
+	//build_vartab(design_);
 	if(smt) { 
 		parse_wires();
 		parse_assigns();
@@ -992,7 +988,7 @@ void Module::assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostr
 	{
 		if(type || select_assigns.find(*pos) != select_assigns.end())
 		{
-			(*pos)->evaluate(design_, design_->find_scope(hname_t(pscope_name())), scope, combine, true);
+			(*pos)->evaluate(design_, design_->find_scope(hname_t(pscope_name())), scope, combine, scope->report_->cover_b);
 			assigns.push_back(*pos);
 		}
 	}
@@ -1038,6 +1034,28 @@ void Module::set_cfg_process()
 	for(PProcess* proc : behaviors) {
 		proc->cfg = (*(cfg_->cfgs))[proc->get_id()];
 	}
+}
+
+int get_param_value(const Module* md, PExpr* expr)
+{
+    NetScope::param_ref_t expr_pos;
+    PEIdent* parm = dynamic_cast<PEIdent*>(expr);
+    assert(parm);
+    string vn =  parm->path().back().name.str();
+    assert(md->get_scope()->find_parameter(perm_string(vn.c_str()), expr_pos));
+    verinum* v = nullptr;
+    //No lsb and msb means that we can use the value of parameter from where it defined.
+    NetExpr* tmp = expr_pos->second.val;
+    NetEConst*ctmp = dynamic_cast<NetEConst*>(tmp);
+    if (ctmp == 0) {
+        cerr << expr->get_lineno() << ": internal error: Unable to evaluate "
+             << "unconstant expression (parameter=" << parm->path()
+             << "): " << *ctmp << endl;
+        exit(1);
+    }
+    v = new verinum(ctmp->value());
+    int value = v->as_long();
+    return value;
 }
 
 

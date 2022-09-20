@@ -1982,8 +1982,6 @@ void NetEUnary::dump(ostream&o) const
 
 void Design::dump(ostream&o) const
 {
-	  cout << "???????" << endl;
-
       o << "DESIGN TIME PRECISION: 10e" << get_precision() << endl;
 
       o << "PACKAGES:" << endl;

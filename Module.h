@@ -43,6 +43,7 @@
 # define CFG_REF 0
 # define CFG_DEF 1
 # define DELETE_INDEGREE 0
+# define NOT_FIND_PARAM INT32_MIN
 
 class PExpr;
 class PEIdent;
@@ -363,6 +364,10 @@ class Module : public PScopeExtra, public PNamedItem {
             map<unsigned, vector<string> > paths_;      /* All paths for every process. */
 
             map<unsigned, vector<vector<unsigned> > > nodes_; /* Path for smt genenrating. */
+            
+            list<PGAssign*> assigns_;                   /* Sorting assign statements. */
+
+            map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
 
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
@@ -370,11 +375,11 @@ class Module : public PScopeExtra, public PNamedItem {
             list<PGate*>     gates_;                    /* Gates include assign lines and module instantiated. */
             ModuleNode*      mn_;                       /* The cfgnode build by this module. */
             Module_Cfgs*     cfg_;                      /* The Cfgs build by module. */
-            list<PGAssign*> assigns_;                   /* Sorting assign statements. */
-            map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
       private: // Not implemented
             Module(const Module&);
             Module& operator= (const Module&);
 };
+
+extern int get_param_value(const Module* md, PExpr* expr);
 
 #endif /* IVL_Module_H */

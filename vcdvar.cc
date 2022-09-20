@@ -718,6 +718,10 @@ void ToggleRep::dump_detail(ostream& o)
 {
 	ostringstream name;
 	name << var_->name;
+	if(var_->width == 1)
+		name << "[" << var_->msb << "]";
+	else
+		name << "[" << var_->msb << ":" << var_->lsb << "]";
 	bool posedge = get_pos_num()==var_->width;
 	bool negedge = get_neg_num()==var_->width;
 	dump_toggle_detail(o, name, posedge, negedge, var_->type);

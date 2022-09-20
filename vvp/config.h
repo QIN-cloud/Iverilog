@@ -43,10 +43,10 @@
 # define HAVE_DLFCN_H 1
 /* # undef HAVE_DL_H */
 # define HAVE_GETOPT_H 1
-/* # undef HAVE_LIBREADLINE */
-/* # undef HAVE_READLINE_READLINE_H */
-/* # undef HAVE_LIBHISTORY */
-/* # undef HAVE_READLINE_HISTORY_H */
+# define HAVE_LIBREADLINE 1
+# define HAVE_READLINE_READLINE_H 1
+# define HAVE_LIBHISTORY 1
+# define HAVE_READLINE_HISTORY_H 1
 # define HAVE_INTTYPES_H 1
 # define HAVE_LROUND 1
 # define HAVE_LLROUND 1

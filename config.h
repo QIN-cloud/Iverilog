@@ -40,8 +40,8 @@
 # define HAVE_DLFCN_H 1
 /* # undef HAVE_DL_H */
 /* # undef HAVE_FCHMOD */
-/* # undef HAVE_LIBREADLINE */
-/* # undef HAVE_LIBZ */
+# define HAVE_LIBREADLINE 1
+# define HAVE_LIBZ 1
 /* # undef HAVE_LIBBZ2 */
 # define HAVE_LROUND 1
 # define HAVE_SYS_WAIT_H 1

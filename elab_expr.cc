@@ -3667,7 +3667,6 @@ NetExpr* PEConcat::elaborate_expr(Design*des, NetScope*scope,
 	/* Make the empty concat expression. */
       NetEConcat*cncat = new NetEConcat(parm_cnt, repeat_count_, expr_type_);
       cncat->set_line(*this);
-	  cncat->pthis = const_cast<PEConcat*>(this);
 
 	/* Remove any zero width constants. */
       unsigned off = 0;

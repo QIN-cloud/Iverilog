@@ -37,6 +37,7 @@ BranchTree* PETernary::build_branch(Module* md, map<unsigned, BranchTree*>& bran
     node->tru_ = tru_->build_branch(md, branchs, node);
     node->fal_ = fal_->build_branch(md, branchs, node);
     if(!root) branchs[get_lineno()] = node;
+    else branchs[get_lineno()] = root;
     return node;
 }
 

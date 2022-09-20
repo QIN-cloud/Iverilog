@@ -18,7 +18,17 @@
 #include "vcdvar.h"
 #include "verinum.h"
 #include "netlist.h"
+#include "idp.h"
+
 using namespace std;
+
+#define TOGGLE_COVERAGE (1 << 0)
+#define FSM_COVERAGE (1 << 1)
+#define STAT_COVERAGE (1 << 2)
+#define PATH_COVERAGE (1 << 3)
+#define BRANCH_COVERAGE (1 << 4)
+#define CONDIT_COVERAGE (1 << 5)
+#define NEED_SORT_PROC 0x3c
 
 class Module;
 class ModuleNode;
@@ -69,9 +79,11 @@ public:
     void set_udps(map<perm_string, PUdp*>& udps);
     void set_design(Design* design);
 
-    map<perm_string, Module*> get_modules();
-    map<perm_string, PUdp*> get_udps();
+    map<perm_string, Module*>& get_modules();
+    map<perm_string, PUdp*>& get_udps();
     map<perm_string, vector<string> >* get_lines();
+    Module* get_module(string name);
+    Design* get_des();
     
     svector<ModuleNode*>* build_nodes(PDesign& de, std::string mainmodule);
 	svector<ModuleNode*>* build_nodes(PDesign& de);

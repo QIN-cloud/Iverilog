@@ -183,6 +183,16 @@ NetScope::~NetScope()
 	/* name_ and module_name_ are perm-allocated. */
 }
 
+const map<hname_t, NetScope*>& NetScope::get_childrens() const
+{
+    return children_;
+}
+
+const map<perm_string,NetNet*>& NetScope::get_symbols() const
+{
+    return signals_map_;
+}
+
 void NetScope::set_line(const LineInfo*info)
 {
       file_ = info->get_file();
@@ -878,7 +888,7 @@ void NetScope::add_tie_lo(Design*des)
 
 RefVar* NetScope::build_var(perm_string s)
 {
-	RefVar* tmp = new RefVar;
+      RefVar* tmp = new RefVar;
       NetNet* net = find_signal(s);
       assert(net);
       if(net->packed_dims().size() <= 1)
@@ -911,20 +921,21 @@ RefVar* NetScope::build_var(perm_string s)
                   tmp->msb = net->packed_dims().front().get_msb();
                   tmp->width = net->vector_width();
             }
-            else
-            {
-                  tmp->lsb = 0;
-                  tmp->msb = 0;
-                  tmp->width = 1;
+            else {
+                tmp->lsb = 0;
+                tmp->msb = 0;
+                tmp->width = 1;
             }
+
             return tmp;
       }
-      
+
       else
       {
             cerr << get_fileline() << " Memory is unsupported now!" << endl;
             exit(0);
       }
+
 
       return 0;
 }

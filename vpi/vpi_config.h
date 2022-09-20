@@ -22,7 +22,7 @@
 
 /* # undef HAVE_LIBIBERTY_H */
 # define HAVE_INTTYPES_H 1
-/* # undef HAVE_LIBZ */
+# define HAVE_LIBZ 1
 /* # undef HAVE_LIBBZ2 */
 # define HAVE_FMIN 1
 # define HAVE_FMAX 1

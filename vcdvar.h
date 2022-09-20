@@ -252,7 +252,7 @@ private:
 	void dump_cond_summary(ostream &o);
 	void dump_cond_detail(ostream& o);
 	void dump_cond_report(ostream& o);
-private:
+public:
 	bool cover_t;
 	bool cover_f;
 	bool cover_l;

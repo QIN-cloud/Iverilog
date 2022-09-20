@@ -473,19 +473,38 @@ void NetCase::dump_smt(ostream &o, map<string, RefVar *> &vars, set<SmtVar *> &u
 	}
 }
 
-void NetProc::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+void NetProc::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const
 {
+	cout << get_fileline() << "(?" << typeid(*this).name() << "?)";
 }
 
-void NetProcTop::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, unsigned &tempid) const
+void NetProcTop::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	list<pair<string, bool>> condit;
+	const PEventStatement* es = dynamic_cast<const PEventStatement*>(event);
+	es->dump_design_smt(o, instan, cfg, condit, tempid);
 	statement_->dump_design_smt(o, instan, change, condit, tempid);
+	string name = condit.front().first;
+	for(string s : cfg->defs)
+	{
+		if(instan->define.find(s) != instan->define.end())
+		{
+			SmtDefine* var = instan->define[s];
+			o << "(assert (=> (not " << name << ") (= "  << var->getName() << " " << var->getLastName() << ")))" << endl;
+		}
+	}
 }
 
-void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg, list<pair<string, bool>> &condit, unsigned tempid) const
+void NetEvWait::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const
+{
+	if(statement_)
+		statement_->dump_design_smt(o, instan, change, condit, tempid);
+}
+
+void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg, list<pair<string, bool>> &condit, unsigned& tempid) const
 {
 	string name = "Temp" + to_string(tempid++);
+	declareConstBool(o, name);
 	list<string> conds;
 	if (cfg->sync)
 	{
@@ -495,33 +514,27 @@ void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg
 			perm_string name = dynamic_cast<PEIdent *>(event->expr())->path().front().name;
 			PEEvent::edge_t tp = event->type();
 
-			assert(instan->symbol_.find(name.str()) != instan->symbol_.end());
-			SmtDefine *var = instan->symbol_[name.str()];
+			assert(instan->define.find(name.str()) != instan->define.end());
+			SmtDefine *var = instan->define[name.str()];
 			ostringstream s;
 
 			if (tp == PEEvent::edge_t::POSEDGE)
 			{
-				if (var->state == var->laststate)
-					s << "false";
-				else
-					s << "(and "
-					  << "(= " << var->getLastName() << " #b0)"
-					  << "(= " << var->getName() << " #b1) )";
+				s << "(and "
+					<< "(= " << var->getLastName() << " #b0)"
+					<< "(= " << var->getName() << " #b1) )";
 			}
 			else if (tp == PEEvent::edge_t::NEGEDGE)
 			{
-				if (var->state == var->laststate)
-					s << "false";
-				else
-					s << "(and "
-					  << "(= " << var->getLastName() << " #b1)"
-					  << "(= " << var->getName() << " #b0) )";
+				s << "(and "
+					<< "(= " << var->getLastName() << " #b1)"
+					<< "(= " << var->getName() << " #b0) )";
 			}
 			else
 			{
 				cerr << event->get_fileline() << " ";
 				event->dump(cerr);
-				cerr << " is unsupported now!\n";
+				cerr << " is unsupported now!" << endl;
 				exit(1);
 			}
 			conds.push_back(s.str());
@@ -533,13 +546,13 @@ void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg
 		//Get refs in cfg, if this process need to replay, one signal or port changed at least.
 		for (string ref : cfg->refs)
 		{
-			assert(instan->symbol_.find(ref) != instan->symbol_.end());
-			SmtDefine *var = instan->symbol_[ref];
-			ostringstream s;
-			if (var->state == var->laststate && var->type == SmtDefine::INPUT)
-				s << "true";
-			else if (var->state != var->laststate)
+			if(instan->define.find(ref) != instan->define.end())
+			{
+				SmtDefine *var = instan->define[ref];
+				ostringstream s;
 				s << "(distinct " << var->getName() << " " << var->getLastName() << ")";
+				conds.push_back(s.str());
+			}
 		}
 	}
 	if (conds.size() == 1)
@@ -553,12 +566,12 @@ void PEventStatement::dump_design_smt(ostream &o, InstanModule *instan, Cfg *cfg
 		{
 			o << " " << c;
 		}
-		o << ") ) )\n";
+		o << ") ) )" << endl;
 	}
 	condit.push_back(make_pair(name, true));
 }
 
-void NetBlock::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+void NetBlock::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const
 {
 	if (last_)
 	{
@@ -572,33 +585,38 @@ void NetBlock::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *
 	}
 }
 
-void NetCondit::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+void NetCondit::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const
 {
 	ostringstream expr;
-	int width = expr_->dump_design_smt(expr, instan, change, condit, tempid);
+	int width = expr_->dump_design_smt(expr, instan, change, tempid);
 	string name = "Temp" + to_string(tempid++);
+	declareConstBool(o, name);
 	assertConditStatement(o, expr, width, name);
 	condit.push_back(make_pair(name, true));
 	if_->dump_design_smt(o, instan, change, condit, tempid);
 	condit.back().second = false;
-	else_->dump_design_smt(o, instan, change, condit, tempid);
+	if(else_)
+		else_->dump_design_smt(o, instan, change, condit, tempid);
 	condit.pop_back();
 }
 
-void NetCase::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+void NetCase::dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const
 {
-	unsigned n;
+	unsigned n = 0;
 	ostringstream c_expr;
-	int c_width = expr_->dump_design_smt(c_expr, instan, change, condit, tempid);
+	int c_width = expr_->dump_design_smt(c_expr, instan, change, tempid);
+	assert(c_width != SMT_INT);
 	for (int idx = 0; idx < items_.size(); idx++)
 	{
 		if (items_[idx].guard)
 		{
 			ostringstream i_expr;
-			int i_width = items_[idx].guard->dump_design_smt(i_expr, instan, change, condit, tempid);
+			int i_width = items_[idx].guard->dump_design_smt(i_expr, instan, change, tempid);
+			assert(i_width != SMT_INT);
 			ostringstream compare;
 			assertEqual(compare, c_expr, c_width, i_expr, i_width, "=");
 			string name = "Temp" + to_string(tempid++);
+			declareConstBool(o, name);
 			condit.push_back(make_pair(name, true));
 			assertSingelStatement(o, name, compare.str(), "=");
 			n++;
@@ -614,49 +632,64 @@ void NetCase::dump_design_smt(ostream &o, InstanModule *instan, set<SmtDefine *>
 	}
 }
 
-int NetAssign_::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid, bool base) const
+int NetAssign_::dump_design_smt(ostream& out, ostringstream& expr, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid, bool base) const
 {
 	if (sig_)
 	{
 		int width;
 		//Find the variable from the references set.
-		if (instan->symbol_.find(sig_->name().str()) != instan->symbol_.end())
+		if (instan->define.find(sig_->name().str()) != instan->define.end())
 		{
 			ostringstream name;
-			SmtDefine* var = instan->symbol_[sig_->name().str()];
+			SmtDefine* var = instan->define[sig_->name().str()];
 
-			if(base)
-				var->update(out, SmtDefine::UpdateType::SPACEUPDATE, 0, nullptr);
-			else
-				change.insert(var);
+			width = lwid_ > var->getWidth() ? var->getWidth() : lwid_;
+            bool part_select;
+            int left, right;
 
-			name << var->getName();
-			width = lwid_;
-
-			if (width != var->getWidth())
+			if (width < var->getWidth())
 			{
 				if (const NetEConst *lsi_ = dynamic_cast<const NetEConst *>(base_))
 				{
 					long lsi = lsi_->value().as_ulong();
-					out << "((_ extract " << lsi + lwid_ - 1 << " " << lsi << ")" << name.str() << ")";
+                    left = lsi + lwid_ - 1;
+                    right = lsi;
 				}
 				else
 				{
-					cerr << get_fileline() << " : Non-const part select is unsupported now!" << endl;
-					exit(0);
+                    left = lwid_ - 1;
+                    right = 0;
 				}
+                part_select = true;
 			}
 			//
 			else
 			{
-				out << name.str();
+                part_select = false;
+                left = var->symbol->get_msb();
+                right = var->symbol->get_lsb();
 			}
+
+            if(base || change.find(var) == change.end())
+                var->update(out, SmtDefine::UpdateType::SPACEUPDATE, 0, nullptr, left, right);
+            if(!base)
+                var->bit_vec->full_initial();
+
+            change[var] = base;
+            name << var->getName();
+
+            if(part_select)
+                expr << "((_ extract " << left - var->symbol->get_lsb() << " " << right - var->symbol->get_lsb() << ")" << name.str() << ")";
+            else
+                expr << name.str();
+
 		}
 		else
 		{
-			cerr << sig_->name().str() << " can't find!\n";
+			cerr << sig_->name().str() << " can't find!" << endl;
 			exit(1);
 		}
+
 		return width;
 	}
 	//We can't generate memory temporarily.
@@ -667,24 +700,42 @@ int NetAssign_::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefin
 	}
 }
 
-void NetAssignBase::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
+void NetAssignBase::dump_design_smt(ostream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
 {
-	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
-	if (l_val_count() > 1)
-	{
-		cerr << get_fileline() << " : Concatation expression in left isn't supported now" << endl;
-		exit(0);
+	ostringstream l_expr;
+	int l_width = 0;
+	list<string> items;
+	NetAssign_* cur = lval_;
+
+    //Generate the respective SMT formats for left and right expressions.
+    //Then verify the formats of expressions are correctly.
+    ostringstream r_expr;
+
+    int r_width = rval_->dump_design_smt(r_expr, instan, change, tempid);
+
+    assert(r_width != SMT_INT);
+
+	while(cur) {
+		ostringstream itemexpr;
+		int itemwidth = cur->dump_design_smt(out, itemexpr, instan, change, condit, tempid, true);
+		items.push_front(itemexpr.str());
+		l_width += itemwidth;
+		cur = cur->more;
 	}
 
-	//Generate the respective SMT formats for left and right expressions.
-	//Then verify the formats of expressions are correctly.
-	ostringstream r_expr;
-	ostringstream l_expr;
+	assert(!items.empty());
 
-	int r_width = rval_->dump_design_smt(r_expr, instan, change, condit, tempid);
-	int l_width = lval_->dump_design_smt(l_expr, instan, change, condit, tempid, true);
-
-	assert(r_width != SMT_INT);
+	if(items.size() == 1)
+		l_expr << items.front();
+	else
+	{
+		l_expr << "(concat";
+		for(string item : items)
+		{
+			l_expr << " " << item;
+		}
+		l_expr << ")";
+	}
 
 	//Establish an equality relationship between the left and right expressions.
 	//If the bit widths of the left and right expressions are different,
@@ -694,34 +745,56 @@ void NetAssignBase::dump_design_smt(ostream& out, InstanModule* instan, set<SmtD
 		bool_to_bv(r_expr, r_bv);
 		r_width = 1;
 	}
+	else
+		r_bv << r_expr.str();
 	
 	ostringstream r_equal;
 	if(r_width != l_width)
 		bv_to_bv(r_bv, r_width, l_width, r_equal);
 	else
 		r_equal << r_bv.str();
-
-	assertSingelStatement(out, l_expr.str(), r_equal.str(), "=");
+	
+	ostringstream res;
+	res << "(= " << l_expr.str() << " " << r_equal.str() << ")";
+	assertStatement(out, condit, res);
 }
 
-void NetAssignNB::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDefine*>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
+void NetAssignNB::dump_design_smt(ostream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const
 {
-	//We can't generate the expression like "{a[1:0], b[1:0]} = 4'b0000" temporarily.
-	if (l_val_count() > 1)
-	{
-		cerr << get_fileline() << " : Concatation expression in left isn't supported now" << endl;
-		exit(0);
+	ostringstream l_expr;
+	int l_width = 0;
+	list<string> items;
+	const NetAssign_* cur = lval();
+
+    //Generate the respective SMT formats for left and right expressions.
+    //Then verify the formats of expressions are correctly.
+    ostringstream r_expr;
+
+    int r_width = rval()->dump_design_smt(r_expr, instan, change, tempid);
+
+    assert(r_width != SMT_INT);
+
+	while(cur) {
+		ostringstream itemexpr;
+		int itemwidth = cur->dump_design_smt(out, itemexpr, instan, change, condit, tempid, false);
+		items.push_front(itemexpr.str());
+		l_width += itemwidth;
+		cur = cur->more;
 	}
 
-	//Generate the respective SMT formats for left and right expressions.
-	//Then verify the formats of expressions are correctly.
-	ostringstream r_expr;
-	ostringstream l_expr;
+	assert(!items.empty());
 
-	int r_width = rval()->dump_design_smt(r_expr, instan, change, condit, tempid);
-	int l_width = lval()->dump_design_smt(l_expr, instan, change, condit, tempid, false);
-
-	assert(r_width != SMT_INT);
+	if(items.size() == 1)
+		l_expr << items.front();
+	else
+	{
+		l_expr << "(concat";
+		for(string item : items)
+		{
+			l_expr << " " << item;
+		}
+		l_expr << ")";
+	}
 
 	//Establish an equality relationship between the left and right expressions.
 	//If the bit widths of the left and right expressions are different,
@@ -731,6 +804,8 @@ void NetAssignNB::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDef
 		bool_to_bv(r_expr, r_bv);
 		r_width = 1;
 	}
+	else
+		r_bv << r_expr.str();
 	
 	ostringstream r_equal;
 	if(r_width != l_width)
@@ -738,7 +813,9 @@ void NetAssignNB::dump_design_smt(ostream& out, InstanModule* instan, set<SmtDef
 	else
 		r_equal << r_bv.str();
 
-	assertSingelStatement(out, l_expr.str(), r_equal.str(), "=");
+	ostringstream res;
+	res << "(= " << l_expr.str() << " " << r_equal.str() << ")";
+	assertStatement(out, condit, res);
 }
 
 

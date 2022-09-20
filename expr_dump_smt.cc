@@ -22,13 +22,13 @@
 */
 int NetExpr::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostringstream &expr, Module *md) const
 {
-	expr << get_fileline() << "(?" << typeid(*this).name() << "?)";
+	cout << get_fileline() << "(?" << typeid(*this).name() << "?)";
 	return SMT_NULL;
 }
 
-int NetExpr::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetExpr::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
-	out << get_fileline() << "(?" << typeid(*this).name() << "?)";
+	cout << get_fileline() << "(?" << typeid(*this).name() << "?)";
 	return SMT_NULL;
 }
 
@@ -48,7 +48,7 @@ int NetEConst::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_INT;
 }
 
-int NetEConst::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEConst::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	if (value_.is_string())
 	{
@@ -127,17 +127,25 @@ int NetESelect::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return width;
 }
 
-int NetESelect::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetESelect::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	int width = expr_width();
 
 	if (const NetESignal *signal = dynamic_cast<const NetESignal *>(expr_))
 	{
-		if (instan->symbol_.find(signal->name().str()) != instan->symbol_.end())
+		if (instan->define.find(signal->name().str()) != instan->define.end())
 		{
-			SmtDefine* var = instan->symbol_[signal->name().str()];
+			SmtDefine* var = instan->define[signal->name().str()];
+            if(width > var->getWidth())
+            {
+                cerr << get_lineno() << " : " << var->symbol->get_name() << " may has a wrong size, must fix it." << endl;
+                width = var->getWidth();
+            }
 			ostringstream name;
-			name << var->getName();
+			if(change.find(var) != change.end())
+				name << var->getLastName();
+			else
+				name << var->getName();
 			//Bit or part selection of variable.
 			if (base_)
 			{
@@ -145,7 +153,7 @@ int NetESelect::dump_design_smt(ostringstream &out, InstanModule *instan, set<Sm
 				if (const NetEConst *lsi_ = dynamic_cast<const NetEConst *>(base_))
 				{
 					unsigned long lsi = lsi_->value().as_unsigned();
-					extract(name, lsi + width - 1, lsi, out);
+					extract(name, lsi + width - 1 - var->symbol->get_lsb(), lsi - var->symbol->get_lsb(), out);
 				}
 				else
 				{
@@ -165,7 +173,6 @@ int NetESelect::dump_design_smt(ostringstream &out, InstanModule *instan, set<Sm
 			exit(1);
 		}
 	}
-
 	return width;
 }
 
@@ -214,16 +221,19 @@ int NetESignal::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return width;
 }
 
-int NetESignal::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetESignal::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	bool find = false;
 	int width;
 
-	if (instan->symbol_.find(name().str()) != instan->symbol_.end())
+	if (instan->define.find(name().str()) != instan->define.end())
 	{
-		SmtDefine* var = instan->symbol_[name().str()];
+		SmtDefine* var = instan->define[name().str()];
 		width = var->getWidth();
-		out << var->getName();
+		if(change.find(var) != change.end() && !change[var])
+			out << var->getLastName();
+		else
+			out << var->getName();
 	}
 
 	else
@@ -316,15 +326,15 @@ int NetETernary::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostr
 	return width;
 }
 
-int NetETernary::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetETernary::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	//Using ite(if true_expr else_expr) form to generate the smt
 	ostringstream i_expr, t_expr, e_expr;
 	int i_width, t_width, e_width;
 
-	i_width = cond_->dump_design_smt(out, instan, change, condit, tempid);
-	t_width = true_val_->dump_design_smt(out, instan, change, condit, tempid);
-	e_width = false_val_->dump_design_smt(out, instan, change, condit, tempid);
+	i_width = cond_->dump_design_smt(i_expr, instan,change, tempid);
+	t_width = true_val_->dump_design_smt(t_expr, instan, change, tempid);
+	e_width = false_val_->dump_design_smt(e_expr, instan, change, tempid);
 
 	assert(i_width == SMT_BOOL);
 	assert(t_width != SMT_INT);
@@ -432,25 +442,32 @@ int NetEUnary::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	}
 }
 
-int NetEUnary::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEUnary::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream u_expr;
 
-	int width = expr_->dump_design_smt(out, instan, change, condit, tempid);
+	int width = expr_->dump_design_smt(u_expr, instan, change, tempid);
 
 	assert(width != SMT_INT);
 
 	//Form as !V, the type of V is uncertain, convert V to a Bool expression and do negation.
 	if (op_ == '!')
 	{
-		ostringstream u_bool;
-
 		if (width == SMT_BOOL)
+		{
+			ostringstream u_bool;
 			u_bool << "(not " << u_expr.str() << ")";
+			out << u_bool.str();
+			return SMT_BOOL;
+		}
+
 		else
-			bv_compare_zero(u_expr, "=", width, u_bool);
-		
-		return SMT_BOOL;
+		{
+			assert(width == 1);
+			out << "(bvnot " << u_expr.str() << ")";
+			return 1;
+		}
+
 	}
 
 	//Form as +V, -V, ~V, the type is BitVec, others is unsupported now.
@@ -498,7 +515,7 @@ int NetEBinary::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return SMT_NULL;
 }
 
-int NetEBinary::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBinary::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	return SMT_NULL;
 }
@@ -511,9 +528,6 @@ int NetEBAdd::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 
 	l_width = left_->dump_smt(vars, used, l_expr, md);
 	r_width = right_->dump_smt(vars, used, r_expr, md);
-
-	cout << l_expr.str() << endl;
-	cout << r_expr.str() << endl;
 
 	assert(l_width >= SMT_INT);
 	assert(r_width >= SMT_INT);
@@ -547,18 +561,18 @@ int NetEBAdd::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 	return width;
 }
 
-int NetEBAdd::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBAdd::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width > SMT_INT);
 	assert(r_width > SMT_INT);
 
-	int width = l_width + r_width;
+	int width = max(l_width, r_width);
 	ostringstream l_bv, r_bv;
 
 	if (l_width < width)
@@ -617,13 +631,13 @@ int NetEBDiv::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 	return width;
 }
 
-int NetEBDiv::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBDiv::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width > SMT_INT);
 	assert(r_width > SMT_INT);
@@ -689,35 +703,47 @@ int NetEBBits::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return width;
 }
 
-int NetEBBits::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBBits::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width != SMT_INT);
 	assert(r_width != SMT_INT);
 
-	int width = max(l_width, r_width);
 	ostringstream l_bv, r_bv;
 
-	if (l_width == SMT_BOOL)
+	if (l_width == SMT_BOOL){
 		bool_to_bv(l_expr, l_bv);
-	else if (l_width < width)
-		bv_to_bv(l_expr, l_width, width, l_bv);
+		l_width = 1;
+	}
 	else
 		l_bv << l_expr.str();
 
-	if (r_width == SMT_BOOL)
+	if (r_width == SMT_BOOL){
 		bool_to_bv(r_expr, r_bv);
-	else if (r_width < width)
-		bv_to_bv(r_expr, r_width, width, r_bv);
+		r_width = 1;
+	}
 	else
 		r_bv << r_expr.str();
 
-	out << "(" << SMT_Vec_Bits[op()] << " " << l_bv.str() << " " << r_bv.str() << ")";
+	ostringstream l_equal, r_equal;
+	int width = max(l_width, r_width);
+
+	if(l_width != width)
+		bv_to_bv(l_bv, l_width, width, l_equal);
+	else
+		l_equal << l_bv.str();
+
+	if(r_width != width)
+		bv_to_bv(r_bv, r_width, width, r_equal);
+	else
+		r_equal << r_bv.str();
+
+	out << "(" << SMT_Vec_Bits[op()] << " " << l_equal.str() << " " << r_equal.str() << ")";
 
 	return width;
 }
@@ -761,14 +787,14 @@ int NetEBComp::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return width;
 }
 
-int NetEBComp::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBComp::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 	int width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width > SMT_INT);
 	assert(r_width > SMT_INT);
@@ -786,7 +812,7 @@ int NetEBComp::dump_design_smt(ostringstream &out, InstanModule *instan, set<Smt
 	else
 		r_bv << r_expr.str();
 
-	out << "(" << SMT_Int_Comp[op()] << " " << l_bv.str() << " " << r_bv.str() << ")";
+	out << "(" << SMT_Vec_Comp[op()] << " " << l_bv.str() << " " << r_bv.str() << ")";
 
 	width = SMT_BOOL;
 
@@ -829,14 +855,14 @@ int NetEBLogic::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return width;
 }
 
-int NetEBLogic::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBLogic::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 	int width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width != SMT_INT);
 	assert(r_width != SMT_INT);
@@ -866,7 +892,7 @@ int NetEBMinMax::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostr
 	return SMT_NULL;
 }
 
-int NetEBMinMax::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBMinMax::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Max and Min operator is unspported!" << endl;
 	exit(1);
@@ -914,13 +940,13 @@ int NetEBMult::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return width;
 }
 
-int NetEBMult::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBMult::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	ostringstream l_expr, r_expr;
 	int l_width, r_width;
 
-	l_width = left_->dump_design_smt(out, instan, change, condit, tempid);
-	r_width = right_->dump_design_smt(out, instan, change, condit, tempid);
+	l_width = left_->dump_design_smt(l_expr, instan, change, tempid);
+	r_width = right_->dump_design_smt(r_expr, instan, change, tempid);
 
 	assert(l_width > SMT_INT);
 	assert(r_width > SMT_INT);
@@ -944,7 +970,7 @@ int NetEBPow::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 	return SMT_NULL;
 }
 
-int NetEBPow::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBPow::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Pow operator is unspported!" << endl;
 	exit(1);
@@ -958,7 +984,7 @@ int NetEBShift::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return SMT_NULL;
 }
 
-int NetEBShift::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEBShift::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Shift operator is unspported!" << endl;
 	exit(1);
@@ -972,7 +998,7 @@ int NetEArrayPattern::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used,
 	return SMT_NULL;
 }
 
-int NetEArrayPattern::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEArrayPattern::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Array pattern unspported!" << endl;
 	exit(1);
@@ -986,7 +1012,7 @@ int NetELast::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 	return SMT_NULL;
 }
 
-int NetELast::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetELast::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetELast unspported!" << endl;
 	exit(1);
@@ -1000,7 +1026,7 @@ int NetEAccess::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostri
 	return SMT_NULL;
 }
 
-int NetEAccess::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEAccess::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetEAccess unspported!" << endl;
 	exit(1);
@@ -1014,7 +1040,7 @@ int NetEEvent::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_NULL;
 }
 
-int NetEEvent::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEEvent::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetEvent unspported!" << endl;
 	exit(1);
@@ -1028,7 +1054,7 @@ int NetENetenum::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostr
 	return SMT_NULL;
 }
 
-int NetENetenum::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetENetenum::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetENetenum unspported!" << endl;
 	exit(1);
@@ -1042,7 +1068,7 @@ int NetENew::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrings
 	return SMT_NULL;
 }
 
-int NetENew::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetENew::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetENew unspported!" << endl;
 	exit(1);
@@ -1056,7 +1082,7 @@ int NetENull::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostring
 	return SMT_NULL;
 }
 
-int NetENull::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetENull::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetENull unspported!" << endl;
 	exit(1);
@@ -1070,7 +1096,7 @@ int NetEProperty::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ost
 	return SMT_NULL;
 }
 
-int NetEProperty::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEProperty::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetEProperty unspported!" << endl;
 	exit(1);
@@ -1084,7 +1110,7 @@ int NetEShallowCopy::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, 
 	return SMT_NULL;
 }
 
-int NetEShallowCopy::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEShallowCopy::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : NetEShallowCopy unspported!" << endl;
 	exit(1);
@@ -1098,7 +1124,7 @@ int NetECString::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostr
 	return SMT_NULL;
 }
 
-int NetECString::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetECString::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << "Const string is unsupported now!" << endl;
 	exit(1);
@@ -1112,7 +1138,7 @@ int NetECReal::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_NULL;
 }
 
-int NetECReal::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetECReal::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Real number is unsupported now!" << endl;
 	exit(1);
@@ -1126,7 +1152,7 @@ int NetEScope::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_NULL;
 }
 
-int NetEScope::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEScope::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : Scope name unspported!" << endl;
 	exit(1);
@@ -1140,45 +1166,49 @@ int NetESFunc::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_NULL;
 }
 
-int NetESFunc::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetESFunc::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : System function call unspported!" << endl;
 	exit(1);
 	return SMT_NULL;
 }
 
-int NetEConcat::dump_smt(map<string, RefVar *> &vars, std::set<SmtVar *> &used, ostringstream &expr, Module *md) const
+int NetEConcat::dump_smt(map<string, RefVar*>& vars, std::set<SmtVar*>& used, ostringstream& expr, Module* md) const
 {
-	int res = 0;
-	assert(pthis);
-	if (pthis->basevec.empty())
-		pthis->parse_concat_expr(md->get_design(), md->get_scope(), vars);
-	expr << "(concat";
-	for (ConcatItem *item : pthis->basevec)
-	{
-		ostringstream cc;
-		res += item->dump_smt(cc, vars);
-		expr << " " << cc.str();
-	}
-	expr << ")";
-	return res;
+	return 0;
 }
 
-int NetEConcat::dump_design_smt(ostringstream &out, InstanModule *instan, std::set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid)
+int NetEConcat::dump_design_smt(ostringstream &out, InstanModule *instan, std::unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
-	int res = 0;
-	assert(pthis);
-	if (pthis->basevec.empty())
-		pthis->parse_concat_expr(instan->module_->get_design(), instan->module_->get_scope(), instan->module_->vartab_);
-	out << "(concat";
-	for (ConcatItem *item : pthis->basevec)
+	list<string> items;
+	unsigned width = 0;
+	for(NetExpr* expr : parms_) 
 	{
-		ostringstream s;
-		res += item->dump_smt(s, instan->symbol_);
-		out << " " << s.str();
+		ostringstream item;
+		unsigned i = expr->dump_design_smt(item, instan, change, tempid);
+		width += i;
+		items.push_back(item.str());
 	}
-	out << ")";
-	return res;
+	assert(!items.empty());
+	if(items.size() == 1 && repeat_ == 1)
+	{
+		out << items.front();
+	}
+	else
+	{
+		width *= repeat_;
+		out << "(concat";
+		for(size_t i = 0; i < repeat_; i++)
+		{
+			for(string item : items)
+			{
+				out << " " << item;
+			}
+			out << " ";
+		}
+		out << ")";
+	}
+	return width;
 }
 
 int NetEUFunc::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostringstream &expr, Module *md) const
@@ -1188,7 +1218,7 @@ int NetEUFunc::dump_smt(map<string, RefVar *> &vars, set<SmtVar *> &used, ostrin
 	return SMT_NULL;
 }
 
-int NetEUFunc::dump_design_smt(ostringstream &out, InstanModule *instan, set<SmtDefine *> &change, list<pair<string, bool>> &condit, unsigned &tempid) const
+int NetEUFunc::dump_design_smt(ostringstream &out, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, unsigned &tempid) const
 {
 	cerr << get_fileline() << " : System function call unspported!" << endl;
 	exit(1);

@@ -402,14 +402,14 @@ void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target)
 
 void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostringstream& target)
 {
-	if(width > finalwidth) {
+	if(width < finalwidth) {
 		target << "(concat #b";
-		for(unsigned i = 0; i < width - finalwidth; i++) {
+		for(unsigned i = 0; i < finalwidth - width; i++) {
 			target << "0";
 		}
 		target << " " << expr.str() << ")";
 	} else {
-		target << "(extract " << width-1 << " " << 0 << " " << expr.str() << ")";
+		target << "((_ extract " << finalwidth-1 << " " << 0 << ") " << expr.str() << ")";
 	}
 }
 
@@ -420,8 +420,8 @@ void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostrings
 void bool_to_bv(ostringstream& expr, ostringstream& target)
 {
 	ostringstream i_expr;
-	i_expr << "(ite " << expr.str() << " 1 0 )";
-	int_to_bv(i_expr, 1, target);  
+	i_expr << "(ite " << expr.str() << " #b1 #b0)";
+	target << i_expr.str();
 }
 
 void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& target)
@@ -429,6 +429,7 @@ void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& targe
 	ostringstream expr_bool;
 	if(width == SMT_INT) expr_bool << "(distinct " << expr.str() << " 0)";
 	else bv_compare_zero(expr, "distinct", width, expr_bool);
+	target << expr_bool.str();
 }
 
 void bv_or_bool_to_int(ostringstream& expr, unsigned width, ostringstream& target)

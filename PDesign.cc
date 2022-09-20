@@ -44,12 +44,12 @@ void PDesign::set_design(Design* design)
 	des = design;
 }
 
-map<perm_string, Module*> PDesign::get_modules()
+map<perm_string, Module*>& PDesign::get_modules()
 {
 	return modules_;
 }
 
-map<perm_string, PUdp*> PDesign::get_udps()
+map<perm_string, PUdp*>& PDesign::get_udps()
 {
 	return udps_;
 }
@@ -57,6 +57,17 @@ map<perm_string, PUdp*> PDesign::get_udps()
 map<perm_string, vector<string> >* PDesign::get_lines()
 {
 	return &(lines_);
+}
+
+Design* PDesign::get_des()
+{
+    return des;
+}
+
+Module* PDesign::get_module(string name) {
+    if(modules_.find(perm_string(name.c_str())) != modules_.end())
+        return modules_[perm_string(name.c_str())];
+    return MODULE_NOT_FIND;
 }
 
 void PDesign::dump(ostream&o)
@@ -814,7 +825,7 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned
 
 	//Evaluate the conditional expression and collect the result of combine coverage.
 	map<PExpr*, map<PExpr*, bool> > cvalues;
-	verinum* vn = node->expr[0]->evaluate(des, scope, vs, combine_, cvalues);
+	verinum* vn = node->expr[0]->evaluate(des, scope, vs, combine_, false, cvalues, bvalues);
 
 	if(combine_)
 		vs->report_->add_cond_report(cvalues);
@@ -846,7 +857,7 @@ int PDesign::eval_cond_expr(Cfg_Node* node, VcdScope* vs, Cfg* cfg, map<unsigned
 			value = idx;
 			set<PExpr*>::const_iterator pos = node->dsuc[idx]->caseitem.begin();
 			for(; pos != node->dsuc[idx]->caseitem.end(); ++pos){
-				verinum* ci = (*pos)->evaluate(des, scope, vs, combine_, cvalues);
+				verinum* ci = (*pos)->evaluate(des, scope, vs, combine_, false, cvalues, bvalues);
 				if(node->type == "ISCONTROL.CASE"){
 					if(*vn == *ci){
 						index = node->dsuc[idx]->index;

@@ -105,7 +105,7 @@ class PGate : public PNamedItem {
       virtual perm_string get_type() const{return perm_string("");}
 
       //2021.2.24
-      virtual CfgNode* build_node(PDesign& de){return 0;};\
+      virtual CfgNode* build_node(PDesign& de){return 0;};
       virtual set<string>& get_modname()
       {
             set<string>* tmp = new set<string>;
@@ -161,6 +161,7 @@ class PGAssign  : public PGate {
             return *tmp;
       };
       void dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned time) const;
+      void dump_design_smt(ostream &out, InstanModule *instan) const;
       void evaluate(Design* des, NetScope* scope, VcdScope* instan, bool combine, bool branch);
       void build_expr(map<PExpr*, set<PExpr*> >& exprs) const;
       void build_branch(Module* md, map<unsigned, BranchTree*>& branchs);

@@ -94,6 +94,7 @@ static void signals_handler(int sig)
 # include  "slice.h"
 # include "testpath.h"
 # include "smt_generator.h"
+# include "idp.h"
 
 using namespace std;
 /* Count errors detected in flag processing. */
@@ -920,6 +921,9 @@ int main(int argc, char*argv[])
 	  const char* smt_time = 0;
 	  const char* net_path = 0;
       const char* pf_path = 0;
+      const char* clk_signal = 0;
+      const char* rst_signal = 0;
+	  perm_string select_top_module;
 
       int opt;
 
@@ -948,7 +952,7 @@ int main(int argc, char*argv[])
 	  char *tmp0;
 	  //unsigned i;
 
-      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:S:VvD:")) != EOF) switch (opt) {
+      while (!covered_flag && (opt = getopt(argc, argv, "M:A:o:c:C:F:f:hN:P:p:S:VvDT:t:O:R:K:")) != EOF) switch (opt) {
 	  case 'A':
 	  	  printf("optarg:%s\n",optarg);
 		  /*tmp0 = strdup(optarg);
@@ -1010,6 +1014,21 @@ int main(int argc, char*argv[])
 	  case 'V':
 	    version_flag = true;
 	    break;
+	  case 'T':
+	  	select_top_module = perm_string(optarg);
+		break;
+	  case 't':
+	  	smt_time = optarg;
+		break;
+      case 'O':
+          target_file = optarg;
+          break;
+      case 'R':
+          rst_signal = optarg;
+          break;
+      case 'K' :
+          clk_signal = optarg;
+          break;
 	  default:
 	    flag_errors += 1;
 	    break;
@@ -1338,12 +1357,17 @@ int main(int argc, char*argv[])
 	design.set_modules(pform_modules);
 	design.set_udps(pform_primitives);
 
-	if(path_smt_flag || covered_flag){
+	if(path_smt_flag || covered_flag || design_smt_flag){
 		design.build_nodes();
 		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++){
+			cout << "Build Cfg for " << module_->second->pscope_name() << "..." << endl;
 			module_->second->build_cfgs();
+			if(design_smt_flag)
+				module_->second->set_cfg_process();
+            module_->second->initialize(false, false, false, false, true);
 		}
 	}
+
 
 	if (pre_process_fail_count) {
 		cerr << "Preprocessor failed with " << pre_process_fail_count
@@ -1420,10 +1444,13 @@ int main(int argc, char*argv[])
 
 	design.set_design(des);
 
-	for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++) {
+	if(covered_flag || path_smt_flag || design_smt_flag)
+	{
+		for(map<perm_string, Module*>::iterator module_ = pform_modules.begin(); module_ != pform_modules.end(); module_++) {
 			module_->second->set_design(des);
-			if(priority_process.find(module_->second->pscope_name().str()) != priority_process.end())
+			if(covered_flag && priority_process.find(module_->second->pscope_name().str()) != priority_process.end())
 				module_->second->priority_line = priority_process[module_->second->pscope_name().str()];
+		}
 	}
 
 	/*Generate SMT-LIB2.*/
@@ -1492,9 +1519,20 @@ int main(int argc, char*argv[])
 	}
 
 	if(design_smt_flag) {
-		SmtGenerator generator;
-		generator.setModule(pform_modules);
-		generator.generateSmt(pform_modules[perm_string("test")], cout, des);
+        NetDesign nd(&design, select_top_module);
+        nd.parse_design();
+        cout << "Parse Netlist success..." << endl;
+        SmtGenerator sg(&nd);
+        sg.clk = clk_signal;
+        sg.rst = rst_signal;
+        sg.time = atoi(smt_time);
+        ofstream file;
+        if(target_file)
+            file = ofstream(target_file);
+        else
+            file = ofstream("smt.smt2");
+        sg.generateSmt(file);
+		cout << "Design SMT Generator...\n";
 	}
 
 	/* Done with all the pform data. Delete the modules. */

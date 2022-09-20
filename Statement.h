@@ -518,7 +518,7 @@ class PEventStatement  : public Statement {
       virtual NetProc* elaborate(Design*des, NetScope*scope) const;
       virtual void elaborate_scope(Design*des, NetScope*scope) const;
       virtual void elaborate_sig(Design*des, NetScope*scope) const;
-      void dump_design_smt(ostream& o, InstanModule* instan, Cfg* cfg, list<pair<string, bool> >& condit, unsigned tempid) const;
+      void dump_design_smt(ostream& o, InstanModule* instan, Cfg* cfg, list<pair<string, bool> >& condit, unsigned& tempid) const;
 
       bool has_aa_term(Design*des, NetScope*scope);
 

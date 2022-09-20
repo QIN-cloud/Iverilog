@@ -127,6 +127,11 @@ list<NetScope*> Design::find_root_scopes() const
       return root_scopes_;
 }
 
+const list<NetScope*>& Design::get_root_scopes() const
+{
+    return root_scopes_;
+}
+
 NetScope* Design::make_package_scope(perm_string name, NetScope*unit_scope,
 				     bool is_unit)
 {

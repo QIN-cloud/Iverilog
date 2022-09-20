@@ -433,7 +433,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/home/smc/Documents/iverilog_3'
+ac_pwd='/home/qin/Desktop/workspace/iverilog'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 test -n "$AWK" || AWK=awk
@@ -654,7 +654,7 @@ S["LDRELOCFLAGS"]=""
 S["DLLIB"]="-ldl"
 S["ALLOCA"]=""
 S["HAVE_LIBBZ2"]="no"
-S["HAVE_LIBZ"]="no"
+S["HAVE_LIBZ"]="yes"
 S["CXXCPP"]="g++ -E"
 S["WARNING_FLAGS_CC"]="-Wstrict-prototypes"
 S["WARNING_FLAGS_CXX"]=""
@@ -698,7 +698,7 @@ S["build"]="x86_64-unknown-linux-gnu"
 S["target_alias"]=""
 S["host_alias"]=""
 S["build_alias"]=""
-S["LIBS"]="-lm -lpthread "
+S["LIBS"]="-lm -lz -lpthread -lreadline -ltermcap "
 S["ECHO_T"]=""
 S["ECHO_N"]="-n"
 S["ECHO_C"]=""
@@ -799,9 +799,15 @@ D["SIZEOF_UNSIGNED_LONG_LONG"]=" 8"
 D["SIZEOF_UNSIGNED_LONG"]=" 8"
 D["SIZEOF_UNSIGNED"]=" 4"
 D["SIZEOF_VOID_P"]=" 8"
+D["HAVE_LIBTERMCAP"]=" 1"
+D["HAVE_LIBREADLINE"]=" 1"
+D["HAVE_LIBHISTORY"]=" 1"
+D["HAVE_READLINE_READLINE_H"]=" 1"
+D["HAVE_READLINE_HISTORY_H"]=" 1"
 D["HAVE_SYS_RESOURCE_H"]=" 1"
 D["LINUX"]=" 1"
 D["HAVE_LIBPTHREAD"]=" 1"
+D["HAVE_LIBZ"]=" 1"
 D["HAVE_ALLOCA_H"]=" 1"
 D["HAVE_ALLOCA"]=" 1"
 D["HAVE_FSEEKO"]=" 1"

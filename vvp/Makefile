@@ -58,7 +58,7 @@ CPPFLAGS = $(INCLUDE_PATH)  -DHAVE_CONFIG_H -DICARUS_VPI_CONST=const
 CFLAGS = -Wall -Wextra -Wshadow -Wstrict-prototypes  -g -O2
 CXXFLAGS = -Wall -Wextra -Wshadow   -g -O2
 LDFLAGS = -rdynamic  
-LIBS = -lm -lpthread  
+LIBS = -lm -lz -lpthread -lreadline -ltermcap  
 
 dllib=-ldl
 

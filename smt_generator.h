@@ -2,61 +2,102 @@
 #define SMT_GENERATOR_H
 #include "Module.h"
 #include "PDesign.h"
-#include  "testpath.h"
+#include "testpath.h"
+#include "idp.h"
 #include <unordered_map>
 #include <list>
-
+#include <vector>
 
 #define NULLTIME 0
+#define BASE_WIDTH 16
 
 class InstanModule;
 class SmtGenerator;
+class PGate;
+class NetDesign;
+class NetSymbol;
+class NetInstan;
+class BitSet;
+
+static u_int16_t base_num[16] = {0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff, 0x1ff, 0x3ff, 0x7ff,0xfff, 0x1fff, 0x3fff, 0x7fff, 0xffff};
+static u_int16_t full_num_except_bit[16] = {0xfffe, 0xfffd, 0xfffb, 0xfff7, 0xffef, 0xffdf, 0xffbf, 0xff7f, 0xfeff, 0xfdff, 0xfbff, 0xf7ff,0xefff, 0xdfff, 0xbfff, 0x7fff};
+static u_int16_t low_fill_zero_bit[16] = {0xfffe, 0xfffb, 0xfff8, 0xfff0, 0xffe0, 0xffb0, 0xff80, 0xff00, 0xfe00, 0xfb00, 0xf800, 0xf000, 0xe000, 0xb000, 0x8000, 0x0000};
+
+struct BitSet{
+    BitSet(int base, unsigned width);
+    vector<u_int16_t> signal_bit;
+    int base;
+    unsigned width;
+    void dump();
+    void initial();
+    void full_initial();
+    void set(int left, int right);
+    void set(u_int16_t& n, unsigned left, unsigned right);
+    bool need_new_state(int left, int right);
+    bool need_new_state(int i, unsigned left, unsigned right);
+    list<pair<int, int> > un_smt_assert_part();
+};
 
 struct SmtDefine{
-    enum VarPortType{INPUT, OUTPUT, INOUT, NOTPORT};
-    enum UpdateType{TIMEUPDATE, SPACEUPDATE};
-    string name;
-    pair<unsigned, unsigned> bitselect;
+    enum UpdateType{TIMEUPDATE, SPACEUPDATE, LINKUPDATE, TOPINPUT};
     pair<unsigned, unsigned> state;
     pair<unsigned, unsigned> laststate;
-    VarPortType type;
-    InstanModule* location;
-    list<SmtDefine*> linkport;
+    NetSymbol* symbol;
+    BitSet* bit_vec;
     size_t getWidth();
     string getName();
     string getLastName();
-    void initial(RefVar* var, ostream& out, InstanModule* im);
-    void update(ostream& out, UpdateType udtype, unsigned udtime, SmtDefine* port);
+    void initial(ostream& out, NetSymbol* symbol);
+    void update(ostream &out, UpdateType udtype, unsigned udtime, SmtDefine* port, int msb, int lsb);
 };
 
 class InstanModule{
 public:
-    InstanModule(Module* md, ostream& out, InstanModule* lastlevel, string type);
+    InstanModule(InstanModule* prelevel, NetInstan* instan, ostream& out);
     ~InstanModule();
-    void generateSmt(ostream& out);
+    void update(ostream& out, unsigned time);
+    void startSynchroLogic(ostream& out, unordered_map<SmtDefine*, bool>& change, unsigned& tempid);
+    void startCombineLogic(ostream& out, unsigned& tempid);
+    void getValueForInput(ostream& out, unsigned time, SmtGenerator* generator);
+    void updatePort(ostream& out, PExpr* port1, PExpr* port2, bool input);
+    void initialPort(ostream& out, PExpr* port1, PExpr* port2);
+    void initialOutput(ostream& out);
 public:
-    string levelname_;
-    string type_;
-    Module* module_;
+    NetInstan* instan;
+    unordered_map<string, SmtDefine*> define;
     list<InstanModule*> nextlevel;
-    unordered_map<string, SmtDefine*> symbol_;
+    InstanModule* lastlevel;
 };
 
 class SmtGenerator{
 public:
-    SmtGenerator();
+    SmtGenerator(NetDesign* design);
     ~SmtGenerator();
-    void generateSmt(Module* md, ostream& out, Design* design);
-    InstanModule* buildInstanModule(Module* topmodule, ostream& out, Design* design, InstanModule* lastlevel, string type);
-    inline void setModule(map<perm_string, Module*>& pform_modules){module_ = pform_modules;}
-private:    
-    InstanModule* top_;
-    map<perm_string, Module*> module_;
+    void generateSmt(ostream& out);
+    void startSynchroLogic(ostream& out, unsigned& tempid);
+    void startCombineLogic(ostream& out, unsigned& tempid);
+    void getValueForInput(ostream& out, unsigned time);
+    void updateInput(ostream& out, unsigned time);
+    void initialOutput(ostream& out);
+    void assertForClk(ostream& out);
+    void assertForRst(ostream& out);
+    void declareClk(ostream& out, unsigned time);
+    inline void set_design(NetDesign* design){this->design = design;}
+public:
+    NetDesign* design;
+    InstanModule* root;
+    const char* clk;
+    const char* rst;
+    unsigned time;
 };
 
+extern void declareConstBool(ostream& out, string name);
 extern void declareConstBitVec(ostream& out, string name, unsigned width);
 extern void assertSingelStatement(ostream& out, string left, string right, string op);
 extern void assertStatement(ostream& out, list<pair<string, bool> >& condit, ostringstream& expr);
 extern void assertConditStatement(ostream& out, ostringstream& expr, int width, string name);
 extern void assertEqual(ostringstream& out, ostringstream& expr1, int width1, ostringstream& expr2, int width2, string op);
+extern void assertInitial(ostream& out, SmtDefine* var);
+extern void assertVarState(ostream& out, int msb, int lsb, SmtDefine* var);
+
 #endif

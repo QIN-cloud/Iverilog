@@ -586,13 +586,15 @@ ModuleNode* Module::build_node(PDesign& de)
 {
 	//cout << get_fileline() << " : " << typeid(this).name() << endl;
 	ModuleNode* md = new ModuleNode(get_lineno());
-	//unsigned idx;
-	list<PGate*>::iterator pos;
-	for(pos = gates_.begin(); pos != gates_.end(); ++pos)
-	{
-		CfgNode* node = (*pos)->build_node(de);
-		md->add_node(node);
-	}
+	unsigned idx;
+
+	// list<PGate*>::iterator pos;
+	// for(pos = gates_.begin(); pos != gates_.end(); ++pos)
+	// {
+	// 	CfgNode* node = (*pos)->build_node(de);
+	// 	md->add_node(node);
+	// }
+
 	list<PProcess*>::iterator ppos;
 	int id_ = 0;
 	for(ppos = behaviors.begin(); ppos != behaviors.end(); ++ppos)
@@ -601,18 +603,21 @@ ModuleNode* Module::build_node(PDesign& de)
 		ProcessNode* node = (*ppos)->build_node(de);
 		md->add_node(node, 0);
 	}
+
 	map<perm_string,PFunction*>::iterator fpos;
 	for(fpos = funcs.begin(); fpos != funcs.end(); ++fpos)
 	{
 		ProcessNode* node = (*fpos).second->build_node(de);
 		md->add_node(node,1);
 	}
+
 	map<perm_string, PTask*>::iterator tpos;
 	for(tpos = tasks.begin(); tpos != tasks.end(); ++tpos)
 	{
 		ProcessNode* node = (*tpos).second->build_node(de);
 		md->add_node(node,2);
 	}
+
 	list<PGenerate*>::iterator gpos;
 	for(gpos = generate_schemes.begin(); gpos != generate_schemes.end(); ++gpos)
 	{
@@ -972,6 +977,7 @@ void PDesign::build_nodes()
 	map<perm_string, Module*>::iterator pos;
 	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
 	{
+		cout << "Build cfg node for " << pos->first << "..." << endl;
 		ModuleNode* node = pos->second->build_node(*this);
 		pos->second->set_modulenode(node);
 	}
