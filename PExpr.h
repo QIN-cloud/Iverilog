@@ -29,7 +29,8 @@
 # include  "LineInfo.h"
 # include  "pform_types.h"
 # include  "Module.h"
-# include  "vcdvar.h"
+# include  "idp.h"
+# include  "Coverage.h"
 
 class Design;
 class Module;
@@ -38,32 +39,28 @@ class NetNet;
 class NetExpr;
 class NetScope;
 class PPackage;
-class VcdVar;
-class VcdScope;
 struct symbol_search_results;
 class PEBinary;
 class BranchTree;
-class SmtDefine;
-class InstanModule;
+class NetInstan;
+class NetSymbol;
+class DesignCoverage;
 
 struct ConcatItem{
 public:
   enum ConcatType{VARIABLE, STABLE};
   ConcatType type_;
-  struct ConcatOfVcdVar{
-    string name_;
-    unsigned lwidth_;
-    unsigned rwidth_;
+  struct ConcatOfVar{
+      string name;
+      unsigned msi;
+      unsigned lsi;
   };
   union{
-    ConcatOfVcdVar* variable_;
+    ConcatOfVar* variable_;
     verinum* stable_;
   }baseitem_;
-  vector<pair<VcdVar*, unsigned> > get_asleft(VcdScope* instan);
-  verinum* get_asright(VcdScope* instan);
-  unsigned dump_smt(ostringstream& out, map<string, RefVar*>& vars);
-  unsigned dump_smt(ostringstream& out, unordered_map<string, SmtDefine*>& symbols);
-  void dump(ostream& out);
+  vector<pair<NetSymbol*, unsigned> > get_asleft(NetInstan* idp);
+  verinum* get_asright(NetInstan* idp);
 };
 
 /*
@@ -205,7 +202,7 @@ class PExpr : public LineInfo {
 	// This attempts to evaluate a constant expression, and return
 	// a verinum as a result. If the expression cannot be
 	// evaluated, return 0.
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
 
 	// This method returns true if the expression represents a
         // structural net that can have multiple drivers. This is
@@ -228,11 +225,9 @@ class PExpr : public LineInfo {
         set<string>* tmp = new set<string>;
         return *tmp;
       };
-      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual vector<ConcatItem*> parse_concat_expr(NetInstan* idp);
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used, 
-      ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
       virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
       virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
@@ -286,11 +281,11 @@ class PEConcat : public PExpr {
       ~PEConcat();
 
     public:
-      vector<ConcatItem*> basevec;
-      vector<pair<VcdVar*, unsigned> > get_asleft(VcdScope* instan);
+      vector<ConcatItem*> ccvec;
+      vector<pair<NetSymbol*, unsigned> > evaluate_as_left(NetInstan* idp);
     
     public:
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
       virtual void dump(ostream&) const;
 
       virtual void declare_implicit_nets(LexicalScope*scope, NetNet::Type type);
@@ -340,11 +335,9 @@ class PEConcat : public PExpr {
 
         return *tmp;
       };
-      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual vector<ConcatItem*> parse_concat_expr(NetInstan* idp);
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-      ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
       virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
 
     private:
@@ -397,7 +390,7 @@ class PEEvent : public PExpr {
       };
       virtual svector<string>& get_vars();
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
 
     private:
@@ -419,7 +412,7 @@ class PEFNumber : public PExpr {
 	/* The eval_const method as applied to a floating point number
 	   gets the *integer* value of the number. This accounts for
 	   any rounding that is needed to get the value. */
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
 
       virtual unsigned test_width(Design*des, NetScope*scope,
 				  width_mode_t&mode);
@@ -437,7 +430,7 @@ class PEFNumber : public PExpr {
         return *tmp;
       }
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
     private:
@@ -491,7 +484,7 @@ class PEIdent : public PExpr {
 	// expressions can can be unpacked arrays.
       NetNet* elaborate_unpacked_net(Design*des, NetScope*sc) const;
 
-      verinum* eval_const(Design*des, NetScope*sc) const;
+      verinum* eval_const(Design* des, NetScope* scope) const;
 
       virtual bool is_collapsible_net(Design*des, NetScope*scope,
                                       NetNet::PortType port_type) const;
@@ -529,11 +522,9 @@ class PEIdent : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
-      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
+      virtual vector<ConcatItem*> parse_concat_expr(NetInstan* idp);
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
       virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
@@ -786,7 +777,7 @@ class PENumber : public PExpr {
 					 bool is_cassign,
 					 bool is_force) const;
 
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
 
       virtual bool is_the_same(const PExpr*that) const;
       //2021.2.24
@@ -796,10 +787,8 @@ class PENumber : public PExpr {
         return *tmp;
       };
 
-      virtual vector<ConcatItem*> parse_concat_expr(Design*des, NetScope*scope, map<string, RefVar*>& vars);
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
+      virtual vector<ConcatItem*> parse_concat_expr(NetInstan* idp);
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
        virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
 
 
@@ -831,7 +820,7 @@ class PEString : public PExpr {
 
       virtual NetEConst*elaborate_expr(Design*des, NetScope*,
 				       unsigned expr_wid, unsigned) const;
-      verinum* eval_const(Design*, NetScope*) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
       //2021.2.24
       virtual set<string>& get_funcname()
       {
@@ -839,7 +828,7 @@ class PEString : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
 
     private:
@@ -881,7 +870,7 @@ class PEUnary : public PExpr {
       virtual NetExpr*elaborate_expr(Design*des, NetScope*,
 				     unsigned expr_wid,
                                      unsigned flags) const;
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
       //2021.2.24
       virtual set<string>& get_funcname()
       {
@@ -896,11 +885,9 @@ class PEUnary : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
        virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
@@ -937,7 +924,7 @@ class PEBinary : public PExpr {
       virtual NetExpr*elaborate_expr(Design*des, NetScope*,
 				     unsigned expr_wid,
                                      unsigned flags) const;
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
       //2021.2.24
       virtual set<string>& get_funcname()
       {
@@ -960,11 +947,9 @@ class PEBinary : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
        virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
 
@@ -1092,7 +1077,7 @@ class PETernary : public PExpr {
       virtual NetExpr*elaborate_expr(Design*des, NetScope*,
 		                     unsigned expr_wid,
                                      unsigned flags) const;
-      virtual verinum* eval_const(Design*des, NetScope*sc) const;
+      virtual verinum* eval_const(Design* des, NetScope* scope) const;
       //2021.2.24
       virtual set<string>& get_funcname()
       {
@@ -1118,11 +1103,9 @@ class PETernary : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
       virtual set<string> get_var_names();
-      virtual int dump_smt(Design* design, NetScope* scope, map<string, RefVar*>& vars, set<SmtVar*>& used,
-       ostringstream& expr, Module* md, bool type, unsigned cur_time) const;
        virtual int dump_design_smt(ostream& o, ostringstream &out, InstanModule *instan) const;
       virtual void build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary);
       virtual BranchTree* build_branch(Module* md, map<unsigned, BranchTree*>& branchs, BranchTree* root);
@@ -1185,7 +1168,7 @@ class PECallFunction : public PExpr {
         return *tmp;
       };
 
-      virtual verinum* evaluate(Design*des, NetScope*scope, VcdScope* instan, bool combine, bool branch, map<PExpr*, map<PExpr*, bool> >& values, map<unsigned, vector<unsigned> >& bvalues );
+      virtual verinum* evaluate(NetInstan* idp, DesignCoverage* dcov);
 
 
     private:
@@ -1296,6 +1279,6 @@ class PEVoid : public PExpr {
 };
 
 extern void verinum_equal(verinum* v1, verinum* v2);
-extern void verinum_equal(vector<pair<VcdVar*, unsigned> >& v1, verinum* v2);
+extern void verinum_equal(vector<pair<NetSymbol*, unsigned> >& v1, verinum* v2);
 
 #endif /* IVL_PExpr_H */

@@ -27,12 +27,12 @@
 # include  "netmisc.h"
 # include  "compiler.h"
 
-verinum* PExpr::eval_const(Design*, NetScope*) const
+verinum* PExpr::eval_const(Design* des, NetScope* scope) const
 {
       return 0;
 }
 
-verinum* PEBinary::eval_const(Design*des, NetScope*scope) const
+verinum* PEBinary::eval_const(Design* des, NetScope* scope) const
 {
       verinum*l = left_->eval_const(des, scope);
       if (l == 0) return 0;
@@ -149,7 +149,7 @@ verinum* PEBinary::eval_const(Design*des, NetScope*scope) const
       delete r;
       return res;
 }
-verinum* PEConcat::eval_const(Design*des, NetScope*scope) const
+verinum* PEConcat::eval_const(Design* des, NetScope* scope) const
 {
       verinum*accum = parms_[0]->eval_const(des, scope);
       if (accum == 0)
@@ -176,10 +176,9 @@ verinum* PEConcat::eval_const(Design*des, NetScope*scope) const
  * Evaluate an identifier as a constant expression. This is only
  * possible if the identifier is that of a parameter.
  */
-verinum* PEIdent::eval_const(Design*des, NetScope*scope) const
+verinum* PEIdent::eval_const(Design* des, NetScope* scope) const
 {
-      assert(scope);
-      NetNet*net;
+	  NetNet*net;
       NetEvent*eve;
       const NetExpr*expr;
 
@@ -215,23 +214,23 @@ verinum* PEIdent::eval_const(Design*des, NetScope*scope) const
       return new verinum(eval->value());
 }
 
-verinum* PEFNumber::eval_const(Design*, NetScope*) const
+verinum* PEFNumber::eval_const(Design* des, NetScope* scope) const
 {
       long val = value_->as_long();
       return new verinum(val);
 }
 
-verinum* PENumber::eval_const(Design*, NetScope*) const
+verinum* PENumber::eval_const(Design* des, NetScope* scope) const
 {
       return new verinum(value());
 }
 
-verinum* PEString::eval_const(Design*, NetScope*) const
+verinum* PEString::eval_const(Design* des, NetScope* scope) const
 {
       return new verinum(string(text_));
 }
 
-verinum* PETernary::eval_const(Design*des, NetScope*scope) const
+verinum* PETernary::eval_const(Design* des, NetScope* scope) const
 {
       verinum*test = expr_->eval_const(des, scope);
       if (test == 0)
@@ -251,7 +250,7 @@ verinum* PETernary::eval_const(Design*des, NetScope*scope) const
       }
 }
 
-verinum* PEUnary::eval_const(Design*des, NetScope*scope) const
+verinum* PEUnary::eval_const(Design* des, NetScope* scope) const
 {
       verinum*val = expr_->eval_const(des, scope);
       if (val == 0)

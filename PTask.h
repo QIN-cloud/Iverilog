@@ -26,7 +26,7 @@
 # include  <vector>
 # include  <list>
 # include  "Statement.h"
-# include  "PDesign.h"
+# include  "AnalysisControler.h"
 class Design;
 class NetExpr;
 class NetNet;

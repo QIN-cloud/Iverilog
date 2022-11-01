@@ -127,7 +127,7 @@ list<NetScope*> Design::find_root_scopes() const
       return root_scopes_;
 }
 
-const list<NetScope*>& Design::get_root_scopes() const
+list<NetScope*>& Design::get_root_scopes()
 {
     return root_scopes_;
 }

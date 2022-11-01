@@ -6,10 +6,13 @@
 #include <list>
 #include <set>
 #include <map>
+#include <unordered_map>
+
 using namespace std;
 
 class PExpr; 
 class NetProcTop;
+class CoverBitVecArray;
 
 /*Directsucc is the information pointing to one of the next CFG nodes.
 It can be devided into the different types according to the current node type.*/
@@ -60,6 +63,9 @@ typedef struct Cfg{
 	bool sync;							//1 for clock driven, 0 for combination driven;
 	bool always;                        //1 for always, 0 for others.
 	NetProcTop* proc;
+    unordered_map<unsigned, unsigned> pp_line;
+	list<CoverBitVecArray*> pp_path;
+    unsigned path_num;
 }Cfg;
 
 /*A collection of CFG in a module.*/

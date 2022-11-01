@@ -48,16 +48,13 @@ Module::Module(LexicalScope*parent, perm_string n)
 
 Module::~Module()
 {
-	for(VcdScope* vcd_scope : vcd_scopes) {
-		delete vcd_scope;
-	}
-	for(pair<Cfg_Node*, PathNode*> pn : path_nodes_) {
-		delete pn.second;
-	}
-	map<unsigned, BranchTree*>::iterator pos = branchs_.begin();
-	for(; pos != branchs_.end(); pos++) {
-		delete pos->second;
-	}
+	// for(pair<Cfg_Node*, PathNode*> pn : path_nodes_) {
+	// 	delete pn.second;
+	// }
+	// map<unsigned, BranchTree*>::iterator pos = branchs_.begin();
+	// for(; pos != branchs_.end(); pos++) {
+	// 	delete pos->second;
+	// }
 }
 
 void Module::add_gate(PGate*gate)
@@ -186,11 +183,11 @@ PNamedItem::SymbolType Module::symbol_type() const
 
 void Module::build_cfgs()
 {
+	assert(mn_);
 	cfg_ = mn_->build_cfgs();
 }
 
-void Module::build_var_cfgs()
-{
+void Module::get_condit() {
 	svector<Cfg*>* cfgs = cfg_->cfgs;
 	for(int i = 0; i < (*cfgs).count(); i++) {
 		Cfg* cfg = (*cfgs)[i];
@@ -198,7 +195,7 @@ void Module::build_var_cfgs()
 			Cfg_Node* cn = (*(cfg->root))[j];
 			if(cn->type.find("ISCONTROL") == 0) {
 				for(string ref : cn->refs){
-					var_cfgs[ref].insert(i);
+					condit[ref] = true;
 				}
 			}
 		}
@@ -219,200 +216,6 @@ void Module::dump_cfg(ostream& o) const
 		}
 	}
 	o << "}" << endl;
-}
-
-
-void Module::dump_vars(ostream& o) const
-{
-	/*Dump condit variables and processes they located in.*/
-	o << "------------------var cfgs------------------"<< endl;
-	map<string, set<unsigned>>::const_iterator var_cfg;
-	for(var_cfg = var_cfgs.begin(); var_cfg != var_cfgs.end(); var_cfg++) {
-		o << "var " << var_cfg->first << " ";
-		for(unsigned id : var_cfg->second) {
-			o << "{" << id << "}" << " ";
-		}
-		o << endl;
-	}
-	/*Dump the instantiated modules by this module type.*/
-	o << "----------------module scopes---------------"<< endl;
-	for(VcdScope* scope : vcd_scopes) {
-		o << "scope " << scope->name_ << endl;
-		o << "(" << endl;
-		map<string, VcdVar*>::iterator var;
-		for(var = scope->defines_.begin(); var != scope->defines_.end(); var++) {
-			o << "var " << var->second->name << "[" << var->second->msb << ":" << var->second->lsb << "]" << " symbol " << var->second->symbol << endl;
-		} 
-		o << ")" << endl;
-	}
-}
-
-void Module::dump_values(ostream& o) const
-{
-	for(VcdScope* scope : vcd_scopes) {
-		scope->dump(o);
-	}
-}
-
-void Module::dump_sort_cfg(ostream& o) const
-{
-	list<list<Cfg*> >::const_iterator pos = cfg_list.begin();
-	for(; pos != cfg_list.end(); pos++) {
-		o << "[ ";
-		for(Cfg* cfg : (*pos)) {
-			o << cfg->lineno << " ";
-		}
-		o << "] ";
-	}
-	o << endl;
-}
-
-void Module::dump_sort_assign(ostream& o) const
-{
-	for(PGAssign* assign : assigns_) {
-		assign->dump(o);
-	}
-}
-
-void Module::dump_exprs(ostream& o) const
-{
-	map<PExpr*, set<PExpr*> >::const_iterator pos = exprs_.begin();
-	for(; pos != exprs_.end(); pos++) {
-		o << pos->first->get_lineno() << " ";
-		pos->first->dump(o);
-		o << "{" << endl;
-		for(PExpr* expr : pos->second) {
-			expr->dump(o);
-			o << endl;
-		}
-		o << "}" << endl;
-	}
-}
-
-NetScope* Module::get_scope() const
-{
-	assert(design_);
-	NetScope* scope;
-	perm_string s = pscope_name();
-	list<NetScope*> scopes = design_->find_root_scopes();
-
-	for(list<NetScope*>::const_iterator pos = scopes.begin();
-	pos != scopes.end(); ++pos){
-		if(s == (*pos)->basename()) {
-			scope = *pos;
-			break;
-		}
-	}
-	return scope;
-}
-
-void Module::build_vartab(Design* d)
-{
-	assert(d);
-	NetScope* scope;
-	perm_string s = pscope_name();
-	list<NetScope*> scopes = d->find_root_scopes();
-
-	for(list<NetScope*>::const_iterator pos = scopes.begin();
-	pos != scopes.end(); ++pos){
-		if(s == (*pos)->basename()) {
-			scope = *pos;
-			break;
-		}
-	}
-
-	for(map<perm_string,PWire*>::const_iterator spos = wires.begin(); spos != wires.end(); ++spos) {
-		perm_string o = spos->first;
-		RefVar* var = scope->build_var(o);
-		if(var) vartab_[var->name] = var;
-	}
-}
-
-PathNode::~PathNode()
-{
-
-}
-
-VcdScope::~VcdScope()
-{
-	map<string, VcdVar*>::iterator var;
-	for(var = defines_.begin(); var != defines_.end(); var++) {
-		delete var->second;
-	}
-	delete report_;
-}
-
-void VcdScope::report(ostream& o)
-{
-	report_->dump(o);
-	for(VcdScope* instan : instans_){
-		instan->report(o);
-	} 
-}
-
-void VcdScope::dump(ostream& o) const
-{
-	map<string, VcdVar*>::const_iterator var;
-	o << module_->pscope_name() << " " << name_ << endl;
-	o << "{" << endl;
-	for(var = defines_.begin(); var != defines_.end(); var++) {
-		o << var->second->symbol << " ";
-		var->second->dump(o);
-	}
-	o << "}" << endl;
-}
-
-void VcdScope::initialize(map<string, verinum>& variety_symbols, ostream& o, bool combine)
-{
-
-	map<string, VcdVar*>::iterator var = defines_.begin();
-	for(; var != defines_.end(); var++) {
-		if(variety_symbols.find(var->second->symbol) == variety_symbols.end())
-			var->second->sim_val = var->second->cur_val;
-		else
-		{
-			string ptype = module_->vartab_[var->second->name]->ptype;
-			var->second->sim_val = ptype == "PINPUT" ? var->second->cur_val : var->second->pre_val; 
-		}
-	}
-	set<string> defs;
-	module_->assign_evaluate(defs, this, true, o, combine);
-	o << "$Initial Values$" << endl;
-	o << "{" << endl;
-	for(var = defines_.begin(); var != defines_.end(); var++)
-	{
-		o << "\t";
-		o << var->second->name << " = ";
-		var->second->sim_val.dump(o);
-		o << endl; 
-	}
-	o << "}" << endl;
-}
-
-void VcdScope::update(set<string>& defs, ostream& o, bool combine)
-{
-	o << "$Direct Influence$ ";
-	for(string def : defs)
-	{
-		o << def << " ";
-	}
-	o << endl;
-	o << "{" << endl;
-	map<string, VcdVar*>::iterator var = defines_.begin();
-	for(; var != defines_.end(); var++)
-	{
-		if(defs.find(var->second->name) != defs.end())
-		{
-			var->second->sim_val = var->second->cur_val;
-			o << "\t";
-			o << var->second->name << " -> ";
-			var->second->sim_val.dump(o);
-			o << endl;
-		}
-	}
-	o << "}" << endl;
-	module_->assign_evaluate(defs, this, false, o, combine);
-	defs.clear();
 }
 
 AssignNode::~AssignNode()
@@ -442,8 +245,9 @@ void AssignNode::dump(ostream& o)
 
 void Module::build_exprs()
 {
-	for(PGAssign* assign : assigns_){
-		assign->build_expr(exprs_);
+    map<PExpr*, set<PExpr*> > expr_item;
+	for(PGAssign* assign : assign_order){
+		assign->build_expr(expr_item);
 	}
 	for(unsigned i = 0; i < cfg_->cfgs->count(); i++){
 		Cfg* cfg = (*(cfg_->cfgs))[i];
@@ -451,92 +255,31 @@ void Module::build_exprs()
 			Cfg_Node* node = (*(cfg->root))[j];
 			if(node->type.find("ISCONTROL") == 0
 			&& node->type.compare("ISCONTROL.EVENT") != 0){
-				node->expr[0]->build_expr(exprs_, nullptr);
+				node->expr[0]->build_expr(expr_item, nullptr);
 			}
 		}
 	}
-	map<PExpr*, set<PExpr*> >::iterator pos = exprs_.begin();
-	for(; pos != exprs_.end(); pos++){
-		for(PExpr* expr : pos->second)
-			reverse_exprs_[expr] = pos->first;
+	map<PExpr*, set<PExpr*> >::iterator pos = expr_item.begin();
+	for(; pos != expr_item.end(); pos++){
+        ExpressionNode* node = new ExpressionNode;
+        node->expr = pos->first;
+        unsigned id = 0;
+        for(PExpr* item : pos->second) {
+            node->item[item] = id++;
+        }
 	}
 }
 
-void Module::build_paths()
+void Module::get_vhdl_line()
 {
-	//generate paths for every process
-	for(unsigned i = 0; i < cfg_->cfgs->count(); i++){
-		Cfg* cfg = (*(cfg_->cfgs))[i];
-
-		//generate paths for a process
-		PathNode* pn = gen_path((*(cfg->root))[0], cfg->root, 0);
-
-		//store the vector and string of paths
-		set<unsigned> route;
-		for(string s : pn->paths_){
-			if(s.size() == 1) continue;
-			paths_[i].push_back(s);
-			unsigned num = 0;
-			for(unsigned j = 0; j < s.size(); j++){
-				if(s[j] == ' '){
-					if(num){
-						route.insert((*(cfg->root))[num]->lineno);
-						num = 0;
-					}
-				}
-				else{
-					num = num * 10 + (s[j] - '0');
-				}
-			}
-			if(num) route.insert((*(cfg->root))[num]->lineno);
-			routes_[cfg].push_back(route);
-			route.clear();
-		}
-	}
-}
-
-PathNode* Module::gen_path(Cfg_Node* node, svector<Cfg_Node*>* root, unsigned index)
-{
-	if(!path_nodes_[node])
-	{
-		PathNode* pn = new PathNode(node);
-		if(node->type != "ENDNODE"){
-			for(unsigned i = 0; i < node->dsuc.count(); i++){
-				PathNode* son_node = gen_path((*root)[node->dsuc[i]->index], root, node->dsuc[i]->index);
-				if(node->type != "STARTNODE"){
-					if(son_node->paths_.empty()) 
-						pn->paths_.push_back(to_string(index));
-					else{
-						for(string s : son_node->paths_){
-							pn->paths_.push_back(to_string(index) + " " + s);
-						}
-					}
-				}
-				else{
-					for(string s : son_node->paths_){
-						pn->paths_.push_back(s);
-					}
-				}
-			}
-		}
-		path_nodes_[node] = pn;
-	}
-	return path_nodes_[node];
-}
-
-void Module::dump_paths(ostream& o) const
-{
-	o << pscope_name() << endl;
-	map<Cfg*, vector<set<unsigned> > >::const_iterator pos;
-	for(pos = routes_.begin(); pos != routes_.end(); pos++){
-		o << "Process ID : " << pos->first->id << endl;
-		for(set<unsigned> route : pos->second){
-			for(unsigned lineno : route){
-				o << lineno << " ";
-			}
-			o << endl;
-		}
-	}
+	vhdl_line.push_back("");
+    perm_string file = get_file();
+    fstream in(file);
+    string temp;
+    while(!in.eof()) {
+        getline(in, temp);
+        vhdl_line.push_back(temp.c_str());
+    }
 }
 
 void Module::parse_assigns()
@@ -555,12 +298,12 @@ void Module::parse_assigns()
 			//Build node for lref.
 			for(string lname : lnames)
 			{
-				if(assign_pos_.find(lname) == assign_pos_.end())
+				if(assign_map.find(lname) == assign_map.end())
 				{
 					AssignNode* node = new AssignNode(lname);
-					assign_pos_[lname] = node;
+					assign_map[lname] = node;
 				}
-				AssignNode* l_node = assign_pos_[lname];
+				AssignNode* l_node = assign_map[lname];
 				l_node->assign_.push_back(assign);
 
 				//Build node for rref.
@@ -568,12 +311,12 @@ void Module::parse_assigns()
 				{
 					if(rname.compare(lname) == 0)
 						continue;
-					if(assign_pos_.find(rname) == assign_pos_.end())
+					if(assign_map.find(rname) == assign_map.end())
 					{
 						AssignNode* node = new AssignNode(rname);
-						assign_pos_[rname] = node;
+						assign_map[rname] = node;
 					}
-					AssignNode* r_node = assign_pos_[rname];
+					AssignNode* r_node = assign_map[rname];
 					if(r_node->next_.find(lname) == r_node->next_.end())
 					{
 						r_node->out_ += 1;
@@ -588,11 +331,11 @@ void Module::parse_assigns()
 
 void Module::sort_assigns()
 {
-	if(assign_pos_.empty()) return;
+	if(assign_map.empty()) return;
 	//Build a unordered map for sorting the assign statements.
 	unordered_map<string, AssignNode*> node_map;
-	map<string, AssignNode*>::iterator pos = assign_pos_.begin();
-	for(pos; pos != assign_pos_.end(); pos++)
+	map<string, AssignNode*>::iterator pos = assign_map.begin();
+	for(pos; pos != assign_map.end(); pos++)
 	{
 		node_map[pos->first] = pos->second;
 	}
@@ -611,7 +354,7 @@ void Module::sort_assigns()
 					{
 						if(records.find(assign) == records.end())
 						{
-							assigns_.push_back(assign);
+							assign_order.push_back(assign);
 							records[assign] = true;
 						}
 					}
@@ -619,7 +362,7 @@ void Module::sort_assigns()
 				unordered_map<string, bool>::iterator n_pos = m_pos->second->next_.begin();
 				for(; n_pos != m_pos->second->next_.end(); n_pos++)
 				{
-					assign_pos_[n_pos->first]->in_ -= 1;
+					assign_map[n_pos->first]->in_ -= 1;
 				}
 				node_map.erase(m_pos->first);
 				break;
@@ -629,63 +372,18 @@ void Module::sort_assigns()
 	records.clear();
 }
 
-void Module::parse_wires()
-{
-	map<string, AssignNode*>::iterator node = assign_pos_.begin();
-	for(node; node != assign_pos_.end(); node++){
-		if(vartab_.find(node->first) != vartab_.end()){
-			if(!node->second->assign_.empty()){
-				vartab_[node->first]->ptype = "Assign";
-			}
-		}
-	}
-}
-
 void Module::find_assign(string var, map<PGAssign*, bool>& select_assigns, set<string>& assign_defs)
 {
-	if(!assign_pos_[var]->assign_.empty()){
-		for(PGAssign* assign : assign_pos_[var]->assign_){
+	if(!assign_map[var]->assign_.empty()){
+		for(PGAssign* assign : assign_map[var]->assign_){
 			select_assigns[assign] = true;
 		}
 		assign_defs.insert(var);
 	}
 
-	unordered_map<string, bool>::iterator next = assign_pos_[var]->next_.begin();
-	for(; next != assign_pos_[var]->next_.end(); next++){
+	unordered_map<string, bool>::iterator next = assign_map[var]->next_.begin();
+	for(; next != assign_map[var]->next_.end(); next++){
 		find_assign(next->first, select_assigns, assign_defs);
-	}
-}
-
-void Module::gen_assign_smt(set<string>& defs, bool type, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, unsigned cur_time)
-{
-	map<PGAssign*, bool> select_assigns;
-	set<string> assign_defs;
-
-	if(!defs.empty()){
-		for(string var : defs){
-			if(assign_pos_.find(var) != assign_pos_.end()){
-				find_assign(var, select_assigns, assign_defs);
-			}
-		}
-	}
-
-	list<PGAssign*>::iterator assign = assigns_.begin();
-	for(assign; assign != assigns_.end(); assign++){
-		if(type || select_assigns.find(*assign) != select_assigns.end()){
-			(*assign)->dump(cout);
-			(*assign)->dump_smt(design_, o, vars, used, this, cur_time);
-		}
-	}
-
-	if(!type){
-		for(string def : assign_defs){
-			defs.insert(def);
-		}
-	}
-
-	if(!select_assigns.empty())
-	{
-		o << endl;
 	}
 }
 
@@ -693,8 +391,6 @@ void Module::sort_cfgs()
 {
 	unordered_map<Cfg*, unordered_map<string, bool> > cfg_used;
 	set<pair<Cfg*, Cfg*> > compares;
-	list<Cfg*> sync_cfgs;
-	list<Cfg*> comb_cfgs;
 	vector<Cfg*> cfgs;
 	//Complete defs with assigns for every cfg.
 	for(int i = 0; i < (*(cfg_->cfgs)).count(); i++)
@@ -703,7 +399,7 @@ void Module::sort_cfgs()
 		Cfg* cfg = (*(cfg_->cfgs))[i];
 		if(!cfg->always) continue;
 		if(cfg->sync) {
-			sync_cfgs.push_back(cfg);
+			sync_always.push_back(cfg);
 		} else {
 			complete_defs(cfg, cfg_used);
 			cfgs.push_back(cfg);
@@ -712,12 +408,7 @@ void Module::sort_cfgs()
 
 	if(cfgs.size() == 1)
 	{
-		if(!sync_cfgs.empty())
-			cfg_list.push_back(sync_cfgs);
-		if(priority_line.find(cfgs[0]->lineno) != priority_line.end()) 
-			cfg_list.push_front(list<Cfg*>(1, cfgs[0]));
-		else
-			cfg_list.push_back(list<Cfg*>(1, cfgs[0]));
+		comb_always.push_back(cfgs.front());
 	} else {
 		//Compare the excuted order of combine cfgs.
 		for(int i = 0; i < cfgs.size(); i++)
@@ -786,27 +477,12 @@ void Module::sort_cfgs()
 							pos->second->out_ -= 1;
 						}
 						delete_nodes[pos->first] = true;
-						comb_cfgs.push_back(pos->first);
+						comb_always.push_back(pos->first);
 					}
 				}
 			}
 		}
-
-		//Sort for sync and comb cfgs.
-		list<Cfg*>::reverse_iterator pos;
-		for(pos = comb_cfgs.rbegin(); pos != comb_cfgs.rend(); pos++) {
-			if(priority_line.find((*pos)->lineno) == priority_line.end())
-				cfg_list.push_front(list<Cfg*>(1, *pos));
-		}
-		cfg_list.push_front(sync_cfgs);
-		for(pos = comb_cfgs.rbegin(); pos != comb_cfgs.rend(); pos++) {
-			if(priority_line.find((*pos)->lineno) != priority_line.end())
-				cfg_list.push_front(list<Cfg*>(1, *pos));
-		}
 	}
-
-	cout << pscope_name() << " sorted: ";
-	dump_sort_cfg(cout);
 }
 
 void Module::complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, bool> >& used)
@@ -818,7 +494,7 @@ void Module::complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, b
 
 	if(!defs.empty()){
 		for(string var : defs){
-			if(assign_pos_.find(var) != assign_pos_.end()){
+			if(assign_map.find(var) != assign_map.end()){
 				find_assign(var, select_assigns, assign_defs);
 			}
 		}
@@ -872,190 +548,64 @@ Cfg* Module::compare_cfgs(Cfg* lcfg, Cfg* rcfg, unordered_map<Cfg*, unordered_ma
 	return nullptr;
 }
 
-void Module::dump_vartab(ostream& o) const
+void Module::build_lines() 
 {
-	map<string, RefVar*>::const_iterator var = vartab_.begin();
-	for(var; var != vartab_.end(); var++)
-		var->second->dump(o);
-}
-
-void Module::initialize(bool line, bool path, bool branch, bool cond, bool smt)
-{
-	//build_vartab(design_);
-	if(smt) { 
-		parse_wires();
-		parse_assigns();
-		sort_assigns();
-		sort_cfgs();
-	}
-	if(line || path || branch || cond) {
-		parse_assigns();
-		sort_assigns();
-		sort_cfgs();
-		if(branch) build_branchs();
-		if(cond) build_exprs();
-		if(path) build_paths();
-	}
-}
-
-void Module::enumrate(ostream& enums, ostream& paths, ostream& report)
-{
-
-	for(map<Cfg*, vector<set<unsigned> > >::iterator pos = routes_.begin(); pos != routes_.end(); pos++)
+	for(unsigned i = 0; i < cfg_->cfgs->count(); i++) 
 	{
-		paths << "id: " << pos->first->id << endl;
-		for(unsigned i = 0; i < pos->second.size(); i++)
+		Cfg* cfg = (*(cfg_->cfgs))[i];
+		unsigned count = 0;
+		for(unsigned j = 0; j < cfg->root->count(); j++)
 		{
-			paths << "path" << i << " : ";
-			for(unsigned lineno : pos->second[i])
+			Cfg_Node* node = (*(cfg->root))[j];
+			if(node->lineno > 0) 
 			{
-				paths << lineno << " ";
-			}
-			paths << endl;
-		}
-	}
-	
-	list<unsigned> path;
-	dfs_paths(enums, path, 0);
-
-	for(map<unsigned, vector<string> >::iterator pos = paths_.begin(); pos != paths_.end(); pos++)
-	{
-		if(!pos->second.empty())
-		{
-			report << "ID " << pos->first << endl;
-			for(unsigned i = 0; i < pos->second.size(); i++)
-			{
-				report << "0" << " ";
-			}
-			report << "end" << endl;
-		}
-	}
-}
-
-void Module::dfs_paths(ostream& o, list<unsigned>& path, unsigned index)
-{
-	if(index < paths_.size()){
-		for(unsigned i = 0; i < paths_[index].size(); i++)
-		{
-			path.push_back(i);
-			dfs_paths(o, path, index + 1);
-			if(index == (paths_.size() - 1))
-			{
-				o << "path ";
-				for(unsigned id : path)
+				if(cfg->pp_line.find(node->lineno) == cfg->pp_line.end()) 
 				{
-					o << id << " ";
+					cfg->pp_line[node->lineno] = count++;
 				}
-				o << "end" << endl;
 			}
-			path.pop_back();
 		}
 	}
 }
 
-void Module::tran_nodes()
+void Module::build_paths() 
 {
-	map<unsigned, vector<string> >::iterator pos;
-	for(pos = paths_.begin(); pos != paths_.end(); pos++)
+	for(unsigned i = 0; i < cfg_->cfgs->count(); i++)
 	{
-		for(string s : pos->second)
+		Cfg* cfg = (*(cfg_->cfgs))[i];
+		for(unsigned j = 0; j < cfg->root->count(); j++)
 		{
-			vector<unsigned> temp = split_path(s);
-			if(nodes_.find(pos->first) == nodes_.end())
-				nodes_[pos->first] = vector<vector<unsigned> >();
-			nodes_[pos->first].push_back(temp);
-		}
-	}
-}
-
-void Module::assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostream& o, bool combine)
-{
-	map<PGAssign*, bool> select_assigns;
-	set<string> assign_defs;
-	if(!defs.empty())
-	{
-		for(string def : defs)
-		{
-			if(assign_pos_.find(def) != assign_pos_.end())
+			Cfg_Node* node = (*(cfg->root))[j];
+			if(node->type == "ISCONTROL.EVENT") 
 			{
-				find_assign(def, select_assigns, assign_defs);
+				CoverBitVecArray* bv = new CoverBitVecArray(cfg->pp_line.size());
+				bv->set_high(cfg->pp_line[node->lineno]);
+				build_cfg_path(cfg, ++j, bv);
+				delete bv;
+				break;
 			}
 		}
 	}
-	list<PGAssign*> assigns;
-	list<PGAssign*>::iterator pos = assigns_.begin();
-	for(; pos != assigns_.end(); pos++)
-	{
-		if(type || select_assigns.find(*pos) != select_assigns.end())
-		{
-			(*pos)->evaluate(design_, design_->find_scope(hname_t(pscope_name())), scope, combine, scope->report_->cover_b);
-			assigns.push_back(*pos);
+}
+
+void Module::build_cfg_path(Cfg* cfg, unsigned idx, CoverBitVecArray* bv) 
+{
+	Cfg_Node* node = (*(cfg->root))[idx];
+	if(node->type == "ENDNODE") {
+		assert(bv);
+		CoverBitVecArray* nbv = new CoverBitVecArray(bv->get_size());
+		nbv->merge_array(bv);
+		cfg->pp_path.push_back(nbv);
+		return;
+	}
+	bv->set_high(cfg->pp_line[node->lineno]);
+	if(node->type.find("ISCONTROL") == 0) {
+		for(unsigned i = 0; i < node->dsuc.count(); ++i){
+			build_cfg_path(cfg, node->dsuc[i]->index, bv);
 		}
+	}	
+	else {
+		build_cfg_path(cfg, node->dsuc[0]->index, bv);
 	}
-	if(!assigns.empty())
-	{
-		o << "[Assigns Influence]" << endl;
-		o << "{" << endl;
-		for(PGAssign* assign : assigns)
-		{
-			assign->dump(o);
-		}
-		o << "}" << endl;
-	}
+	bv->set_low(cfg->pp_line[node->lineno]);
 }
-
-vector<unsigned> split_path(string path)
-{
-	vector<unsigned> res;
-	char* p = strtok(strdup(path.c_str()), " ");
-	while(p != NULL) {
-		res.push_back(atoi(p));
-		p = strtok(NULL, " ");
-	}
-	return res;
-}
-
-void Module::get_lines(map<perm_string, vector<string> >& lines) const
-{
-	perm_string file = get_file();
-	if(lines.find(file) == lines.end()) {
-		fstream in(file);
-		string temp;
-		vector<string>& location = lines[file];
-		while(!in.eof()) {
-			getline(in, temp);
-			location.push_back(temp);
-		}
-	}
-}
-
-void Module::set_cfg_process()
-{
-	for(PProcess* proc : behaviors) {
-		proc->cfg = (*(cfg_->cfgs))[proc->get_id()];
-	}
-}
-
-int get_param_value(const Module* md, PExpr* expr)
-{
-    NetScope::param_ref_t expr_pos;
-    PEIdent* parm = dynamic_cast<PEIdent*>(expr);
-    assert(parm);
-    string vn =  parm->path().back().name.str();
-    assert(md->get_scope()->find_parameter(perm_string(vn.c_str()), expr_pos));
-    verinum* v = nullptr;
-    //No lsb and msb means that we can use the value of parameter from where it defined.
-    NetExpr* tmp = expr_pos->second.val;
-    NetEConst*ctmp = dynamic_cast<NetEConst*>(tmp);
-    if (ctmp == 0) {
-        cerr << expr->get_lineno() << ": internal error: Unable to evaluate "
-             << "unconstant expression (parameter=" << parm->path()
-             << "): " << *ctmp << endl;
-        exit(1);
-    }
-    v = new verinum(ctmp->value());
-    int value = v->as_long();
-    return value;
-}
-
-

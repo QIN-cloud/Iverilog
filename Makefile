@@ -32,7 +32,7 @@ SHELL = /bin/sh
 # The normal configuration leaves suffix empty
 suffix = 
 
-prefix = /usr/local/iverilog
+prefix = /usr/local
 exec_prefix = ${prefix}
 srcdir = .
 datarootdir = ${prefix}/share
@@ -102,8 +102,8 @@ M = LineInfo.o StringHeap.o
 
 TT = t-dll.o t-dll-api.o t-dll-expr.o t-dll-proc.o t-dll-analog.o
 FF = cprop.o exposenodes.o nodangle.o synth.o synth2.o syn-rules.o
-HH = build_node.o cfg.o CfgNode.o PDesign.o slice.o slice_dump.o vcdvar.o expr_evaluate.o build_expr.o build_branch.o
-SMT = stat_dump_smt.o testpath.o expr_dump_smt.o expr_getname.o assign_dump_smt.o smt_generator.o idp.o
+HH = build_node.o cfg.o CfgNode.o AnalysisControler.o slice.o slice_dump.o expr_evaluate.o build_expr.o build_branch.o branchtree.o
+SMT = stat_dump_smt.o expr_dump_smt.o expr_getname.o assign_dump_smt.o smt_generator.o idp.o Coverage.o
 O = main.o async.o design_dump.o discipline.o dup_expr.o elaborate.o \
     elab_expr.o elaborate_analog.o elab_lval.o elab_net.o \
     elab_scope.o elab_sig.o elab_sig_analog.o elab_type.o \

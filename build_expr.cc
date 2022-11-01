@@ -1,6 +1,7 @@
 #include <PExpr.h>
 #include <PGate.h>
 #include  "ivl_assert.h"
+#include "Module.h"
 
 void PGAssign::build_expr(map<PExpr*, set<PExpr*> >& exprs) const
 {
@@ -58,9 +59,23 @@ void PEBinary::build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary)
 
 void PETernary::build_expr(map<PExpr*, set<PExpr*> >& exprs, PEBinary* binary)
 {
+
     expr_->build_expr(exprs, nullptr);
     tru_->build_expr(exprs, nullptr);
     fal_->build_expr(exprs, nullptr);
     exprs[this].insert(expr_);
 }
 
+void Module::build_expr_node(map<PExpr*, set<PExpr*> >& exprs)
+{
+    for(auto expr : exprs) {
+        ExpressionNode* node = new ExpressionNode;
+        node->expr = expr.first;
+        pp_expr[expr.first] = node;
+        unsigned id = 0;
+        for(auto item : expr.second) {
+            pp_reverse_expr[item] = node;
+            node->item[item] = id++;
+        }
+    }
+}

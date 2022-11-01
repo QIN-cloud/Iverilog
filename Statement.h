@@ -31,7 +31,7 @@
 # include  "HName.h"
 # include  "LineInfo.h"
 # include  "slice.h"     //2020.2.4
-# include  "PDesign.h"
+# include  "AnalysisControler.h"
 # include  "smt_generator.h"
 
 class PExpr;

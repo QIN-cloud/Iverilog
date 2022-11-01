@@ -5864,8 +5864,6 @@ bool PProcess::elaborate(Design*des, NetScope*scope) const
 
       delete[]attrib_list;
       top->set_line(*this);
-	  top->set_id(id_);
-	  top->set_sync(sync_);
       des->add_process(top);
 
 	/* Detect the special case that this is a combinational

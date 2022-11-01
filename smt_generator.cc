@@ -4,6 +4,102 @@
 #include <algorithm>
 #include "PGate.h"
 
+/* 
+* Convert a BitVec to a Int.
+* The format is ( (_ bv2int) BitVec ).
+*/
+void bv_to_int(ostringstream& expr, ostringstream& target)
+{
+	target << "((_ bv2int)" << expr.str() << ")";
+}
+
+/* 
+* Convert a Int to a BitVec.
+* Request a width of BitVec.
+* The format is ( (_ int2bv width) Int ).
+*/
+void int_to_bv(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	target << "((_ int2bv " << width << ")" << expr.str() << ")";
+}
+
+/*
+* Convert a BitVec to a BitVec for changing the width of the BitVec.
+* The format is ( (_ int2bv width ) ( (_ bv2int ) BitVec ) ).
+*/
+void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	target << "((_ int2bv " << width << ")" << "((_ bv2int)" << expr.str() << "))";
+}
+
+void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostringstream& target)
+{
+	if(width < finalwidth) {
+		target << "(concat #b";
+		for(unsigned i = 0; i < finalwidth - width; i++) {
+			target << "0";
+		}
+		target << " " << expr.str() << ")";
+	} else {
+		target << "((_ extract " << finalwidth-1 << " " << 0 << ") " << expr.str() << ")";
+	}
+}
+
+/*
+* Convert a Bool expression to a BitVec.
+* First convert Bool to Int type, then Int to BitVec.
+*/
+void bool_to_bv(ostringstream& expr, ostringstream& target)
+{
+	ostringstream i_expr;
+	i_expr << "(ite " << expr.str() << " #b1 #b0)";
+	target << i_expr.str();
+}
+
+void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	ostringstream expr_bool;
+	if(width == SMT_INT) expr_bool << "(distinct " << expr.str() << " 0)";
+	else bv_compare_zero(expr, "distinct", width, expr_bool);
+	target << expr_bool.str();
+}
+
+void bv_or_bool_to_int(ostringstream& expr, unsigned width, ostringstream& target)
+{
+	if(width == SMT_BOOL)
+		target << "(ite " << expr.str() << " 1 0)";
+	else 
+		target << "((_ bv2int)" << expr.str() << ")";
+}
+
+/*
+* Bit or part selection for a BitVec.
+* The format is ( (_ extract msi lsi ) BitVec ).
+*/
+void extract(ostringstream& expr, int msi, int lsi, ostringstream& target)
+{
+	target << "((_ extract " << msi << " " << lsi << ")" << expr.str() << ")" ;
+}
+
+/*
+* Compare a BitVec with #b0 which need to expand the number of "0" bits.
+*/
+void bv_compare_zero(ostringstream& expr, string op, unsigned width, ostringstream& target)
+{
+	target << "(" << op << " " << expr.str() << " " << "#b";
+	for(int i = 0; i < width; i++){target << "0";}
+	target << ")";
+}
+
+/*
+* Compare a Int number with 0 for a bool result.
+*/
+void int_compare_zero(ostringstream& expr, string op, ostringstream& target)
+{
+	target << "(" << op << " " << expr.str() << " " << "0)";
+}
+
+
 void declareConstBool(ostream& out, string name)
 {
     out << "(declare-const " << name << " Bool" << ")" << endl;
@@ -167,7 +263,7 @@ InstanModule::InstanModule(InstanModule* lastlevel, NetInstan* instan, ostream& 
         define[pos.first] = var;
         assertInitial(out, var);
     }
-    map<string, NetInstan*>::iterator npos = instan->next_level.begin();
+    unordered_map<string, NetInstan*>::iterator npos = instan->next_level.begin();
     for(; npos != instan->next_level.end(); npos++) {
         InstanModule* next = new InstanModule(this, npos->second, out);
         nextlevel.push_back(next);
@@ -204,14 +300,10 @@ void InstanModule::startSynchroLogic(ostream& out, unordered_map<SmtDefine*, boo
         }
     }
     out << "\n; " << instan->get_level_name() << " " << "synchrous generate" << endl;
-    for(size_t i = 0; i < instan->get_module()->get_cfg()->cfgs->count(); i++)
+    for(Cfg* cfg : instan->get_module()->sync_always)
     {
-        Cfg* cfg = (*(instan->get_module()->get_cfg()->cfgs))[i];
-        if(cfg->sync)
-        {
-            out << ";" << instan->get_module()->get_file() << " : " << cfg->lineno << endl;
-            cfg->proc->dump_design_smt(out, this, change, tempid);
-        }
+        out << ";" << instan->get_module()->get_file() << " : " << cfg->lineno << endl;
+        cfg->proc->dump_design_smt(out, this, change, tempid);
     }
     for(InstanModule* instan : nextlevel)
     {
@@ -227,35 +319,18 @@ void InstanModule::startCombineLogic(ostream& out, unsigned& tempid)
     }
     out << "\n; " << instan->get_level_name() << " " << "assign generate" << endl;
     unordered_map<SmtDefine*, bool> change;
-    for(PGAssign* ag : instan->get_module()->assigns_)
-    {
-        out << ";";
-        ag->dump(out);
-        ag->dump_design_smt(out, this);
-    }
+    // for(PGAssign* ag : instan->get_module()->assigns_)
+    // {
+    //     out << ";";
+    //     ag->dump(out);
+    //     ag->dump_design_smt(out, this);
+    // }
     out << "\n; " << instan->get_level_name() << " " << "combine generate" << endl;
-    for(list<Cfg*> cfgset : instan->get_module()->cfg_list)
+    for(Cfg* cfg : instan->get_module()->comb_always)
     {
-        Cfg* cfg = nullptr;
-        if(cfgset.size() == 1)
-        {
-            cfg = cfgset.front();
-            if(!cfg->sync)
-            {
-                out << "\n; " << instan->get_module()->get_file() << " : " << cfg->lineno << endl;
-                cfg->proc->dump_design_smt(out, this, change, tempid);
-            }
-        }
-        if(cfg)
-        {
+            out << "\n; " << instan->get_module()->get_file() << " : " << cfg->lineno << endl;
+            cfg->proc->dump_design_smt(out, this, change, tempid);
             out << "\n; " << instan->get_level_name() << " " << "assign generate" << endl;
-            for(PGAssign* ag : instan->get_module()->assigns_)
-            {
-                out << ";";
-                ag->dump(out);
-                ag->dump_design_smt(out, this);
-            }
-        }
     }
     out << "\n;" << "Update outputs for " << instan->get_level_name() << endl;
     if(!instan->output_port.empty())

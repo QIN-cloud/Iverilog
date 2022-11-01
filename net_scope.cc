@@ -30,7 +30,6 @@
 # include  <cstdlib>
 # include  <sstream>
 # include  "ivl_assert.h"
-# include  "testpath.h"
 
 class PExpr;
 
@@ -886,56 +885,3 @@ void NetScope::add_tie_lo(Design*des)
       }
 }
 
-RefVar* NetScope::build_var(perm_string s)
-{
-      RefVar* tmp = new RefVar;
-      NetNet* net = find_signal(s);
-      assert(net);
-      if(net->packed_dims().size() <= 1)
-      {
-            RefVar* tmp = new RefVar;
-            tmp->name = s;
-            switch (net->port_type())
-            {
-            case PortType::NOT_A_PORT : tmp->ptype = "NOT_A_PORT";
-                  break;
-            case PortType::PIMPLICIT : tmp->ptype = "PIMPLICIT";
-                  break;
-            case PortType::PINOUT : tmp->ptype = "PINOUT";
-                  break;
-            case PortType::PINPUT : tmp->ptype = "PINPUT";
-                  break;
-            case PortType::POUTPUT : tmp->ptype = "POUTPUT";
-                  break;
-            case PortType::PREF : tmp->ptype = "PREF";
-                  break;
-            default:
-                  break;
-            }
-            tmp->time = 0;
-            tmp->space = 0;
-            tmp->record = false;
-            if(net->packed_dims().size())
-            {
-                  tmp->lsb = net->packed_dims().front().get_lsb();
-                  tmp->msb = net->packed_dims().front().get_msb();
-                  tmp->width = net->vector_width();
-            }
-            else {
-                tmp->lsb = 0;
-                tmp->msb = 0;
-                tmp->width = 1;
-            }
-
-            return tmp;
-      }
-
-      else
-      {
-            cerr << get_fileline() << " Memory is unsupported now!" << endl;
-            exit(0);
-      }
-
-
-      return 0;
-}

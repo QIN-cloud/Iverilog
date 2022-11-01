@@ -33,6 +33,7 @@
 # include  <vector>
 # include  <set>
 # include  <utility>
+# include  <unordered_map>
 # include  "ivl_target.h"
 # include  "ivl_target_priv.h"
 # include  "pform_types.h"
@@ -45,7 +46,7 @@
 # include  "LineInfo.h"
 # include  "Attrib.h"
 # include  "PUdp.h"
-# include  "testpath.h"
+# include  "cfg.h"
 
 #ifdef HAVE_IOSFWD
 # include  <iosfwd>
@@ -92,13 +93,12 @@ class netenum_t;
 class netstruct_t;
 class netvector_t;
 
-class RefVar;
-class SmtVar;
 class PProcess;
 class NetEConcat;
-class InstanModule;
 class SmtDefine;
+class Cfg;
 class Statement;
+class InstanModule;
 
 struct target;
 struct functor_t;
@@ -1200,8 +1200,6 @@ class NetScope : public Definitions, public Attrib {
       void add_tie_hi(Design*des);
       void add_tie_lo(Design*des);
 
-      RefVar* build_var(perm_string s);
-
       Link&tie_hi() const { return tie_hi_->pin(0); };
       Link&tie_lo() const { return tie_lo_->pin(0); };
 
@@ -2025,7 +2023,6 @@ class NetExpr  : public LineInfo {
 
       virtual void expr_scan(struct expr_scan_t*) const =0;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
 	// This is the advanced description of the type. I think I
@@ -2123,7 +2120,6 @@ class NetEArrayPattern  : public NetExpr {
 
       void expr_scan(struct expr_scan_t*) const;
       void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       NetEArrayPattern* dup_expr() const;
@@ -2160,7 +2156,6 @@ class NetEConst  : public NetExpr {
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual NetEConst* dup_expr() const;
@@ -2235,7 +2230,6 @@ class NetECReal  : public NetExpr {
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual NetECReal* dup_expr() const;
@@ -2254,7 +2248,6 @@ class NetECString  : public NetEConst {
     public:
       explicit NetECString(const std::string& val);
       ~NetECString();
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
       // The type of a string is IVL_VT_STRING
       ivl_variable_type_t expr_type() const;
@@ -2772,9 +2765,6 @@ class NetProc : public virtual LineInfo {
 			      const std::vector<NetEvProbe*>&events);
 
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const;
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const;
       virtual void dump_design_smt(ostream& o, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
 	// Recursively checks to see if there is delay in this element.
       virtual DelayType delay_type(bool print_delay=false) const;
@@ -2928,7 +2918,6 @@ class NetAssign_ {
       NetAssign_* more;
 
       void dump_lval(ostream&o) const;
-      int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md, bool base_type, set<string>& refs, unsigned cur_time) const;
       int dump_design_smt(ostream& out, ostringstream& expr, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid, bool base) const;
 
     private:
@@ -2985,8 +2974,6 @@ class NetAssignBase : public NetProc {
 	// This dumps all the lval structures.
       void dump_lval(ostream&) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const;
       virtual void dump_design_smt(ostream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -3033,7 +3020,6 @@ class NetAssignNB  : public NetAssignBase {
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, set<string>& refs, unsigned cur_time) const;
       virtual void dump_design_smt(ostream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -3100,7 +3086,6 @@ class NetBlock  : public NetProc {
       virtual int match_proc(struct proc_match_t*);
       virtual void dump(ostream&, unsigned ind) const;
       virtual void dump_design_smt(ostream& o, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -3155,8 +3140,6 @@ class NetCase  : public NetProc {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const;
       virtual void dump_design_smt(ostream& o, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
@@ -3198,7 +3181,6 @@ class NetCAssign  : public NetAssignBase {
       ~NetCAssign();
 
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool emit_proc(struct target_t*) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -3252,8 +3234,6 @@ class NetCondit  : public NetProc {
       virtual bool emit_proc(struct target_t*) const;
       virtual int match_proc(struct proc_match_t*);
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const;
       virtual void dump_design_smt(ostream& o, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool> >& condit, unsigned& tempid) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
@@ -3302,7 +3282,6 @@ class NetDeassign : public NetAssignBase {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private: // not implemented
@@ -3332,7 +3311,6 @@ class NetDisable  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
@@ -3509,7 +3487,6 @@ class NetEvTrig  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -3592,7 +3569,6 @@ class NetEvWait  : public NetProc {
 
       virtual void dump(ostream&, unsigned ind) const;
       virtual void dump_design_smt(ostream &o, InstanModule *instan, unordered_map<SmtDefine*, bool>& change, list<pair<string, bool>> &condit, unsigned &tempid) const;
-      virtual void gen_stats(NetStats* proc_stats);
 	// This will ignore any statement.
       virtual void dump_inline(ostream&) const;
       virtual DelayType delay_type(bool print_delay=false) const;
@@ -3646,7 +3622,6 @@ class NetForce  : public NetAssignBase {
       ~NetForce();
 
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool emit_proc(struct target_t*) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 };
@@ -3668,7 +3643,6 @@ class NetForever : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
@@ -3807,7 +3781,6 @@ class NetPDelay  : public NetProc {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -3836,8 +3809,6 @@ class NetRepeat : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
@@ -3862,7 +3833,6 @@ class NetRelease : public NetAssignBase {
 
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
     private:
@@ -3894,7 +3864,6 @@ class NetSTask  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
 				     map<perm_string,LocalVar>&ctx) const;
@@ -3949,7 +3918,6 @@ class NetELast : public NetExpr {
 
       virtual ivl_variable_type_t expr_type() const;
       virtual void dump(std::ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
@@ -3982,7 +3950,6 @@ class NetEUFunc  : public NetExpr {
       virtual ivl_variable_type_t expr_type() const;
       virtual const netenum_t* enumeration() const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
@@ -4021,7 +3988,6 @@ class NetEAccess : public NetExpr {
 
       virtual ivl_variable_type_t expr_type() const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
@@ -4054,7 +4020,6 @@ class NetUTask  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
 
@@ -4082,8 +4047,6 @@ class NetWhile  : public NetProc {
       virtual void nex_output(NexusSet&);
       virtual bool emit_proc(struct target_t*) const;
       virtual void dump(ostream&, unsigned ind) const;
-      virtual void gen_stats(NetStats* proc_stats);
-      virtual void dump_smt(ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, bool result, int caseitemidx, Module* md, set<string>& refs) const;;
       virtual DelayType delay_type(bool print_delay=false) const;
       virtual bool check_synth(ivl_process_type_t pr_type, const NetScope*scope) const;
       virtual bool evaluate_function(const LineInfo&loc,
@@ -4129,12 +4092,7 @@ class NetProcTop  : public LineInfo, public Attrib {
 
       void dump(ostream&, unsigned ind) const;
       void dump_design_smt(ostream& o, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
-      virtual void gen_stats(NetStats* proc_stats);
       bool emit(struct target_t*tgt) const;
-      unsigned get_id();
-      bool get_sync();
-      void set_id(unsigned id);
-      void set_sync(bool sync);
 
     public:
       const Statement* event;
@@ -4151,7 +4109,6 @@ class NetProcTop  : public LineInfo, public Attrib {
       Design*synthesized_design_;
       NetScope*scope_;
       friend class Design;
-      unsigned id_;
       bool sync_;
       NetProcTop*next_;
 };
@@ -4240,7 +4197,6 @@ class NetEBinary  : public NetExpr {
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     protected:
@@ -4269,7 +4225,6 @@ class NetEBAdd : public NetEBinary {
       virtual NetEBAdd* dup_expr() const;
       virtual NetExpr* eval_tree();
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
       
 
@@ -4293,7 +4248,6 @@ class NetEBDiv : public NetEBinary {
 
       virtual NetEBDiv* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4323,7 +4277,6 @@ class NetEBBits : public NetEBinary {
 
       virtual NetEBBits* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4355,7 +4308,6 @@ class NetEBComp : public NetEBinary {
       virtual ivl_variable_type_t expr_type() const;
       virtual NetEBComp* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4388,7 +4340,6 @@ class NetEBLogic : public NetEBinary {
 
       virtual NetEBLogic* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4409,7 +4360,6 @@ class NetEBMinMax : public NetEBinary {
       ~NetEBMinMax();
 
       virtual ivl_variable_type_t expr_type() const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4430,7 +4380,6 @@ class NetEBMult : public NetEBinary {
 
       virtual NetEBMult* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4451,7 +4400,6 @@ class NetEBPow : public NetEBinary {
 
       virtual NetEBPow* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4479,7 +4427,6 @@ class NetEBShift : public NetEBinary {
 
       virtual NetEBShift* dup_expr() const;
       virtual NetNet* synthesize(Design*, NetScope*scope, NetExpr*root);
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4522,7 +4469,6 @@ class NetEConcat  : public NetExpr {
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*root);
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, std::set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
       
 
@@ -4582,7 +4528,6 @@ class NetESelect  : public NetExpr {
       virtual NetESelect* dup_expr() const;
       virtual NetNet*synthesize(Design*des, NetScope*scope, NetExpr*root);
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4609,7 +4554,6 @@ class NetEEvent : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4635,7 +4579,6 @@ class NetENetenum  : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4662,7 +4605,6 @@ class NetENew : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4687,7 +4629,6 @@ class NetENull : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 };
 
@@ -4716,7 +4657,6 @@ class NetEProperty : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4744,7 +4684,6 @@ class NetEScope  : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -4781,7 +4720,6 @@ class NetESFunc  : public NetExpr {
                                   bool nested_func = false) const;
       virtual const netenum_t* enumeration() const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       virtual void expr_scan(struct expr_scan_t*) const;
@@ -4919,7 +4857,6 @@ class NetEShallowCopy : public NetExpr {
                                   bool nested_func = false) const;
 
       virtual void dump(ostream&os) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
       void expr_scan_oper1(struct expr_scan_t*) const;
@@ -4956,7 +4893,6 @@ class NetETernary  : public NetExpr {
                                   bool nested_func = false) const;
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
       virtual NetNet*synthesize(Design*, NetScope*scope, NetExpr*root);
 
@@ -5014,7 +4950,6 @@ class NetEUnary  : public NetExpr {
                                   bool nested_func = false) const;
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
       
 
@@ -5116,7 +5051,6 @@ class NetESignal  : public NetExpr {
 
       virtual void expr_scan(struct expr_scan_t*) const;
       virtual void dump(ostream&) const;
-      virtual int dump_smt(map<string, RefVar*>& vars, set<SmtVar*>& used, ostringstream& expr, Module* md) const;
       virtual int dump_design_smt(ostringstream& out, InstanModule* instan, unordered_map<SmtDefine*, bool>& change, unsigned& tempid) const;
 
     private:
@@ -5169,7 +5103,7 @@ class Design {
 				bool program_block, bool is_interface);
       NetScope* find_root_scope();
       std::list<NetScope*> find_root_scopes() const;
-      const std::list<NetScope*>& get_root_scopes() const;
+      std::list<NetScope*>& get_root_scopes();
 
       NetScope* make_package_scope(perm_string name, NetScope*unit_scope,
 				   bool is_unit);

@@ -33,10 +33,9 @@
 # include  "netlist.h"
 # include  "pform_types.h"
 # include  "slice.h"
-# include  "PDesign.h"
+# include  "AnalysisControler.h"
+# include  "Coverage.h"
 # include  "cfg.h"
-# include  "vcdvar.h"
-# include  "testpath.h"
 # include  <fstream>
 
 # define ASSIGN_NUMBER 2
@@ -62,33 +61,16 @@ class NetScope;
 class PData;
 class VcdVar;
 class BranchTree;
+class CoverBitVecArray;
 
-/* A struct stores the paths of a Cfg node. */
-struct PathNode{
-public:
-      PathNode(Cfg_Node* node) : node_(node){};
-      ~PathNode();
-      Cfg_Node* node_;
-      vector<string> paths_;
+struct ExpressionNode {
+    PExpr* expr;
+    unordered_map<PExpr*, unsigned> item;
 };
 
-/* This scope represents a instantiation module by this module type.*/
-class VcdScope{
-public:
-      VcdScope(Module* module, PDesign* pdesign) : module_(module), pdesign_(pdesign){};
-      ~VcdScope();
-      void dump(ostream& o) const;
-      void report(ostream& o);
-      void initialize(map<string, verinum>& variety_symbols, ostream& o, bool combine);
-      void update(set<string>& changed, ostream& o, bool combine);
-      Module* module_;                                 //Module type.
-      PDesign* pdesign_;                               //Coverage control struct.
-      string name_;                                    //Instantiated name.
-      ScopeRep* report_;                               //Scope coverage report.
-      map<string, vector<VcdVar*> > vars_;             //{var symbol, {var}}.
-      map<string, VcdVar*> defines_;                   //{var name, var}.
-      vector<VcdScope*> instans_;                      //Next instan level.
-      set<VcdVar*> fsm_vars_;                          //Select for fsm coverage.
+struct BranchNode {
+    BranchTree* tree;
+    unordered_map<unsigned, bool> leaf;
 };
 
 /* This struct is used for assign sorting. */
@@ -114,8 +96,6 @@ public:
       unsigned out_;
       list<Cfg*> next_;
 };
-
-vector<unsigned> split_path(string path);
 
 /* 
  * A module is a named container and scope. A module holds a bunch of
@@ -243,131 +223,41 @@ class Module : public PScopeExtra, public PNamedItem {
 
       public:
             ModuleNode* build_node(PDesign& de);
-
-            /* Build cfgs for processes in this module. */
-            void build_cfgs();           
-
-            /* Search the variables in condition expressions and record the process id. */
-            void build_var_cfgs();
-
-            /* Build variable table*/
-            void build_vartab(Design*);
-
-            /* Generate paths for every process. */
+            void get_vhdl_line();
+            void build_cfgs();
+            void build_lines();
             void build_paths();
-
-            /* Using DFS to generate paths for start node of a cfg. */
-            PathNode* gen_path(Cfg_Node* node, svector<Cfg_Node*>* root, unsigned index);
-
-            /* Generate all paths at a clock. */
-            void enumrate(ostream& enums, ostream& paths, ostream& report);
-
-            /* Get the struct for expression coverage.*/
             void build_exprs();
-
-            /* Get the struct for branch coverage. */
             void build_branchs();
-
-            /* Parse assigns and be ready for sorting them. */
+            void get_condit();
             void parse_assigns();
-
-            /* Sort assign statements. */
             void sort_assigns();
-
-            /* Search lrefs in assign statements from wires. */
-            void parse_wires();
-
-            /* Find assign by var in graph. */
+            void sort_cfgs();
+            void build_cfg_path(Cfg* cfg, unsigned idx, CoverBitVecArray* bv);
+            void build_branch_node(map<unsigned, BranchTree*>& branchs);
+            void build_expr_node(map<PExpr*, set<PExpr*> >& exprs);
+            void complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, bool> >& used);
+            Cfg* compare_cfgs(Cfg* lcfg, Cfg* rcfg, unordered_map<Cfg*, unordered_map<string, bool> >& used);
             void find_assign(string var, map<PGAssign*, bool>& select_assigns, set<string>& assign_defs);
 
-            /* Generate smt-lib2 for assign statements, type will be true if generate all assigns at beginning. */
-            void gen_assign_smt(set<string>& defs, bool type, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, unsigned cur_time);
-
-            /* Get the assign value by sim_vars. */
-            void assign_evaluate(set<string>& defs, VcdScope* scope, bool type, ostream& o, bool combine);
-
-            /* Select synchrous cfgs and sort combine cfgs. */
-            void sort_cfgs();
-
-            /* Get the assign defs influenced by a combine cfg. */
-            void complete_defs(Cfg* cfg, unordered_map<Cfg*, unordered_map<string, bool> >& used);
-
-            /* Compare two combine cfgs, return the cfg which should be excuted first. */
-            Cfg* compare_cfgs(Cfg* lcfg, Cfg* rcfg, unordered_map<Cfg*, unordered_map<string, bool> >& used); 
-
-            /* Transfer the string path to vector<unsigned>. */
-            void tran_nodes();
-            
-            /* Dump all the path combinations. */
-            void dfs_paths(ostream& o, list<unsigned>& path, unsigned index);
-            
-            /* Work ready for coverage and smt generator. */
-            void initialize(bool line, bool path, bool branch, bool cond, bool smt);
-
             /* Dump the cfgnodes for every cfg. */
-            void dump_cfg(ostream& o) const; 
-
-            /* Dump the condit variable and process id,then dump the vcd scopes instantiated of this module. */
-            void dump_vars(ostream& o) const;
-
-            /* Dump the variables of instatiated scopes during the simulation replay. */      
-            void dump_values(ostream& o)const; 
-
+            void dump_cfg(ostream& o) const;
             void dump_slice(std::ostream& out, slicer* s) const;
-
-            void dump_paths(ostream& o)const;
-
-            void dump_vartab(ostream& o)const;
-
-            void dump_sort_cfg(ostream& o) const;
-
-            void dump_sort_assign(ostream& o) const;
-
-            void dump_exprs(ostream& o) const;
-
-            void get_lines(map<perm_string, vector<string> >& lines) const;
-
-            void set_cfg_process();
-
             inline void set_design(Design* design){design_ = design;};
-
             inline Design* get_design() const{return design_;};
-
-            NetScope* get_scope() const;
-
             inline void set_cfg(Module_Cfgs* cfg){cfg_ = cfg;}
-
             inline void set_modulenode(ModuleNode* mn){mn_  = mn;}
-
             inline Module_Cfgs* get_cfg(){return cfg_;};
 
-            vector<VcdScope*> vcd_scopes;               /* Mutiple instantiated scopes of this module type. */
-            
-            map<string, set<unsigned>> var_cfgs;        /* Save condit variable and process id, form as { var, set{ process id } }. */
-
-            map<Cfg_Node*, PathNode*> path_nodes_;      /* Save path information for every node. */
-
-            map<Cfg*, vector<set<unsigned> > > routes_; /* Save paths for every cfg. */
-
-            map<string, RefVar*> vartab_;               /* Defined variables. */
-
-            set<unsigned> priority_line;                  /* Priority process id. */
-
-            list<list<Cfg*> > cfg_list;                 /* The sorted process list. */
-
-            map<unsigned, BranchTree*> branchs_;        /* Branchs for coverage. */
-
-            map<PExpr*, set<PExpr*> > exprs_;           /* Using for expression coverage. */
-            
-            map<PExpr*, PExpr*> reverse_exprs_;         
-
-            map<unsigned, vector<string> > paths_;      /* All paths for every process. */
-
-            map<unsigned, vector<vector<unsigned> > > nodes_; /* Path for smt genenrating. */
-            
-            list<PGAssign*> assigns_;                   /* Sorting assign statements. */
-
-            map<string, AssignNode*> assign_pos_;       /* Using for searching the variable in assigns. */ 
+            unordered_map<string, bool> condit;
+            list<Cfg*> sync_always;
+            list<Cfg*> comb_always;
+            map<unsigned, BranchNode*> pp_branch;        /* Branchs for coverage. */
+            map<PExpr*, ExpressionNode*> pp_expr;
+            map<PExpr*, ExpressionNode*> pp_reverse_expr;
+            vector<PGAssign*> assign_order;
+            map<string, AssignNode*> assign_map;       /* Using for searching the variable in assigns. */
+            vector<const char*> vhdl_line;
 
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
@@ -379,7 +269,5 @@ class Module : public PScopeExtra, public PNamedItem {
             Module(const Module&);
             Module& operator= (const Module&);
 };
-
-extern int get_param_value(const Module* md, PExpr* expr);
 
 #endif /* IVL_Module_H */

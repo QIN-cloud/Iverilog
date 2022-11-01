@@ -1,8 +1,7 @@
 #ifndef SMT_GENERATOR_H
 #define SMT_GENERATOR_H
 #include "Module.h"
-#include "PDesign.h"
-#include "testpath.h"
+#include "AnalysisControler.h"
 #include "idp.h"
 #include <unordered_map>
 #include <list>
@@ -10,6 +9,12 @@
 
 #define NULLTIME 0
 #define BASE_WIDTH 16
+
+#define SMT_INT 0
+#define SMT_BOOL -1
+#define SMT_NULL -2
+#define SMT_WRONG -3
+#define SMT_MAX 64
 
 class InstanModule;
 class SmtGenerator;
@@ -19,9 +24,17 @@ class NetSymbol;
 class NetInstan;
 class BitSet;
 
-static u_int16_t base_num[16] = {0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff, 0x1ff, 0x3ff, 0x7ff,0xfff, 0x1fff, 0x3fff, 0x7fff, 0xffff};
-static u_int16_t full_num_except_bit[16] = {0xfffe, 0xfffd, 0xfffb, 0xfff7, 0xffef, 0xffdf, 0xffbf, 0xff7f, 0xfeff, 0xfdff, 0xfbff, 0xf7ff,0xefff, 0xdfff, 0xbfff, 0x7fff};
-static u_int16_t low_fill_zero_bit[16] = {0xfffe, 0xfffb, 0xfff8, 0xfff0, 0xffe0, 0xffb0, 0xff80, 0xff00, 0xfe00, 0xfb00, 0xf800, 0xf000, 0xe000, 0xb000, 0x8000, 0x0000};
+static unordered_map<char, const char*> SMT_Vec_Add = {{'+', "bvadd"}, {'-', "bvsub"}};
+static unordered_map<char, const char*> SMT_Vec_Div = {{'/', "bvudiv"}, {'%', "bvurem"}};
+static unordered_map<char, const char*> SMT_Vec_Bits = {{'^', "bvxor"}, {'|', "bvor"}, {'&', "bvand"}, {'O', "bvnor"}, {'A', "bvnand"}, {'X', "bvxor"}};
+static unordered_map<char, const char*> SMT_Vec_Comp = {{'>', "bvugt"}, {'<', "bvult"}, {'L', "bvule"}, {'G', "bvuge"}, {'e', "="}, {'n', "distinct"}};
+static unordered_map<char, const char*> SMT_Int_Comp = {{'>', ">"}, {'<', "<"}, {'L', "<="}, {'G', ">="}, {'e', "="}, {'n', "distinct"}};
+static unordered_map<char, const char*> SMT_Bool_Logic = {{'a', "and"}, {'o', "or"}};
+static unordered_map<char, const char*> SMT_Vec_Mult = {{'*', "bvmul"}};
+
+static const u_int16_t base_num[16] = {0x1, 0x3, 0x7, 0xf, 0x1f, 0x3f, 0x7f, 0xff, 0x1ff, 0x3ff, 0x7ff,0xfff, 0x1fff, 0x3fff, 0x7fff, 0xffff};
+static const u_int16_t full_num_except_bit[16] = {0xfffe, 0xfffd, 0xfffb, 0xfff7, 0xffef, 0xffdf, 0xffbf, 0xff7f, 0xfeff, 0xfdff, 0xfbff, 0xf7ff,0xefff, 0xdfff, 0xbfff, 0x7fff};
+static const u_int16_t low_fill_zero_bit[16] = {0xfffe, 0xfffb, 0xfff8, 0xfff0, 0xffe0, 0xffb0, 0xff80, 0xff00, 0xfe00, 0xfb00, 0xf800, 0xf000, 0xe000, 0xb000, 0x8000, 0x0000};
 
 struct BitSet{
     BitSet(int base, unsigned width);
@@ -99,5 +112,15 @@ extern void assertConditStatement(ostream& out, ostringstream& expr, int width, 
 extern void assertEqual(ostringstream& out, ostringstream& expr1, int width1, ostringstream& expr2, int width2, string op);
 extern void assertInitial(ostream& out, SmtDefine* var);
 extern void assertVarState(ostream& out, int msb, int lsb, SmtDefine* var);
+extern void bv_to_int(ostringstream& expr, ostringstream& target);
+extern void int_to_bv(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_to_bv(ostringstream& expr, unsigned width, unsigned finalwidth, ostringstream& target);
+extern void bv_int_bv(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bool_to_bv(ostringstream& expr, ostringstream& target);
+extern void extract(ostringstream& expr, int msi, int lsi, ostringstream& target);
+extern void bv_or_int_to_bool(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_or_bool_to_int(ostringstream& expr, unsigned width, ostringstream& target);
+extern void bv_compare_zero(ostringstream& expr, string op, unsigned width, ostringstream& target);
+extern void int_compare_zero(ostringstream& expr, string op, ostringstream& target);
 
 #endif

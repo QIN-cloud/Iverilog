@@ -32,7 +32,6 @@ public:
 	VcdScope* scope; 				//The instantiated module where this variable is located in.
 	string name;      				//Variable name.
 	Type type;						//Signal or Port.
-	string symbol;					//Symbol in VCD file.
 	bool little_endia; 				//True as var[3:0], false as var[0:3].
 	unsigned width;   		    	//Bit width.
 	long lsb, msb;     				//Least and most size of bits.

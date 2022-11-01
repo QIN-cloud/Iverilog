@@ -26,7 +26,9 @@
 # include  "PDelays.h"
 # include  "netlist.h"
 # include  "Module.h"
-# include  "vcdvar.h"
+# include  "idp.h"
+# include  "Coverage.h"
+# include  "smt_generator.h"
 # include  <map>
 # include  <list>
 # include  <set>
@@ -38,9 +40,11 @@ class Module;
 class CfgNode;
 class PDelays;
 class PDesign;
-class VcdScope;
-class VcdVar;
+class NetInstan;
+class NetSymbol;
 class BranchTree;
+class DesignCoverage;
+class InstanModule;
 
 /*
  * A PGate represents a Verilog gate. The gate has a name and other
@@ -160,16 +164,17 @@ class PGAssign  : public PGate {
             set<string>* tmp = new set<string>;
             return *tmp;
       };
-      void dump_smt(Design* design, ostream& o, map<string, RefVar*>& vars, set<SmtVar*>& used, Module* md, unsigned time) const;
       void dump_design_smt(ostream &out, InstanModule *instan) const;
-      void evaluate(Design* des, NetScope* scope, VcdScope* instan, bool combine, bool branch);
+      void evaluate(NetInstan* idp, DesignCoverage* dcov);
       void build_expr(map<PExpr*, set<PExpr*> >& exprs) const;
       void build_branch(Module* md, map<unsigned, BranchTree*>& branchs);
+      void set_id(unsigned id) {this->id = id;}
+      unsigned get_id() { return id; }
 
     private:
+      unsigned id;
       void elaborate_unpacked_array_(Design*des, NetScope*scope, NetNet*lval) const;
 };
-
 
 /*
  * The Builtin class is specifically a gate with one of the builtin

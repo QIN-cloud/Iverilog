@@ -91,5 +91,6 @@
         "charconv": "cpp",
         "cassert": "cpp",
         "getopt.h": "c"
-    }
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

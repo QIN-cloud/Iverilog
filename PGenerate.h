@@ -27,7 +27,7 @@
 # include  <map>
 # include  <valarray>
 # include  "pform_types.h"
-# include  "PDesign.h"
+# include  "AnalysisControler.h"
 # include  "CfgNode.h"
 # include  "slice.h"
 # include  "PGate.h"

@@ -2,15 +2,16 @@
 #include<Statement.h>
 #include<PExpr.h>
 #include<PGate.h>
-#include<vcdvar.h>
+#include<branchtree.h>
 
 void Module::build_branchs()
 {
-    for(PGAssign* assign : assigns_) {
-        assign->build_branch(this, branchs_);
+    map<unsigned, BranchTree*> branchs;
+    for(PGAssign* assign : assign_order) {
+        assign->build_branch(this, branchs);
     }
     for(PProcess* proc : behaviors) {
-        proc->build_branch(this, branchs_, nullptr);
+        proc->build_branch(this, branchs, nullptr);
     }
 }
 
@@ -146,4 +147,15 @@ BranchTree* PCase::build_branch(Module* md, map<unsigned, BranchTree*>& branchs,
     }
     if(!root) branchs[get_lineno()] = node;
     return node;
+}
+
+void Module::build_branch_node(map<unsigned, BranchTree*>& branchs) 
+{
+    for(auto branch : branchs) {
+        BranchNode* node = new BranchNode;
+        node->tree = branch.second;
+        unsigned id = 0;
+        branch.second->set_id(id, node);
+        pp_branch[branch.first] = node;
+    }
 }

@@ -1008,8 +1008,8 @@ configure:7155: gcc -o conftest  -g -O2    conftest.c -lz -lpthread -lreadline -
 conftest.c:51:6: warning: conflicting types for built-in function 'lround' [-Wbuiltin-declaration-mismatch]
  char lround ();
       ^~~~~~
-/tmp/ccPXeAE4.o: In function `main':
-/home/qin/Desktop/workspace/iverilog/conftest.c:55: undefined reference to `lround'
+/tmp/ccfAWgQS.o: In function `main':
+/home/qin/Desktop/iverilog-update_10_1/iverilog-update/conftest.c:55: undefined reference to `lround'
 collect2: error: ld returned 1 exit status
 configure:7155: $? = 1
 configure: failed program was:

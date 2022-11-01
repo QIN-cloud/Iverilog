@@ -1,7 +1,7 @@
 #include "config.h"
 #include "Statement.h"
 #include "CfgNode.h"
-#include "PDesign.h"
+#include "AnalysisControler.h"
 #include "Module.h"
 #include "PTask.h"
 #include "PWire.h"
@@ -938,50 +938,50 @@ GenerateNode* PGenerate::build_node(PDesign& de)
 	return gn;
 }
 
-svector<ModuleNode*>* PDesign::build_nodes(PDesign& de, string mainmodule)
-{
-	const char* constc = nullptr;         //初始化const char*类型，并赋值为空
-    constc= mainmodule.c_str();
-	perm_string tmp(constc);
-	svector<ModuleNode*>* nodes = new svector<ModuleNode*>();
-	map<perm_string, Module*>::iterator pos;
-	pos = modules_.find(tmp);
-	if (pos != modules_.end())
-	{
-		ModuleNode* node = pos->second->build_node(de);
-		nodes = new svector<ModuleNode*>(*nodes, node);
-	}
-	else
-	{
-		cerr << "Invalid module name for program slicing: " << mainmodule << endl;
-		exit(1);
-	}
-	return nodes;
-}
+// svector<ModuleNode*>* PDesign::build_nodes(PDesign& de, string mainmodule)
+// {
+// 	const char* constc = nullptr;         //初始化const char*类型，并赋值为空
+//     constc= mainmodule.c_str();
+// 	perm_string tmp(constc);
+// 	svector<ModuleNode*>* nodes = new svector<ModuleNode*>();
+// 	map<perm_string, Module*>::iterator pos;
+// 	pos = modules_.find(tmp);
+// 	if (pos != modules_.end())
+// 	{
+// 		ModuleNode* node = pos->second->build_node(de);
+// 		nodes = new svector<ModuleNode*>(*nodes, node);
+// 	}
+// 	else
+// 	{
+// 		cerr << "Invalid module name for program slicing: " << mainmodule << endl;
+// 		exit(1);
+// 	}
+// 	return nodes;
+// }
 
-svector<ModuleNode*>* PDesign::build_nodes(PDesign& de)
-{
-	svector<ModuleNode*>* nodes = new svector<ModuleNode*>();
-	map<perm_string, Module*>::iterator pos;
-	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
-	{
-		ModuleNode* node = pos->second->build_node(de);
-		nodes = new svector<ModuleNode*>(*nodes, node);
-	}
-	return nodes;
-}
+// svector<ModuleNode*>* PDesign::build_nodes(PDesign& de)
+// {
+// 	svector<ModuleNode*>* nodes = new svector<ModuleNode*>();
+// 	map<perm_string, Module*>::iterator pos;
+// 	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
+// 	{
+// 		ModuleNode* node = pos->second->build_node(de);
+// 		nodes = new svector<ModuleNode*>(*nodes, node);
+// 	}
+// 	return nodes;
+// }
 
-void PDesign::build_nodes()
-{
-	cout << "Build pform nodes and construct into cfgs..." << endl;
-	map<perm_string, Module*>::iterator pos;
-	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
-	{
-		cout << "Build cfg node for " << pos->first << "..." << endl;
-		ModuleNode* node = pos->second->build_node(*this);
-		pos->second->set_modulenode(node);
-	}
-}
+// void PDesign::build_nodes()
+// {
+// 	cout << "Build pform nodes and construct into cfgs..." << endl;
+// 	map<perm_string, Module*>::iterator pos;
+// 	for(pos = modules_.begin(); pos != modules_.end(); ++pos)
+// 	{
+// 		cout << "Build cfg node for " << pos->first << "..." << endl;
+// 		ModuleNode* node = pos->second->build_node(*this);
+// 		pos->second->set_modulenode(node);
+// 	}
+// }
 
 CfgNode* PForever::build_node(PDesign& de)
 {

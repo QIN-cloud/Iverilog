@@ -10,6 +10,8 @@
 using namespace std;
 
 class PExpr;
+struct Cfg;
+struct Module_Cfgs;
 
 typedef struct Node{
 	set<string> refs_, defs_;
