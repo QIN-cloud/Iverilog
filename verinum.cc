@@ -80,6 +80,7 @@ void verinum::dump(ostream& o) const
 				break;
 		}
 	}
+    o << endl;
 }
 
 string verinum::dumpstring() const

@@ -64,7 +64,7 @@ typedef struct Cfg{
 	bool always;                        //1 for always, 0 for others.
 	NetProcTop* proc;
     unordered_map<unsigned, unsigned> pp_line;
-	list<CoverBitVecArray*> pp_path;
+	map<CoverBitVecArray, unsigned> pp_path;
     unsigned path_num;
 }Cfg;
 

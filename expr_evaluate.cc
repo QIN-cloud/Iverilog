@@ -589,20 +589,22 @@ verinum* PEBinary::evaluate(NetInstan* idp, DesignCoverage* dcov)
 
 	if(op_ == 'a' || op_ == '0') {
 		if(CHECK_COVERAGE(EXPRESSION_COVERAGE, dcov->get_coverage())) {
-			if(idp->get_module()->pp_expr.find(this) != idp->get_module()->pp_expr.end()) {
-				ExpressionNode* node = idp->get_module()->pp_expr[this];
-				assert(dcov->sim_expr[node] == nullptr);
-				dcov->sim_expr[node] = new CoverBitVecArray(node->item.size());
-			}
-			assert(idp->get_module()->pp_reverse_expr.find(left_) != idp->get_module()->pp_reverse_expr.end());
-			assert(idp->get_module()->pp_reverse_expr.find(right_) == idp->get_module()->pp_reverse_expr.find(left_));
-			ExpressionNode* node = idp->get_module()->pp_reverse_expr[left_];
-			assert(dcov->sim_expr.find(node) != dcov->sim_expr.end());
-			CoverBitVecArray* bv = dcov->sim_expr[node];
-			if(l->as_unsigned())
-				bv->set_high(node->item[left_]);
-			if(r->as_unsigned()) 
-				bv->set_high(node->item[right_]);
+			if(idp->get_module()->pp_reverse_expr.find(left_) != idp->get_module()->pp_reverse_expr.end()) {
+                ExpressionNode *node = idp->get_module()->pp_reverse_expr[left_];
+                if (dcov->sim_expr.find(node) == dcov->sim_expr.end()) {
+                    dcov->sim_expr[node] = new CoverBitVecArray(node->item.size());
+                }
+                if (l->as_unsigned())
+                    dcov->sim_expr[node]->set_high(node->item[left_]);
+            }
+            if(idp->get_module()->pp_reverse_expr.find(right_) != idp->get_module()->pp_reverse_expr.end()) {
+                ExpressionNode *node = idp->get_module()->pp_reverse_expr[right_];
+                if (dcov->sim_expr.find(node) == dcov->sim_expr.end()) {
+                    dcov->sim_expr[node] = new CoverBitVecArray(node->item.size());
+                }
+                if (l->as_unsigned())
+                    dcov->sim_expr[node]->set_high(node->item[right_]);
+            }
 		}
 	}
 	
@@ -751,10 +753,16 @@ verinum* PETernary::evaluate(NetInstan* idp, DesignCoverage* dcov)
 		}
 	}
 
+    if(CHECK_COVERAGE(BRANCH_COVERAGE, dcov->get_coverage())) {
+        BranchNode* node = idp->get_module()->pp_branch[expr_->get_lineno()];
+        dcov->sim_branch[node].push_back((*vn)[0] == verinum::V1 ? TRUE_BRANCH : FALSE_BRANCH);
+    }
+
 	if((*vn)[0] == verinum::V1)
 		v = tru_->evaluate(idp, dcov);
 	else
 		v = fal_->evaluate(idp, dcov);
+
 	delete vn;
 	return v;
 }

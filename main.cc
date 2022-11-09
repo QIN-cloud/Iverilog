@@ -1117,6 +1117,7 @@ int main(int argc, char*argv[])
 			break;
 		case 'I':
 			dcov->add_instan(optarg);
+            break;
 		case 'v':
 			dcov->add_fsm_variable(optarg);
 			break;

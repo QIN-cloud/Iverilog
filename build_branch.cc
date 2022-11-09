@@ -13,6 +13,7 @@ void Module::build_branchs()
     for(PProcess* proc : behaviors) {
         proc->build_branch(this, branchs, nullptr);
     }
+    build_branch_node(branchs);
 }
 
 void PGAssign::build_branch(Module* md, map<unsigned, BranchTree*>& branchs)
@@ -34,11 +35,11 @@ BranchTree* PETernary::build_branch(Module* md, map<unsigned, BranchTree*>& bran
 {
     BrCondit* node = new BrCondit(md, BranchTree::TERNARY);
     node->cond_ = expr_;
-    node->lineno_ = get_lineno();
+    node->lineno_ = expr_->get_lineno();
     node->tru_ = tru_->build_branch(md, branchs, node);
     node->fal_ = fal_->build_branch(md, branchs, node);
-    if(!root) branchs[get_lineno()] = node;
-    else branchs[get_lineno()] = root;
+    if(!root) branchs[expr_->get_lineno()] = node;
+    else branchs[expr_->get_lineno()] = root;
     return node;
 }
 

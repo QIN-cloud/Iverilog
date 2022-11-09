@@ -266,7 +266,9 @@ void Module::build_exprs()
         unsigned id = 0;
         for(PExpr* item : pos->second) {
             node->item[item] = id++;
+            pp_reverse_expr[item] = node;
         }
+        pp_expr[pos->first] = node;
 	}
 }
 
@@ -595,7 +597,7 @@ void Module::build_cfg_path(Cfg* cfg, unsigned idx, CoverBitVecArray* bv)
 		assert(bv);
 		CoverBitVecArray* nbv = new CoverBitVecArray(bv->get_size());
 		nbv->merge_array(bv);
-		cfg->pp_path.push_back(nbv);
+		cfg->pp_path[*nbv] = cfg->pp_path.size();
 		return;
 	}
 	bv->set_high(cfg->pp_line[node->lineno]);
