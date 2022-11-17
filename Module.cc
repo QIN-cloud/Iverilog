@@ -29,6 +29,7 @@
 # include  <stack>
 # include  <unordered_map>
 # include  <unistd.h>
+# include <math.h>
 
 
 using namespace std;
@@ -193,13 +194,13 @@ void Module::get_condit() {
 		Cfg* cfg = (*cfgs)[i];
 		for(int j = 0; j < cfg->root->count(); j++) {
 			Cfg_Node* cn = (*(cfg->root))[j];
-			if(cn->type.find("ISCONTROL") == 0) {
+			if(cn->type.find("ISCONTROL") == 0
+            && cn->type != "ISCONTROL.EVENT") {
 				for(string ref : cn->refs){
 					condit[ref] = true;
 				}
 			}
 		}
-
 	}
 }
 
@@ -277,10 +278,10 @@ void Module::get_vhdl_line()
 	vhdl_line.push_back("");
     perm_string file = get_file();
     fstream in(file);
-    string temp;
     while(!in.eof()) {
+        string temp;
         getline(in, temp);
-        vhdl_line.push_back(temp.c_str());
+        vhdl_line.push_back(temp);
     }
 }
 
@@ -555,13 +556,18 @@ void Module::build_lines()
 	for(unsigned i = 0; i < cfg_->cfgs->count(); i++) 
 	{
 		Cfg* cfg = (*(cfg_->cfgs))[i];
+        cfg->max_lineno = 0;
+        cfg->min_lineno = INT_MAX;
 		unsigned count = 0;
 		for(unsigned j = 0; j < cfg->root->count(); j++)
 		{
 			Cfg_Node* node = (*(cfg->root))[j];
 			if(node->lineno > 0) 
 			{
-				if(cfg->pp_line.find(node->lineno) == cfg->pp_line.end()) 
+                cfg->min_lineno = min(cfg->min_lineno, unsigned(node->lineno));
+                cfg->max_lineno = max(cfg->max_lineno, unsigned(node->lineno));
+				if(cfg->pp_line.find(node->lineno) == cfg->pp_line.end()
+                && node->type != "ISCONTROL.EVENT")
 				{
 					cfg->pp_line[node->lineno] = count++;
 				}

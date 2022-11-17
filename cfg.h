@@ -66,6 +66,8 @@ typedef struct Cfg{
     unordered_map<unsigned, unsigned> pp_line;
 	map<CoverBitVecArray, unsigned> pp_path;
     unsigned path_num;
+    unsigned min_lineno;
+    unsigned max_lineno;
 }Cfg;
 
 /*A collection of CFG in a module.*/

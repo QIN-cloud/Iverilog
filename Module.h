@@ -257,7 +257,7 @@ class Module : public PScopeExtra, public PNamedItem {
             map<PExpr*, ExpressionNode*> pp_reverse_expr;
             vector<PGAssign*> assign_order;
             map<string, AssignNode*> assign_map;       /* Using for searching the variable in assigns. */
-            vector<const char*> vhdl_line;
+            vector<string> vhdl_line;
 
       private:
             void dump_specparams_(ostream&out, unsigned indent) const;
